@@ -1,0 +1,11 @@
+.board-cell {
+  aspect-ratio: 1;
+  background-color: #ffffffaa;
+  border-radius: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--game-board-size) * 0.15);
+  font-weight: bold;
+  color: #000000aa;
+}

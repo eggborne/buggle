@@ -1,0 +1,10 @@
+#root {
+  width: 100%;
+  height: var(--actual-height);
+  max-height: var(--actual-height);
+  max-width: 1280px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+}

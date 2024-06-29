@@ -1,0 +1,14 @@
+.game-board {
+  width: var(--game-board-size);
+  height: var(--game-board-size);
+  aspect-ratio: 1;
+  background-color: #ffffffaa;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  place-items: stretch;
+  place-content: center;
+  grid-gap: 0.5rem;
+}
