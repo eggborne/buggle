@@ -21,7 +21,7 @@ function App() {
   const getPuzzle = async () => {
     const nextPuzzle = await generateBoard(4);
     console.log('nextpuzzle', nextPuzzle.wordList)
-    if (nextPuzzle.wordList.size < 10) {
+    if (nextPuzzle.wordList.size < 6) {
       getPuzzle()
     } else {
       setLetterMatrix(nextPuzzle.randomMatrix);

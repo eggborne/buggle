@@ -8,4 +8,5 @@
   font-size: calc(var(--game-board-size) * 0.125);
   font-weight: bold;
   color: #000000aa;
+  pointer-events: none;;
 }

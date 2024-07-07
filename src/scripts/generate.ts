@@ -53,51 +53,29 @@ const generateLetterMatrix = (size: number): string[][] => {
   return letterMatrix;
 };
 
-const isValidWord = async (word: string): Promise<boolean> => {
-  console.log('checking', word)
-  try {
-    const fetchUrl = `https://mikedonovan.dev/language-api/check?word=${word}`;
-    const response = await fetch(fetchUrl);
-    const data = await response.json();
-    console.log('response', data);
-    return data.exists;
-  } catch (error) {
-    console.error('Error checking word validity:', word, error);
-    return false;
-  }
-};
-
-const findAllWords = async (matrix: string[][]): Promise<Set<string>> => {
+const findAllWords = (matrix: string[][]): Set<string> => {
   let checked = 0;
   const startTime = Date.now();
   const rows = matrix.length;
   const cols = matrix[0].length;
   const result: Set<string> = new Set();
-  const visited: boolean[][] = Array.from({ length: rows }, () => Array(cols).fill(false));
+  const visited: boolean[][] = Array.from({ length: rows }, () =>
+    Array(cols).fill(false)
+  );
+
   const directions = [
-    [0, 1], [1, 0], [0, -1], [-1, 0],
-    [1, 1], [-1, -1], [1, -1], [-1, 1]
+    [-1, -1],
+    [-1, 0],
+    [-1, 1],
+    [0, -1],
+    [0, 1],
+    [1, -1],
+    [1, 0],
+    [1, 1],
   ];
 
-  const cache: Map<string, boolean> = new Map();
-
-  const dfs = async (x: number, y: number, currentWord: string): Promise<void> => {
-    if (currentWord.length > 2) {
-      if (cache.has(currentWord)) {
-        if (cache.get(currentWord)) {
-          result.add(currentWord);
-        }
-      } else {
-        const valid = wordTrie.search(currentWord);
-        checked++;
-        cache.set(currentWord, valid);
-        if (valid) {
-          result.add(currentWord);
-        }
-      }
-    }
-
-    if (currentWord.length >= 10) {
+  const dfs = (x: number, y: number, currentWord: string): void => {
+    if (currentWord.length >= 11) {
       return;
     }
 
@@ -107,33 +85,42 @@ const findAllWords = async (matrix: string[][]): Promise<Set<string>> => {
       const newX = x + dx;
       const newY = y + dy;
 
-      if (newX >= 0 && newY >= 0 && newX < rows && newY < cols && !visited[newX][newY]) {
-        await dfs(newX, newY, currentWord + matrix[newX][newY]);
+      if (
+        newX >= 0 &&
+        newY >= 0 &&
+        newX < rows &&
+        newY < cols &&
+        !visited[newX][newY]
+      ) {
+        dfs(newX, newY, currentWord + matrix[newX][newY]);
       }
+    }
+
+    if (currentWord.length >= 3 && wordTrie.search(currentWord)) {
+      checked++;
+      result.add(currentWord);
     }
 
     visited[x][y] = false;
   };
 
-  const promises = [];
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < cols; j++) {
-      promises.push(dfs(i, j, matrix[i][j]));
+      dfs(i, j, matrix[i][j]);
     }
   }
 
-  await Promise.all(promises);
   const timeElapsed = Date.now() - startTime;
-  console.log('checked', checked, 'words in', timeElapsed, 'ms');
+  console.log("checked", checked, "words in", timeElapsed, "ms");
   return result;
 };
 
 
 const generateBoard = async (size: number): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
   const randomMatrix = generateLetterMatrix(size);
-  const wordList = await findAllWords(randomMatrix);
-  console.log('generateBoard generated', randomMatrix);
-  console.log(wordList.size, 'in wordList', wordList)
+  const wordListData = findAllWords(randomMatrix);
+  const wordList = new Set(Array.from(wordListData).sort((a, b) => a.length - b.length));
+  console.log(wordList.size, 'in puzzle', { randomMatrix, wordList })
   return { randomMatrix, wordList };
 }
 
