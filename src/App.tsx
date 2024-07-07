@@ -5,6 +5,8 @@ import TitleScreen from './components/TitleScreen'
 import SelectScreen from './components/SelectScreen'
 import GameScreen from './components/GameScreen'
 import OptionsScreen from './components/OptionsScreen'
+import { generateBoard } from './scripts/generate'
+
 
 function App() {
 
@@ -16,8 +18,20 @@ function App() {
     ['m','n','o','p'],
   ]);
 
+  const getPuzzle = async () => {
+    const nextPuzzle = await generateBoard(4);
+    console.log('nextpuzzle', nextPuzzle.wordList)
+    if (nextPuzzle.wordList.size < 10) {
+      getPuzzle()
+    } else {
+      setLetterMatrix(nextPuzzle.randomMatrix);
+    }
+  }
 
   const changePhase = (newPhase: string) => {
+    if (newPhase === 'game-board') {
+      getPuzzle();
+    }
     setPhase(newPhase);
   }
 

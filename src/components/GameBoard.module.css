@@ -1,4 +1,4 @@
-.game-board {
+.gameBoard {
   width: var(--game-board-size);
   height: var(--game-board-size);
   aspect-ratio: 1;
@@ -11,4 +11,24 @@
   place-items: stretch;
   place-content: center;
   grid-gap: 0.5rem;
+}
+
+.wordInput {
+  font-size: 3.5rem;
+  letter-spacing: 0.1rem;
+  font-weight: bold;
+  padding: 1rem;
+  width: 70%;
+  text-align: center;
+  text-transform: uppercase;
+  background-color: transparent;
+  border: none;
+}
+
+.valid {
+  color: rgb(119, 254, 119);
+}
+
+.invalid {
+  color: white;
 }

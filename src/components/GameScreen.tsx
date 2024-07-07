@@ -1,5 +1,6 @@
 import GameBoard from './GameBoard';
-import './GameScreen.css'
+import styles from './GameScreen.module.css';
+
 
 interface GameScreenProps {
   letterMatrix: string[][];
@@ -7,14 +8,12 @@ interface GameScreenProps {
 };
 
 function GameScreen({ letterMatrix, changePhase }: GameScreenProps) {
+
   return (
     <main
-      className='game-screen'
-      
+      className={styles.gameScreen}
+
     >
-      <div className='debug'>
-        
-      </div>
       <GameBoard letterMatrix={letterMatrix} />
       <button onClick={() => changePhase('title')}>Back</button>
     </main>

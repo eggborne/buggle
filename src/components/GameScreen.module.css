@@ -1,0 +1,10 @@
+.gameScreen {
+  background-color: #5b007777;
+  justify-content: space-around;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
