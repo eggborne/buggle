@@ -1,16 +1,17 @@
 .gameBoard {
   width: var(--game-board-size);
-  height: var(--game-board-size);
-  aspect-ratio: 1;
+  aspect-ratio: var(--puzzle-width) / var(--puzzle-height);
   background-color: #ffffffaa;
   border-radius: 0.25rem;
-  padding: 0.5rem;
+  padding: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 6));
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--puzzle-width), 1fr);
+  grid-template-rows: repeat(var(--puzzle-height), 1fr);
   place-items: stretch;
   place-content: center;
-  grid-gap: 0.5rem;
+  grid-gap: calc(
+    1rem / ((var(--puzzle-width) * var(--puzzle-height)) /6)
+  );
 }
 
 .wordInput {
@@ -23,12 +24,14 @@
   text-transform: uppercase;
   background-color: transparent;
   border: none;
+  outline: none;
+  margin: 1rem;
 }
 
 .valid {
-  color: rgb(119, 254, 119);
+  color: rgb(129, 254, 129);
 }
 
 .invalid {
-  color: white;
+  color: #ffffffdd;
 }

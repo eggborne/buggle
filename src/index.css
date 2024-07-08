@@ -11,10 +11,14 @@
 
   --actual-height: 100dvh;
   --game-board-size: 90dvw;
-  --header-height: 5rem;
+  --header-height: 4rem;
   --main-background-color: #202020;
   --header-background-color: #242424;
   --text-color: #ffffffde;
+
+  --puzzle-size: 4;
+  --puzzle-width: 4;
+  --puzzle-height: 4;
 }
 
 * {

@@ -2,12 +2,14 @@ import './BoardCell.css'
 
 interface BoardCellProps {
   letter: string;
+  touched: boolean;
+  wordValid: boolean;
 }
 
-function BoardCell({ letter }: BoardCellProps) {
+function BoardCell({ letter, touched, wordValid }: BoardCellProps) {
 
   return (
-    <div className='board-cell'>{letter.toUpperCase()}</div>
+    <div className={'board-cell' + (touched ? ' touched' : '') + (wordValid ? ' valid' : '')}>{letter.toUpperCase()}</div>
   )
 }
 

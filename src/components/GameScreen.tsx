@@ -9,12 +9,17 @@ interface GameScreenProps {
 
 function GameScreen({ letterMatrix, changePhase }: GameScreenProps) {
 
+  const handleValidWord = (word: string) => {
+    console.warn("Valid word:", word);
+    
+  };
+
   return (
     <main
       className={styles.gameScreen}
 
     >
-      <GameBoard letterMatrix={letterMatrix} />
+      <GameBoard letterMatrix={letterMatrix} onValidWord={handleValidWord} />
       <button onClick={() => changePhase('title')}>Back</button>
     </main>
   )

@@ -24,7 +24,7 @@ for (const word of wordList) {
   wordTrie.insert(word);
   wordsDone++;
 }
-console.log(wordsDone, 'words added to wordTrie in', (Date.now() - startTime), 'ms');
+console.warn(wordsDone, 'words added to wordTrie in', (Date.now() - startTime), 'ms');
 
 const tieredLetters = [
   ['E', 'A', 'O', 'I', 'U'],
@@ -37,13 +37,32 @@ const tieredLetters = [
 ].map((tier, index) => tier.flatMap(letter => Array([12, 10, 5, 4, 3, 2, 1][index]).fill(letter)))
   .reduce((acc, val) => acc.concat(val), []);
 
-const generateLetterMatrix = (size: number): string[][] => {
+const generateLetterMatrix2 = (size: number): string[][] => {
+  document.documentElement.style.setProperty('--puzzle-size', size.toString());
   const letters = tieredLetters.join('');
   const letterMatrix: string[][] = [];
 
   for (let i = 0; i < size; i++) {
     const row: string[] = [];
     for (let j = 0; j < size; j++) {
+      const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
+      row.push(randomLetter);
+    }
+    letterMatrix.push(row);
+  }
+
+  return letterMatrix;
+};
+
+const generateLetterMatrix = (width: number, height: number): string[][] => {
+  document.documentElement.style.setProperty('--puzzle-width', width.toString());
+  document.documentElement.style.setProperty('--puzzle-height', height.toString());
+  const letters = tieredLetters.join('');
+  const letterMatrix: string[][] = [];
+
+  for (let i = 0; i < height; i++) {
+    const row: string[] = [];
+    for (let j = 0; j < width; j++) {
       const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
       row.push(randomLetter);
     }
@@ -63,19 +82,16 @@ const findAllWords = (matrix: string[][]): Set<string> => {
     Array(cols).fill(false)
   );
 
-  const directions = [
-    [-1, -1],
-    [-1, 0],
-    [-1, 1],
-    [0, -1],
-    [0, 1],
-    [1, -1],
-    [1, 0],
-    [1, 1],
-  ];
+  const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
   const dfs = (x: number, y: number, currentWord: string): void => {
-    if (currentWord.length >= 11) {
+
+    // const maxPathLength = (rows * cols);
+    const maxPathLength = 10;
+
+    // visited[x][y] = true;
+
+    if (currentWord.length >= maxPathLength) {
       return;
     }
 
@@ -96,9 +112,11 @@ const findAllWords = (matrix: string[][]): Set<string> => {
       }
     }
 
-    if (currentWord.length >= 3 && wordTrie.search(currentWord)) {
+    if (currentWord.length >= 3) {
       checked++;
-      result.add(currentWord);
+      if (wordTrie.search(currentWord)) {
+        result.add(currentWord);
+      }
     }
 
     visited[x][y] = false;
@@ -111,16 +129,15 @@ const findAllWords = (matrix: string[][]): Set<string> => {
   }
 
   const timeElapsed = Date.now() - startTime;
-  console.log("checked", checked, "words in", timeElapsed, "ms");
+  console.warn("checked", checked, "words in", timeElapsed, "ms");
   return result;
 };
 
-
-const generateBoard = async (size: number): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
-  const randomMatrix = generateLetterMatrix(size);
+const generateBoard = async (width: number, height: number): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
+  const randomMatrix = generateLetterMatrix(width, height);
   const wordListData = findAllWords(randomMatrix);
   const wordList = new Set(Array.from(wordListData).sort((a, b) => a.length - b.length));
-  console.log(wordList.size, 'in puzzle', { randomMatrix, wordList })
+  console.log(wordList.size, 'words in puzzle', randomMatrix.flat().join(''), wordList)
   return { randomMatrix, wordList };
 }
 

@@ -6,7 +6,15 @@
   align-items: center;
   justify-content: center;
   font-size: calc(var(--game-board-size) * 0.125);
+  font-size: calc((var(--game-board-size) * 0.5) / var(--puzzle-width));
   font-weight: bold;
   color: #000000aa;
-  pointer-events: none;;
+}
+
+.board-cell.touched {
+  background-color: rgba(69, 255, 69, 0.267);
+}
+.board-cell.touched.valid {
+  background-color: rgba(83, 255, 83, 0.762);
+  outline: 2px solid rgb(123, 255, 141);
 }
