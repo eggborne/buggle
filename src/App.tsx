@@ -25,7 +25,6 @@ function App() {
   const [puzzleSize, setPuzzleSize] = useState<puzzleDimenstions>({ width: 4, height: 4 });
   const [minimumWordAmount, setMinimumWordAmount] = useState<number>(20);
 
-
   const getPuzzle = async (options: SinglePlayerOptions) => {
     const nextPuzzle = await generateBoard(options.puzzleSize.width, options.puzzleSize.height);
     if (nextPuzzle.wordList.size < options.minimumWordAmount) {
@@ -45,10 +44,11 @@ function App() {
       height: options.puzzleSize.height
     });
     setMinimumWordAmount(options.minimumWordAmount);
+    console.log('starting with puzzleSize', puzzleSize, 'and minimumWordAmount', minimumWordAmount);
+    setPhase('select')
     await getPuzzle(options);
     setPhase('game-board');
   }
-
 
   return (
     <>

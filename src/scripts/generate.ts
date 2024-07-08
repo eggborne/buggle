@@ -37,23 +37,6 @@ const tieredLetters = [
 ].map((tier, index) => tier.flatMap(letter => Array([12, 10, 5, 4, 3, 2, 1][index]).fill(letter)))
   .reduce((acc, val) => acc.concat(val), []);
 
-const generateLetterMatrix2 = (size: number): string[][] => {
-  document.documentElement.style.setProperty('--puzzle-size', size.toString());
-  const letters = tieredLetters.join('');
-  const letterMatrix: string[][] = [];
-
-  for (let i = 0; i < size; i++) {
-    const row: string[] = [];
-    for (let j = 0; j < size; j++) {
-      const randomLetter = letters.charAt(Math.floor(Math.random() * letters.length));
-      row.push(randomLetter);
-    }
-    letterMatrix.push(row);
-  }
-
-  return letterMatrix;
-};
-
 const generateLetterMatrix = (width: number, height: number): string[][] => {
   document.documentElement.style.setProperty('--puzzle-width', width.toString());
   document.documentElement.style.setProperty('--puzzle-height', height.toString());
