@@ -9,7 +9,6 @@ function SelectScreen({ changePhase }: SelectScreenProps) {
   return (
     <main className='select-screen'>
       select screen
-      <button onClick={() => changePhase('title')}>Back</button>
     </main>
   )
 }

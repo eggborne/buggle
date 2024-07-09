@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import styles from './TitleScreen.module.css'
 import { SinglePlayerOptions } from '../App';
-import BoardCell from './BoardCell';
 
 interface TitleScreenProps {
   changePhase: (phase: string) => void;
@@ -35,11 +34,11 @@ function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
             <div className={styles.puzzleOptions + (optionsExpanded ? `` : ` ${styles.hidden}`)}>
               <label>
                 <span>Width</span>
-                <input type='number' defaultValue='5' min='4' max='16' id='puzzleWidth' name='puzzleWidth' />
+                <input type='number' defaultValue='5' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
               </label>
               <label>
                 <span>Height</span>
-                <input type='number' defaultValue='5' min='4' max='16' id='puzzleHeight' name='puzzleHeight' />
+                <input type='number' defaultValue='5' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
               </label>
               <label>
                 <span>Min. Words</span>

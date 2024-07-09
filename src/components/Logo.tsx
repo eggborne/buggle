@@ -1,5 +1,4 @@
 import styles from './Logo.module.css'
-import BoardCell from './BoardCell';
 
 function Logo() {
   return (

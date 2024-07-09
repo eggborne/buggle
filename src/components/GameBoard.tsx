@@ -1,4 +1,4 @@
-import { wordTrie } from '../scripts/generate';
+import { wordTrie } from '../App';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
 import styles from './GameBoard.module.css'
@@ -130,7 +130,7 @@ function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
     if (!dragging) return;
     if (touchedCells.find((c) => c.id === cell.id)) return;
     if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) { return; }
-    
+
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
     setCurrentWord((prevWord) => prevWord + cell.letter);
     setWordValid(checkWord(currentWord + cell.letter));
@@ -170,6 +170,7 @@ function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
           ))
         )}
       </div>
+      <button>Upload</button>
     </>
   )
 }

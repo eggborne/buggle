@@ -1,30 +1,4 @@
-import { Trie } from "./trie";
-
-const fetchWords = async () => {
-  const fetchStart = Date.now();
-  try {
-    const response = await fetch('https://mikedonovan.dev/language-api/wordsonlylist.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    console.warn('got raw word list in', (Date.now() - fetchStart), 'ms')
-    return data;
-  } catch (error) {
-    console.error('Error fetching word list:', error);
-  }
-};
-
-const wordList = await fetchWords();
-const wordTrie = new Trie();
-let wordsDone = 0;
-
-const startTime = Date.now();
-for (const word of wordList) {
-  wordTrie.insert(word);
-  wordsDone++;
-}
-console.warn(wordsDone, 'words added to wordTrie in', (Date.now() - startTime), 'ms');
+import { wordTrie } from '../App';
 
 const tieredLetters = [
   ['E', 'A', 'O', 'I', 'U'],
@@ -71,8 +45,6 @@ const findAllWords = (matrix: string[][]): Set<string> => {
 
     // const maxPathLength = (rows * cols);
     const maxPathLength = 10;
-
-    // visited[x][y] = true;
 
     if (currentWord.length >= maxPathLength) {
       return;
@@ -126,5 +98,4 @@ const generateBoard = async (width: number, height: number): Promise<{ randomMat
 
 export {
   generateBoard,
-  wordTrie,
 };

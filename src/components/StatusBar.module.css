@@ -1,0 +1,20 @@
+.statusBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  color: #ffffffaa;
+  /* background-color: darkred; */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  font-size: 0.65rem;
+  opacity: 1;
+  transition: opacity 300ms ease;
+}
+
+.showing {
+  opacity: 1;
+}
