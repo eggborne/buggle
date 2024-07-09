@@ -1,0 +1,30 @@
+.adminScreen {
+  background-color: #9ea55b77;
+  font-family: monospace;
+  align-items: center;
+}
+
+.puzzleList {
+  width: 95%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.puzzleListing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  width: 20vw;
+  color: #111;
+  background-color: #ddd
+}
+
+.miniPuzzle {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  letter-spacing: 0.25rem;
+}

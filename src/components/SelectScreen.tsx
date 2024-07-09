@@ -1,10 +1,6 @@
 import './SelectScreen.css'
 
-interface SelectScreenProps {
-  changePhase: (phase: string) => void;
-}
-
-function SelectScreen({ changePhase }: SelectScreenProps) {
+function SelectScreen() {
 
   return (
     <main className='select-screen'>

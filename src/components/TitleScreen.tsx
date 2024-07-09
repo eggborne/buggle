@@ -51,6 +51,7 @@ function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
         }
         <button onClick={() => changePhase('select')}>Multiplayer</button>
         <button onClick={() => changePhase('options')}>Options</button>
+        <button style={{ backgroundColor: 'gray' }} onClick={() => changePhase('admin')}>Admin</button>
       </div>
     </main>
   )

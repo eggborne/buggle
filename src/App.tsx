@@ -7,7 +7,11 @@ import TitleScreen from './components/TitleScreen'
 import SelectScreen from './components/SelectScreen'
 import GameScreen from './components/GameScreen'
 import OptionsScreen from './components/OptionsScreen'
+import AdminScreen from './components/AdminScreen'
 import { generateBoard } from './scripts/generate'
+import { set, ref } from 'firebase/database';
+import { database } from './scripts/firebase.ts';
+
 
 interface PuzzleDimensions {
   width: number;
@@ -33,7 +37,7 @@ interface PointValues {
   [key: number]: number;
 }
 
-interface PuzzleData {
+export interface PuzzleData {
   allWords: Set<string>;
   letters: string;
   gridSize: PuzzleDimensions;
@@ -79,6 +83,8 @@ function App() {
   const [puzzleSize, setPuzzleSize] = useState<PuzzleDimensions>({ width: 4, height: 4 });
   const [minimumWordAmount, setMinimumWordAmount] = useState<number>(50);
 
+  console.log('puzzleSize minimumWordAmount', puzzleSize, minimumWordAmount);
+
   const [player, setPlayer] = useState<PlayerData>({
     score: 0,
     wordsFound: new Set(),
@@ -95,7 +101,7 @@ function App() {
   useEffect(() => {
     const buildDictionary = async () => {
       const fetchStart = Date.now();
-      const wordList = await fetchWords();      
+      const wordList = await fetchWords();
       setWordListFetched(true);
       const fetchTime = (Date.now() - fetchStart);
       console.log(wordList);
@@ -103,9 +109,9 @@ function App() {
       const listStatusElement = document.getElementById('list-status');
       if (listStatusElement) {
         listStatusElement.innerText = `${wordList.length} words downloaded in ${fetchTime}ms`;
-      }      
+      }
       console.log('first:', wordList[0]);
-      console.log('last:', wordList[wordList.length-1])
+      console.log('last:', wordList[wordList.length - 1])
       const trieStart = Date.now();
       await initializeTrie(wordList);
       setDictionaryLoaded(true);
@@ -116,6 +122,8 @@ function App() {
         dictStatusElement.innerText = `Dictionary built in ${dictTime}ms`;
       }
     }
+    setStatusMessage('');
+    setStatusShowing(true);
     buildDictionary();
   }, []);
 
@@ -136,6 +144,24 @@ function App() {
       setPlayer(nextPlayer);
     }
   };
+
+  function uploadPuzzle() {
+    const puzzleData = {
+      allWords: Array.from(currentGame.allWords),
+      gridSize: currentGame.gridSize,
+      letters: letterMatrix.map(row => row.join('')).join(''),
+    }
+    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.gridSize.width}${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}` ;
+    const nextPuzzleData = {
+      allWords: puzzleData.allWords,
+      letters: puzzleData.letters,
+      gridSize: puzzleData.gridSize,
+    }
+
+    console.warn('uploading', newPuzzleId, nextPuzzleData)
+
+    set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
+  }
 
   const getPuzzle = async (options: SinglePlayerOptions) => {
     const nextPuzzle = await generateBoard(options.puzzleSize.width, options.puzzleSize.height);
@@ -176,14 +202,16 @@ function App() {
     <>
       <StatusBar message={statusMessage} showing={statusShowing} dictionaryLoaded={dictionaryLoaded} wordListFetched={wordListFetched} />
       {phase === 'title' && <TitleScreen changePhase={changePhase} startSinglePlayerGame={startSinglePlayerGame} />}
-      {phase === 'options' && <OptionsScreen changePhase={changePhase} />}
-      {phase === 'select' && <SelectScreen changePhase={changePhase} />}
+      {phase === 'options' && <OptionsScreen />}
+      {phase === 'admin' && <AdminScreen />}
+      {phase === 'select' && <SelectScreen />}
       {phase === 'game-board' &&
         <GameScreen
           player={player}
           currentGame={currentGame}
           letterMatrix={letterMatrix}
           handleValidWord={handleValidWord}
+          uploadPuzzle={uploadPuzzle}
         />}
       <Header phase={phase} changePhase={changePhase} />
     </>

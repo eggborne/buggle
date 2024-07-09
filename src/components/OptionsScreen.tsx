@@ -1,10 +1,6 @@
 import './OptionsScreen.css'
 
-interface OptionsScreenProps {
-  changePhase: (newPhase: string) => void;
-}
-
-function OptionsScreen({ changePhase }: OptionsScreenProps) {
+function OptionsScreen() {
 
   return (
     <main className='options-screen'>

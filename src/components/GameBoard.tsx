@@ -1,4 +1,4 @@
-import { wordTrie } from '../App';
+import { PuzzleData, wordTrie } from '../App';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
 import styles from './GameBoard.module.css'
@@ -7,6 +7,7 @@ import CurrentWordDisplay from './CurrentWordDisplay';
 interface GameBoardProps {
   letterMatrix: string[][];
   onValidWord: (word: string) => void;
+  uploadPuzzle: () => void;
 }
 
 interface CellObj {
@@ -16,7 +17,7 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
+function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
 
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
@@ -170,7 +171,7 @@ function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
           ))
         )}
       </div>
-      <button>Upload</button>
+      <button onClick={uploadPuzzle}>Upload</button>
     </>
   )
 }
