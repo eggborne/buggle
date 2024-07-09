@@ -34,7 +34,7 @@ const tieredLetters = [
   ['F', 'H', 'V', 'W', 'Y', 'K'],
   ['J', 'X'],
   ['Q', 'Z']
-].map((tier, index) => tier.flatMap(letter => Array([12, 10, 5, 4, 3, 2, 1][index]).fill(letter)))
+].map((tier, index) => tier.flatMap(letter => Array([12, 10, 8, 4, 3, 2, 1][index]).fill(letter)))
   .reduce((acc, val) => acc.concat(val), []);
 
 const generateLetterMatrix = (width: number, height: number): string[][] => {
@@ -112,7 +112,7 @@ const findAllWords = (matrix: string[][]): Set<string> => {
   }
 
   const timeElapsed = Date.now() - startTime;
-  console.warn("checked", checked, "words in", timeElapsed, "ms");
+  console.warn("checked", checked, "paths in", timeElapsed, "ms");
   return result;
 };
 

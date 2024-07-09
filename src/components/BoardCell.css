@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--game-board-size) * 0.125);
   font-size: calc((var(--game-board-size) * 0.5) / var(--puzzle-width));
+  min-width: calc((var(--game-board-size) * 0.5) / var(--puzzle-width));
   font-weight: bold;
   color: #000000aa;
 }

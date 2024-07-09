@@ -17,7 +17,7 @@ export class Trie {
 
   insert(word: string): void {
     let currentNode = this.root;
-    for (let char of word) {
+    for (const char of word) {
       if (!currentNode.children.has(char)) {
         currentNode.children.set(char, new TrieNode());
       }
@@ -28,7 +28,7 @@ export class Trie {
 
   search(word: string): boolean {
     let currentNode = this.root;
-    for (let char of word) {
+    for (const char of word) {
       if (!currentNode.children.has(char)) {
         return false;
       }

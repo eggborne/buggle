@@ -1,26 +1,24 @@
+import { PlayerData, CurrentGameData } from '../App';
 import GameBoard from './GameBoard';
 import styles from './GameScreen.module.css';
+import GameStatusDisplay from './GameStatusDisplay';
 
 
 interface GameScreenProps {
+  player: PlayerData;
+  currentGame: CurrentGameData;
   letterMatrix: string[][];
-  changePhase: (phase: string) => void;
-};
+  handleValidWord: (word: string) => void;
+}
 
-function GameScreen({ letterMatrix, changePhase }: GameScreenProps) {
-
-  const handleValidWord = (word: string) => {
-    console.warn("Valid word:", word);
-    
-  };
+function GameScreen({ player, currentGame, letterMatrix, handleValidWord }: GameScreenProps) {
 
   return (
     <main
       className={styles.gameScreen}
-
     >
-      <GameBoard letterMatrix={letterMatrix} onValidWord={handleValidWord} />
-      <button onClick={() => changePhase('title')}>Back</button>
+      <GameStatusDisplay player={player} currentGame={currentGame} />
+      <GameBoard letterMatrix={letterMatrix} onValidWord={handleValidWord} />      
     </main>
   )
 }

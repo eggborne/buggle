@@ -1,0 +1,21 @@
+.wordInput {
+  font-size: 3rem;
+  letter-spacing: 0.1rem;
+  font-weight: bold;
+  padding: 1rem;
+  width: 90%;
+  text-align: center;
+  text-transform: uppercase;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  /* margin: 1rem; */
+}
+
+.valid {
+  color: rgb(129, 254, 129);
+}
+
+.invalid {
+  color: #ffffffdd;
+}

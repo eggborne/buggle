@@ -1,0 +1,27 @@
+.numeralDisplay {
+  --numeral-height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: calc(var(--numeral-height) / 8);
+  padding: calc(var(--numeral-height) / 8);
+  border-radius: 0.25rem;
+  transition: scale 300ms ease;
+}
+
+.numeralDigit {
+  box-sizing: content-box;
+  background-image: url('/slimnumerals.png');
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  background-position-x: center;
+  background-position-y: 0;
+  width: calc(var(--numeral-height) * (1/2));
+  height: var(--numeral-height);
+  filter: invert();
+  transition: background-position-y 300ms ease-out;
+}
+
+.scoreNumber.black {
+  filter: none;
+}

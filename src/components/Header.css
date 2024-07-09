@@ -1,9 +1,16 @@
 header {
   width: 100%;
   height: var(--header-height);
-  background-color: #ffffff22;
+  background-color: #a0ff8622;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 1rem;
+}
+
+header > button {
+  position: absolute;
+  left: 1rem;
+  background: red;
+  padding: 0.5rem 0.75rem;
 }

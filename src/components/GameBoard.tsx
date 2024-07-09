@@ -2,11 +2,12 @@ import { wordTrie } from '../scripts/generate';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
 import styles from './GameBoard.module.css'
+import CurrentWordDisplay from './CurrentWordDisplay';
 
 interface GameBoardProps {
   letterMatrix: string[][];
   onValidWord: (word: string) => void;
-};
+}
 
 interface CellObj {
   letter: string;
@@ -116,33 +117,6 @@ function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
     }
   };
 
-  const handleCellTouchStart = (cell: CellObj) => {
-    if (!dragging) return;
-    if (touchedCells.find((c) => c.id === cell.id)) return; // Prevent duplicates
-
-    // Check if it's a valid neighbor ONLY when adding a new cell 
-    if (
-      touchedCells.length > 0 &&
-      !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])
-    ) {
-      return;
-    }
-    setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
-    setCurrentWord((prevWord) => prevWord + cell.letter);
-    setWordValid(checkWord(currentWord + cell.letter));
-  };
-
-  const handleCellTouchEnd = () => {
-    // You might need to add logic here if you want to 
-    // handle the case when the touch ends outside of any cell.
-  };
-
-  const isValidNeighbor = (cell1: CellObj, cell2: CellObj): boolean => {
-    const rowDiff = Math.abs(cell1.row - cell2.row);
-    const colDiff = Math.abs(cell1.col - cell2.col);
-    return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
-  };
-
   const handleWordSubmit = () => {
     if (wordValid) {
       onValidWord(currentWord);
@@ -152,27 +126,33 @@ function GameBoard({ letterMatrix, onValidWord }: GameBoardProps) {
     setWordValid(false);
   };
 
+  const handleCellTouchStart = (cell: CellObj) => {
+    if (!dragging) return;
+    if (touchedCells.find((c) => c.id === cell.id)) return;
+    if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) { return; }
+    
+    setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
+    setCurrentWord((prevWord) => prevWord + cell.letter);
+    setWordValid(checkWord(currentWord + cell.letter));
+  };
+
+  const handleCellTouchEnd = () => {
+    //
+  };
+
+  const isValidNeighbor = (cell1: CellObj, cell2: CellObj): boolean => {
+    const rowDiff = Math.abs(cell1.row - cell2.row);
+    const colDiff = Math.abs(cell1.col - cell2.col);
+    return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
+  };
+
   const checkWord = (wordToCheck: string): boolean => {
     return wordToCheck.length > 2 && wordTrie.search(wordToCheck);
   }
 
-  let inputClass = styles.wordInput;
-  if (wordValid) {
-    inputClass += ' ' + styles.valid;
-  } else {
-    inputClass += ' ' + styles.invalid;
-  }
-
-  const wordString = touchedCells.map(cell => cell.letter).join('');
-
   return (
     <>
-      <input
-        readOnly
-        className={inputClass}
-        value={wordString}
-        name='wordCheck' id='wordCheck' type='text'
-      />
+      <CurrentWordDisplay letters={currentWord.split('')} wordValid={wordValid} />
       <div
         ref={gameBoardRef}
         id='game-board'

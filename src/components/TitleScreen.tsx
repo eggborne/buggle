@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from './TitleScreen.module.css'
 import { SinglePlayerOptions } from '../App';
+import BoardCell from './BoardCell';
 
 interface TitleScreenProps {
   changePhase: (phase: string) => void;
@@ -13,20 +14,20 @@ function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
 
   const handleStartSinglePlayer = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const target = e.target as any;
-    const options = {
+    const target = e.currentTarget as HTMLFormElement;
+    const options: SinglePlayerOptions = {
       puzzleSize: {
-        width: parseInt(target.elements.puzzleWidth.value),
-        height: parseInt(target.elements.puzzleHeight.value)
+        width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10),
+        height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
       },
-      minimumWordAmount: parseInt(target.elements.minWords.value),
-    }
+      minimumWordAmount: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
+    };
 
     startSinglePlayerGame(options);
   }
 
   return (
-    <main className={styles.titleScreen}>
+    <main className={styles.titleScreen}>      
       <div className='button-group'>
         {optionsExpanded ?
           <form onSubmit={handleStartSinglePlayer}>
@@ -34,15 +35,15 @@ function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
             <div className={styles.puzzleOptions + (optionsExpanded ? `` : ` ${styles.hidden}`)}>
               <label>
                 <span>Width</span>
-                <input type='number' defaultValue='4' min='4' max='12' id='puzzleWidth' name='puzzleWidth' />
+                <input type='number' defaultValue='5' min='4' max='16' id='puzzleWidth' name='puzzleWidth' />
               </label>
               <label>
                 <span>Height</span>
-                <input type='number' defaultValue='4' min='4' max='12' id='puzzleHeight' name='puzzleHeight' />
+                <input type='number' defaultValue='5' min='4' max='16' id='puzzleHeight' name='puzzleHeight' />
               </label>
               <label>
                 <span>Min. Words</span>
-                <input type='number' defaultValue='50' min='15' max='500' id='minWords' name='minWords' />
+                <input type='number' defaultValue='50' min='15' max='1000' id='minWords' name='minWords' />
               </label>
             </div>
           </form>

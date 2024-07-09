@@ -1,0 +1,32 @@
+.gameStatusDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  gap: 1rem;
+  width: 100%;
+  flex-grow: 1;
+  color: #ddd;
+}
+
+.gameStatsArea {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeScoreArea {
+  width: 7rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.labeledCounter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.gameStatsArea > .labeledCounter {
+  flex-direction: column;
+}

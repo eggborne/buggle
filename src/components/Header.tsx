@@ -1,10 +1,17 @@
 import './Header.css'
+import Logo from './Logo';
 
-function Header() {
+interface HeaderProps {
+  phase: string;
+  changePhase: (phase: string) => void;
+}
+
+function Header({ phase, changePhase }: HeaderProps) {
 
   return (
     <header>
-      <h1>Header Title</h1>
+      {phase !== 'title' && <button onClick={() => changePhase('title')}>{'<'}</button>}
+      <Logo />
     </header>
   )
 }
