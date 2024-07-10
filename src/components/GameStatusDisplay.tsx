@@ -9,7 +9,6 @@ interface GameStatusDisplayProps {
 }
 
 function GameStatusDisplay({ player, currentGame }: GameStatusDisplayProps) {
-
   return (
     <div className={styles.gameStatusDisplay}>
       <div className={styles.gameStatsArea}>

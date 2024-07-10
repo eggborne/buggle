@@ -1,10 +1,12 @@
-import { PuzzleData, wordTrie } from '../App';
+import { CurrentGameData, PlayerData } from '../App';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
 import styles from './GameBoard.module.css'
 import CurrentWordDisplay from './CurrentWordDisplay';
 
 interface GameBoardProps {
+  currentGame: CurrentGameData;
+  player: PlayerData;
   letterMatrix: string[][];
   onValidWord: (word: string) => void;
   uploadPuzzle: () => void;
@@ -17,7 +19,7 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
+function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
 
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +27,8 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
   const [wordValid, setWordValid] = useState<boolean>(false);
+  const [wordStatus, setWordStatus] = useState<string>('invalid');
+  const [wordListShowing, setWordListShowing] = useState<boolean>(false);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -36,7 +40,10 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
+      if (gameBoardRef.current?.contains(e.target as Node)) {
+        e.preventDefault();
+      }
+      // e.preventDefault();
       if (!dragging) return;
       const touch = e.touches[0];
       handleCellHover(touch.clientX, touch.clientY);
@@ -88,7 +95,7 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
     if (!boardRect) return;
 
     const cellSize = boardRect.width / letterMatrix.length; // Assuming square board
-    const hitboxMargin = touchedCells.length > 0 ? cellSize * 0.15 : 0;
+    const hitboxMargin = touchedCells.length > 0 ? cellSize * 0.175 : 0;
 
     const row = Math.floor((clientY - boardRect.top) / cellSize);
     const col = Math.floor((clientX - boardRect.left) / cellSize);
@@ -111,7 +118,6 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
         row,
         col,
       };
-
       handleCellTouchStart(cellObj);
     } else {
       handleCellTouchEnd();
@@ -125,6 +131,7 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
     setCurrentWord('');
     setTouchedCells([]);
     setWordValid(false);
+    setWordStatus('invalid');
   };
 
   const handleCellTouchStart = (cell: CellObj) => {
@@ -134,6 +141,11 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
 
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
     setCurrentWord((prevWord) => prevWord + cell.letter);
+    if (player.wordsFound.has(currentWord + cell.letter)) {
+      setWordStatus('duplicate');
+    } else if (checkWord(currentWord + cell.letter)) {
+      setWordStatus('valid');
+    }
     setWordValid(checkWord(currentWord + cell.letter));
   };
 
@@ -148,12 +160,13 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
   };
 
   const checkWord = (wordToCheck: string): boolean => {
-    return wordToCheck.length > 2 && wordTrie.search(wordToCheck);
+    const wordExists = currentGame.allWords.has(wordToCheck);
+    return wordExists;
   }
 
   return (
     <>
-      <CurrentWordDisplay letters={currentWord.split('')} wordValid={wordValid} />
+      <CurrentWordDisplay letters={currentWord.split('')} wordStatus={wordStatus} />
       <div
         ref={gameBoardRef}
         id='game-board'
@@ -166,12 +179,28 @@ function GameBoard({ letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) 
               id={`${r}${l}`}
               style={{ userSelect: 'none' }}
             >
-              <BoardCell letter={letter} touched={touchedCells.some(c => c.id === `${r}${l}`)} wordValid={wordValid} />
+              <BoardCell letter={letter} touched={touchedCells.some(c => c.id === `${r}${l}`)} wordStatus={wordStatus} />
             </div>
           ))
         )}
       </div>
-      <button onClick={uploadPuzzle}>Upload</button>
+      <div className={styles.lowerButtonArea}>
+        <button onClick={uploadPuzzle}>Upload</button>
+        <button style={{ background: 'green' }} onClick={() => setWordListShowing(true)}>Word List</button>
+      </div>
+      {wordListShowing &&
+        <>
+          <button onClick={() => setWordListShowing(false)} className={styles.closeButton}>X</button>
+          <div className={styles.wordListModal}>
+            {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
+              <div style={{
+                opacity: Array.from(player.wordsFound).includes(word) ? '0.75' : '1',
+                textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none'
+              }} key={word}>{word}</div>
+            )}
+          </div>
+        </>
+      }
     </>
   )
 }

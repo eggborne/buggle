@@ -16,6 +16,10 @@
   color: rgb(129, 254, 129);
 }
 
+.duplicate {
+  color: rgb(172, 192, 94);
+}
+
 .invalid {
   color: #ffffffdd;
 }

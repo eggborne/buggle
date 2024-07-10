@@ -14,3 +14,8 @@ form {
 .gameScreen button {
   margin: 1rem;
 }
+
+.lowerButtonArea {
+  display: flex;
+  gap: 1rem;
+}

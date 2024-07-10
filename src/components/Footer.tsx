@@ -1,19 +1,19 @@
-import './Header.css'
+import styles from './Footer.module.css'
 import Logo from './Logo';
 
-interface HeaderProps {
+interface FooterProps {
   phase: string;
   changePhase: (phase: string) => void;
 }
 
-function Header({ phase, changePhase }: HeaderProps) {
+function Footer({ phase, changePhase }: FooterProps) {
 
   return (
-    <header>
+    <footer className={styles.Footer}>
       {phase !== 'title' && <button onClick={() => changePhase('title')}>{'<'}</button>}
       <Logo />
-    </header>
+    </footer>
   )
 }
 
-export default Header;
+export default Footer;

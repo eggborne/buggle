@@ -1,4 +1,4 @@
-header {
+.Footer {
   width: 100%;
   height: var(--header-height);
   background-color: #a0ff8622;
@@ -8,7 +8,7 @@ header {
   gap: 1rem;
 }
 
-header > button {
+.Footer > button {
   position: absolute;
   left: 1rem;
   background: red;

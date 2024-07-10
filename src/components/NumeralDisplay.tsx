@@ -7,7 +7,9 @@ interface NumeralDisplayProps {
 }
 
 function NumeralDisplay({ digits, length = 4 }: NumeralDisplayProps) {
-
+  if (!digits) {
+    digits = 0;
+  }
   const digitArray = digits.toString().padStart(length, '0').split('').map(digit => parseInt(digit));
 
   return (

@@ -5,18 +5,13 @@ import styles from './CurrentWordDisplay.module.css';
 
 interface CurrentWordDisplayProps {
   letters: string[];
-  wordValid: boolean;
+  wordStatus: string;
 }
 
-function CurrentWordDisplay({ letters, wordValid }: CurrentWordDisplayProps) {
+function CurrentWordDisplay({ letters, wordStatus }: CurrentWordDisplayProps) {
 
   let inputClass = styles.wordInput;
-  if (wordValid) {
-    inputClass += ' ' + styles.valid;
-  } else {
-    inputClass += ' ' + styles.invalid;
-  }
-
+  inputClass += ' ' + styles[wordStatus];
   const wordString = letters.join('');
 
   return (
