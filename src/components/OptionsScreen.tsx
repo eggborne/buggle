@@ -9,7 +9,7 @@ interface OptionsScreenProps {
 
 function OptionsScreen({ options, changeOption }: OptionsScreenProps) {
   const debouncedChangeOption = debounce((name, value) => {
-    changeOption(name, value);
+    changeOption(name as string, value as string);
   }, 300); // Adjust delay (ms) as needed 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +25,11 @@ function OptionsScreen({ options, changeOption }: OptionsScreenProps) {
         </label>
         <label>
           <span>Cube Roundness</span>
-          <input name={'cubeRoundness'} onPointerUp={(e) => changeOption(e.currentTarget.name, e.currentTarget.value)} type='range' defaultValue={options.cubeRoundness} min='0' max='100' />
+          <input name={'cubeRoundness'} onPointerUp={(e) => changeOption(e.currentTarget.name, e.currentTarget.value)} type='range' defaultValue={options.cubeRoundness} min='0' max='50' />
+        </label>
+        <label>
+          <span>Cube gap</span>
+          <input name={'cubeGap'} onPointerUp={(e) => changeOption(e.currentTarget.name, e.currentTarget.value)} type='range' defaultValue={options.cubeGap} min='0' max='15' />
         </label>
         <label>
           <span>Swipe buffer</span>

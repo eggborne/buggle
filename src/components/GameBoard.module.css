@@ -1,14 +1,8 @@
 .gameBoard {
   width: var(--game-board-size);
-  aspect-ratio: var(--puzzle-width) / var(--puzzle-height);
   border-radius: 0.25rem;
-  padding: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 6));
   display: grid;
-  grid-template-columns: repeat(var(--puzzle-width), 1fr);
-  grid-template-rows: repeat(var(--puzzle-height), 1fr);
   place-items: stretch;
   place-content: center;
-  border-radius: calc(var(--cube-roundness) / var(--puzzle-height));
-  gap: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 3));
   z-index: 0;
 }

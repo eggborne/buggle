@@ -1,0 +1,68 @@
+.SelectScreen {
+  background-color: var(--select-screen-bg-color);
+}
+
+.sizeSelect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; 
+}
+
+.sizeSelections {
+  display: flex;
+  align-items: center;
+}
+
+.sizeSelections > span {
+  padding: 0.25rem;
+  border: 0.5rem solid transparent;
+}
+
+.SelectScreen form {
+  align-items: stretch;
+}
+
+.SelectScreen button {
+  padding: 1rem;
+  font-size: 1.5rem;
+}
+
+.SelectScreen button.start {
+  background-color: green;  
+}
+
+.puzzleOptions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  transform-origin: top;
+  scale: 1 1;
+  transition: all 100ms ease;
+  gap: 1rem;
+}
+
+.puzzleOptions.hidden {
+  opacity: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.puzzleOptions label {
+  display: flex;
+  place-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  margin: 0.5rem;
+}
+
+.puzzleOptions label>span {
+  flex-grow: 1;
+}
+
+.puzzleOptions input {
+  font-size: 2rem;
+  padding: 0.5rem;
+  width: 6rem;
+  text-align: center;
+}

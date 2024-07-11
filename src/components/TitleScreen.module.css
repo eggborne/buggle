@@ -1,61 +1,26 @@
-.titleScreen {
-  background-color: #00ff5577;
+.TitleScreen {
+  background-color: var(--title-screen-bg-color);
   max-height: 100dvh;
   overflow-y: auto;
 }
 
-.titleScreen form {
-  align-items: stretch;
-}
-
-.puzzleOptions {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-  transform-origin: top;
-  scale: 1 1;
-  transition: all 100ms ease;
-}
-
-.puzzleOptions.hidden {
-  opacity: 0;
-  height: 0;
-  pointer-events: none;
-}
-
-.puzzleOptions label {
-  display: flex;
-  place-items: center;
-  gap: 0.5rem;
-  font-size: 1.25rem;
-  margin: 0.5rem;
-}
-
-.puzzleOptions label > span {
-  flex-grow: 1;
-}
-
-.puzzleOptions input {
-  font-size: 2rem;
-  padding: 0.5rem;
-  width: 6rem;
-  text-align: center;
-}
-
-.titleScreen button {
+.TitleScreen button {
   padding: 1rem;
   font-size: 1.5rem;
 }
 
-.titleScreen button.start {
-  background-color: green;
-  border: 0.1rem solid #ffffff99;
+.TitleScreen button:nth-of-type(1){
+  background-color: var(--select-screen-bg-color);
 }
 
-.titleScreen button.back {
-  background-color: rgb(128, 117, 0);
-  border: 0.1rem solid #ffffff58;
-  width: min-content;
-  font-size: 1rem;
-  align-self: center;
+.TitleScreen button:nth-of-type(2){
+  background-color: var(--lobby-screen-bg-color);;
+}
+
+.TitleScreen button:nth-of-type(3){
+  background-color: var(--options-screen-bg-color);;
+}
+
+.TitleScreen button:nth-of-type(4){
+  background-color: var(--create-screen-bg-color);;
 }

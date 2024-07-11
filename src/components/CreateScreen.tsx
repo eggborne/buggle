@@ -1,22 +1,21 @@
-import styles from './AdminScreen.module.css'
+import styles from './CreateScreen.module.css'
 import { useState, useRef, useEffect } from 'react';
-import { PuzzleData, CreatePuzzleOptions, SinglePlayerOptions } from '../App';
+import { PuzzleData, CreatePuzzleOptions } from '../App.tsx';
 import { ref, child, get } from "firebase/database";
-import { database } from '../scripts/firebase';
-import { stringTo2DArray } from '../scripts/util';
-import Modal from './Modal';
+import { database } from '../scripts/firebase.ts';
+import { stringTo2DArray } from '../scripts/util.ts';
+import Modal from './Modal.tsx';
 import { createDictionary } from '../scripts/generate.ts';
 
 
-interface AdminScreenProps {
+interface CreateScreenProps {
   handleClickPremadePuzzle: (puzzle: PuzzleData) => void;
-  startSinglePlayerGame: (options: SinglePlayerOptions) => void;
   startCreatedPuzzlePreview: (options: CreatePuzzleOptions) => void;
   onBuildDictionary: () => void;
   dictionaryBuilt: boolean;
 }
 
-function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBuildDictionary, dictionaryBuilt }: AdminScreenProps) {
+function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBuildDictionary, dictionaryBuilt }: CreateScreenProps) {
 
   const [puzzleList, setPuzzleList] = useState<PuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -31,10 +30,11 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBu
         height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
       },
       minimumWordAmount: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
+      maximumWordAmount: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10),
       maximumPathLength: parseInt((target.elements.namedItem('maxPathLength') as HTMLInputElement).value, 10),
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
       lengthRequirements: [{
-        minRequiredWordAmount:parseInt( (target.elements.namedItem('minRequiredWordAmount') as HTMLInputElement).value),
+        minRequiredWordAmount: parseInt((target.elements.namedItem('minRequiredWordAmount') as HTMLInputElement).value),
         requiredWordLength: parseInt((target.elements.namedItem('requiredWordLength') as HTMLInputElement).value)
       }],
     };
@@ -66,7 +66,7 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBu
   }, []);
 
   return (
-    <main className={styles.AdminScreen}>
+    <main className={styles.CreateScreen}>
       <div className={styles.creationArea}>
         <h1>Create Puzzle</h1>
         <form ref={formRef} onSubmit={handleStartCreatedPuzzle}>
@@ -80,6 +80,10 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBu
               </select>
             </label>
             <label>
+              <span>Max. path length</span>
+              <input type='number' defaultValue='10' min='3' max='36' id='maxPathLength' name='maxPathLength' />
+            </label>
+            <label>
               <span>Width</span>
               <input type='number' defaultValue='5' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
             </label>
@@ -87,21 +91,25 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBu
               <span>Height</span>
               <input type='number' defaultValue='5' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
             </label>
-            <label>
-              <span>Min. Words</span>
-              <input type='number' defaultValue='50' min='1' max='1000' id='minWords' name='minWords' />
-            </label>
-            <label>
-              <span>Max. path length</span>
-              <input type='number' defaultValue='10' min='3' max='36' id='maxPathLength' name='maxPathLength' />
-            </label>
             <div className={styles.doubleInput}>
+              <h4>Total words</h4>
               <label>
-                <span>at least</span>
-                <input type='number' defaultValue='10' min='1' max='300' id='minRequiredWordAmount' name='minRequiredWordAmount' />
+                <span>Min</span>
+                <input type='number' defaultValue='25' min='1' max='1000' id='minWords' name='minWords' />
               </label>
               <label>
-                <span>of length</span>
+                <span>Max</span>
+                <input type='number' defaultValue='1000' min='2' max='1000' id='maxWords' name='maxWords' />
+              </label>
+            </div>
+            <div className={styles.doubleInput}>
+              <h4>At least X words of length Y</h4>
+              <label>
+                <span>X</span>
+                <input type='number' defaultValue='1' min='1' max='300' id='minRequiredWordAmount' name='minRequiredWordAmount' />
+              </label>
+              <label>
+                <span>Y</span>
                 <input type='number' defaultValue='5' min='3' max='16' id='requiredWordLength' name='requiredWordLength' />
               </label>
             </div>
@@ -141,4 +149,4 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBu
   )
 }
 
-export default AdminScreen;
+export default CreateScreen;

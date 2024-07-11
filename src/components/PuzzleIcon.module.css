@@ -1,0 +1,11 @@
+.PuzzleIcon {
+  display: grid;
+  position: relative;
+  gap: 0.1rem;
+}
+
+.PuzzleIcon > div {
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+}

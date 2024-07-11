@@ -37,10 +37,10 @@ export const getFromLocalStorage = <T>(key: string): T | null => {
   }
 };
 
-export const debounce = <T extends (...args: any[]) => void>(func: T, delay: number): (...args: Parameters<T>) => void => {
-  let timeoutId: NodeJS.Timeout | null = null;
+export const debounce = <Args extends unknown[], R>(func: (...args: Args) => R, delay: number): (...args: Args) => void => {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return (...args: Parameters<T>) => {
+  return (...args: Args) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }

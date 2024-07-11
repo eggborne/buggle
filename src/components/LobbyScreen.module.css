@@ -1,5 +1,5 @@
 .lobbyScreen {
-  background-color: #3fbcff55;
+  background-color: var(--lobby-screen-bg-color);
   justify-content: flex-start;
 }
 
