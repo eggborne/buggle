@@ -1,6 +1,7 @@
 import { CurrentGameData, PlayerData } from '../App';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
+import Modal from './Modal';
 import styles from './GameBoard.module.css'
 import CurrentWordDisplay from './CurrentWordDisplay';
 
@@ -128,13 +129,14 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
   const handleWordSubmit = () => {
     if (wordValid) {
       onValidWord(currentWord);
+
     }
     setCurrentWord('');
     setTouchedCells([]);
     setWordValid(false);
     setWordStatus('invalid');
   };
-  
+
   const handleCellTouchStart = (cell: CellObj) => {
     if (!dragging) return;
     if (touchedCells.find((c) => c.id === cell.id)) return;
@@ -184,17 +186,14 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
         <button onClick={() => setWordListShowing(true)}>Word List</button>
       </div>
       {wordListShowing &&
-        <>
-          <button onClick={() => setWordListShowing(false)} className={styles.closeButton}>X</button>
-          <div className={styles.wordListModal}>
-            {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
-              <div style={{
-                opacity: Array.from(player.wordsFound).includes(word) ? '0.75' : '1',
-                textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none'
-              }} key={word}>{word}</div>
-            )}
-          </div>
-        </>
+        <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
+          {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
+            <div style={{
+              opacity: Array.from(player.wordsFound).includes(word) ? '0.75' : '1',
+              textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none'
+            }} key={word}>{word}</div>
+          )}
+        </Modal>
       }
     </>
   )

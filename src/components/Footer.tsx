@@ -10,7 +10,7 @@ function Footer({ phase, changePhase }: FooterProps) {
 
   return (
     <footer className={styles.Footer}>
-      {phase !== 'title' && <button onClick={() => changePhase('title')}>{'<'}</button>}
+      <button onClick={() => changePhase('title')} style={{ visibility: phase === 'title' ? 'hidden' : 'visible' }}>{'<'}</button>
       <Logo />
     </footer>
   )

@@ -39,4 +39,5 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: rgb(214, 22, 22);
 }

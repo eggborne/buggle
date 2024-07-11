@@ -8,8 +8,8 @@ interface OptionsScreenProps {
 
 function OptionsScreen({ options, changeOption }: OptionsScreenProps) {
 
-  const onChangeOption = (e: React.ChangeEvent) => {
-    const target = e.currentTarget as any;
+  const onChangeOption = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.currentTarget;
     changeOption(target.name, target.value);
   }
 

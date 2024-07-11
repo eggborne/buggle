@@ -9,7 +9,7 @@ import OptionsScreen from './components/OptionsScreen'
 import AdminScreen from './components/AdminScreen'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
-import { createDictionary, generateBoard } from './scripts/generate.ts';
+import { generateBoard } from './scripts/generate.ts';
 import { stringTo2DArray, randomInt } from "./scripts/util.ts";
 
 
@@ -52,7 +52,7 @@ export interface PuzzleData {
 export interface OptionsData {
   cubeRoundness: number;
   gameBackgroundColor: string;
-};
+}
 
 const defaultOptions = {
   cubeRoundness: 30,
@@ -64,6 +64,7 @@ const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 }
 function App() {
   // const [statusMessage, setStatusMessage] = useState<string>('');
   // const [statusShowing, setStatusShowing] = useState<boolean>(false);
+  const [dictionaryBuilt, setDictionaryBuilt] = useState<boolean>(false);
   const [options, setOptions] = useState<OptionsData | null>(null);
   const [phase, setPhase] = useState<string>('title');
   const [letterMatrix, setLetterMatrix] = useState<string[][]>([]);
@@ -83,8 +84,11 @@ function App() {
   });
 
   useEffect(() => {
-    createDictionary();
-    setOptions(defaultOptions)
+    window.addEventListener('popstate', function () {
+      history.pushState(null, '', document.URL);
+    });
+    history.pushState(null, '', document.URL);
+    setOptions(defaultOptions);
   }, []);
 
   useEffect(() => {
@@ -140,6 +144,7 @@ function App() {
   }
 
   const getPuzzle = async (options: CreatePuzzleOptions) => {
+    console.log('creating puzzle with options', options)
     const nextPuzzle = await generateBoard(options);
     if (nextPuzzle.wordList.size < options.minimumWordAmount) {
       getPuzzle(options);
@@ -205,7 +210,7 @@ function App() {
       {/* <StatusBar message={statusMessage} showing={statusShowing} /> */}
       {phase === 'title' && <TitleScreen changePhase={changePhase} startSinglePlayerGame={startSinglePlayerGame} />}
       {phase === 'options' && <OptionsScreen options={options} changeOption={changeOption} />}
-      {phase === 'admin' && <AdminScreen handleClickPremadePuzzle={startPuzzle} startSinglePlayerGame={startSinglePlayerGame} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />}
+      {phase === 'admin' && <AdminScreen onBuildDictionary={() => setDictionaryBuilt(true)} dictionaryBuilt={dictionaryBuilt} handleClickPremadePuzzle={startPuzzle} startSinglePlayerGame={startSinglePlayerGame} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />}
       {phase === 'select' && <LobbyScreen />}
       {phase === 'game-board' &&
         <GameScreen

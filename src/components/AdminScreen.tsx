@@ -5,14 +5,18 @@ import { ref, child, get } from "firebase/database";
 import { database } from '../scripts/firebase';
 import { stringTo2DArray } from '../scripts/util';
 import Modal from './Modal';
+import { createDictionary } from '../scripts/generate.ts';
+
 
 interface AdminScreenProps {
   handleClickPremadePuzzle: (puzzle: PuzzleData) => void;
   startSinglePlayerGame: (options: SinglePlayerOptions) => void;
   startCreatedPuzzlePreview: (options: CreatePuzzleOptions) => void;
+  onBuildDictionary: () => void;
+  dictionaryBuilt: boolean;
 }
 
-function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: AdminScreenProps) {
+function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBuildDictionary, dictionaryBuilt }: AdminScreenProps) {
 
   const [puzzleList, setPuzzleList] = useState<PuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -34,6 +38,10 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: Ad
   }
 
   useEffect(() => {
+    if (!dictionaryBuilt) {
+      createDictionary();
+      onBuildDictionary();
+    }
     const getPuzzles = async () => {
       const dbRef = ref(database);
       get(child(dbRef, `puzzles/`)).then((snapshot) => {
@@ -86,10 +94,10 @@ function AdminScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: Ad
           {puzzleList.map((puzzle: PuzzleData) => {
             const matrix = stringTo2DArray(puzzle.letters, puzzle.gridSize.width, puzzle.gridSize.height);
             return (
-              <div onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
+              <div key={`${puzzle.gridSize.width}${puzzle.gridSize.width}${puzzle.letters}`} onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
                 <div className={styles.miniPuzzle}>
-                  {matrix.map(row =>
-                    <div>{row}</div>
+                  {matrix.map((row, r) =>
+                    <div key={r}>{row}</div>
                   )}
                 </div>
                 <div>{[...puzzle.allWords].length}</div>

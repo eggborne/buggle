@@ -1,16 +1,18 @@
 .Logo {
   display: flex;
-  gap: 1%;
+  gap: calc(var(--footer-height) / 20);
 }
 
 .tile {
-  font-size: calc(var(--footer-height) * 0.25);
+  font-size: calc(var(--footer-height) * 0.3);
+  line-height: 0;
   background-color: #ffffffaa;
   border-radius: 0.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(var(--footer-height) / 2.5);
+  width: calc(var(--footer-height) / 2);
+  max-height: calc(var(--footer-height) / 2);
   aspect-ratio: 1;
   font-weight: bold;
   color: #000000aa;

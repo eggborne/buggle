@@ -3,15 +3,15 @@
   height: var(--footer-height);
   min-height: var(--footer-height);
   background-color: #a0ff8622;
-  display: flex;
+  display: grid;
+  place-items: center;
   justify-content: center;
-  align-items: center;
-  gap: 1rem;
+  align-content: center;
+  grid-template-columns: var(--footer-height) 1fr var(--footer-height);
+  grid-template-rows: 1fr;
 }
 
 .Footer > button {
-  position: absolute;
-  left: 1rem;
   background: red;
   height: calc(var(--footer-height) / 1.5);
   width: calc(var(--footer-height) / 1.5);
