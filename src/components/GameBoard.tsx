@@ -43,7 +43,6 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
       if (gameBoardRef.current?.contains(e.target as Node)) {
         e.preventDefault();
       }
-      // e.preventDefault();
       if (!dragging) return;
       const touch = e.touches[0];
       handleCellHover(touch.clientX, touch.clientY);
@@ -94,8 +93,10 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
     const boardRect = gameBoardRef.current?.getBoundingClientRect();
     if (!boardRect) return;
 
-    const cellSize = boardRect.width / letterMatrix.length; // Assuming square board
-    const hitboxMargin = touchedCells.length > 0 ? cellSize * 0.175 : 0;
+    const cellBuffer = 0.5;
+    // const cellSize = boardRect.width / letterMatrix.length; // Assuming square board
+    const cellSize = boardRect.width / currentGame.gridSize.width; // Assuming square board
+    const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 10) : 0;
 
     const row = Math.floor((clientY - boardRect.top) / cellSize);
     const col = Math.floor((clientX - boardRect.left) / cellSize);
@@ -133,20 +134,19 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
     setWordValid(false);
     setWordStatus('invalid');
   };
-
+  
   const handleCellTouchStart = (cell: CellObj) => {
     if (!dragging) return;
     if (touchedCells.find((c) => c.id === cell.id)) return;
-    if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) { return; }
+    if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
 
+    const nextCurrentWord = currentWord + cell.letter;
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
-    setCurrentWord((prevWord) => prevWord + cell.letter);
-    if (player.wordsFound.has(currentWord + cell.letter)) {
-      setWordStatus('duplicate');
-    } else if (checkWord(currentWord + cell.letter)) {
-      setWordStatus('valid');
-    }
-    setWordValid(checkWord(currentWord + cell.letter));
+    setCurrentWord(nextCurrentWord);
+    const alreadyFound = player.wordsFound.has(nextCurrentWord);
+    const wordExistsInPuzzle = currentGame.allWords.has(nextCurrentWord);
+    setWordStatus(alreadyFound ? 'duplicate' : wordExistsInPuzzle ? 'valid' : 'invalid');
+    setWordValid(!alreadyFound && wordExistsInPuzzle);
   };
 
   const handleCellTouchEnd = () => {
@@ -158,11 +158,6 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
     const colDiff = Math.abs(cell1.col - cell2.col);
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
-
-  const checkWord = (wordToCheck: string): boolean => {
-    const wordExists = currentGame.allWords.has(wordToCheck);
-    return wordExists;
-  }
 
   return (
     <>
@@ -186,7 +181,7 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
       </div>
       <div className={styles.lowerButtonArea}>
         <button onClick={uploadPuzzle}>Upload</button>
-        <button style={{ background: 'green' }} onClick={() => setWordListShowing(true)}>Word List</button>
+        <button onClick={() => setWordListShowing(true)}>Word List</button>
       </div>
       {wordListShowing &&
         <>

@@ -3,15 +3,14 @@ import './App.css'
 import Footer from './components/Footer.tsx'
 // import StatusBar from './components/StatusBar'
 import TitleScreen from './components/TitleScreen'
-import SelectScreen from './components/SelectScreen'
+import LobbyScreen from './components/LobbyScreen.tsx'
 import GameScreen from './components/GameScreen'
 import OptionsScreen from './components/OptionsScreen'
 import AdminScreen from './components/AdminScreen'
-import { generateBoard } from './scripts/generate'
-import { set, ref } from 'firebase/database';
-import { database } from './scripts/firebase.ts';
-import { createDictionary } from './scripts/generate.ts';
-import { stringTo2DArray } from "./scripts/util.ts";
+import { set, get, ref, child } from 'firebase/database';
+import { database } from './scripts/firebase';
+import { createDictionary, generateBoard } from './scripts/generate.ts';
+import { stringTo2DArray, randomInt } from "./scripts/util.ts";
 
 
 interface PuzzleDimensions {
@@ -21,13 +20,19 @@ interface PuzzleDimensions {
 
 export interface SinglePlayerOptions {
   puzzleSize: PuzzleDimensions;
+}
+
+export interface CreatePuzzleOptions {
+  puzzleSize: PuzzleDimensions;
   minimumWordAmount: number;
+  maximumPathLength: number;
 }
 
 export interface PlayerData {
   score: number;
   wordsFound: Set<string>;
 }
+
 export interface CurrentGameData {
   allWords: Set<string>;
   timeLimit: number;
@@ -44,11 +49,22 @@ export interface PuzzleData {
   gridSize: PuzzleDimensions;
 }
 
-const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11, }
+export interface OptionsData {
+  cubeRoundness: number;
+  gameBackgroundColor: string;
+};
+
+const defaultOptions = {
+  cubeRoundness: 30,
+  gameBackgroundColor: '#223300',
+};
+
+const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 }
 
 function App() {
   // const [statusMessage, setStatusMessage] = useState<string>('');
   // const [statusShowing, setStatusShowing] = useState<boolean>(false);
+  const [options, setOptions] = useState<OptionsData | null>(null);
   const [phase, setPhase] = useState<string>('title');
   const [letterMatrix, setLetterMatrix] = useState<string[][]>([]);
 
@@ -68,24 +84,32 @@ function App() {
 
   useEffect(() => {
     createDictionary();
+    setOptions(defaultOptions)
   }, []);
 
-  const handleValidWord = (word: string) => {
-    console.warn("Valid word:", word);
-    if (player.wordsFound.has(word)) {
-      console.error('already found', word)
-    } else {
-      let wordValue;
-      if (word.length >= 8) {
-        wordValue = pointValues[8];
-      } else {
-        wordValue = pointValues[word.length];
+  useEffect(() => {
+    for (const optionKey in options) {
+      const varName = '--' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+      let newValue = options[optionKey as keyof OptionsData].toString();
+      if (optionKey === 'cubeRoundness') {
+        newValue += '%';
       }
-      const nextPlayer = { ...player };
-      nextPlayer.score += wordValue;
-      nextPlayer.wordsFound.add(word);
-      setPlayer(nextPlayer);
+      document.documentElement.style.setProperty(varName, newValue)
     }
+
+  }, [options])
+
+  const handleValidWord = (word: string) => {
+    let wordValue;
+    if (word.length >= 8) {
+      wordValue = pointValues[8];
+    } else {
+      wordValue = pointValues[word.length];
+    }
+    const nextPlayer = { ...player };
+    nextPlayer.score += wordValue;
+    nextPlayer.wordsFound.add(word);
+    setPlayer(nextPlayer);
   };
 
   function uploadPuzzle() {
@@ -94,7 +118,7 @@ function App() {
       gridSize: currentGame.gridSize,
       letters: letterMatrix.map(row => row.join('')).join(''),
     }
-    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.gridSize.width}${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}` ;
+    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.gridSize.width}${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}`;
     const nextPuzzleData = {
       allWords: puzzleData.allWords,
       letters: puzzleData.letters,
@@ -106,8 +130,17 @@ function App() {
     set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
   }
 
-  const getPuzzle = async (options: SinglePlayerOptions) => {
-    const nextPuzzle = await generateBoard(options.puzzleSize.width, options.puzzleSize.height);
+  const fetchRandomPuzzle = async (size: PuzzleDimensions): Promise<PuzzleData> => {
+    const dbRef = ref(database);
+    const snapshot = await get(child(dbRef, `puzzles/`));
+    const data: PuzzleData[] = snapshot.val();
+    const randomPool = Object.values(data).filter(puzzle => puzzle.gridSize.width === size.width && puzzle.gridSize.height === size.height);
+    const randomPuzzle: PuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
+    return randomPuzzle;
+  }
+
+  const getPuzzle = async (options: CreatePuzzleOptions) => {
+    const nextPuzzle = await generateBoard(options);
     if (nextPuzzle.wordList.size < options.minimumWordAmount) {
       getPuzzle(options);
     } else {
@@ -128,9 +161,8 @@ function App() {
   const startPuzzle = (puzzle: PuzzleData) => {
     document.documentElement.style.setProperty('--puzzle-width', puzzle.gridSize.width.toString());
     document.documentElement.style.setProperty('--puzzle-height', puzzle.gridSize.height.toString());
-    console.log('clicked', puzzle);
+    console.log('starting', puzzle);
     const nextMatrix = stringTo2DArray(puzzle.letters, puzzle.gridSize.width, puzzle.gridSize.height);
-    console.warn('nextMatrix', nextMatrix);
     setLetterMatrix(nextMatrix);
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
@@ -149,17 +181,32 @@ function App() {
   }
 
   const startSinglePlayerGame = async (options: SinglePlayerOptions) => {
+    const randomPuzzle = await fetchRandomPuzzle(options.puzzleSize);
+    startPuzzle(randomPuzzle);
+  }
+
+  const startCreatedPuzzlePreview = async (options: CreatePuzzleOptions) => {
     await getPuzzle(options);
     setPhase('game-board');
   }
 
+  const changeOption = (optionKey: string, newValue: string | number) => {
+    console.log('changing', optionKey, 'to', newValue);
+    setOptions(prevOptions => {
+      if (!prevOptions) return null;
+      return {
+        ...prevOptions,
+        [optionKey]: newValue,
+      };
+    });
+  }
   return (
     <>
       {/* <StatusBar message={statusMessage} showing={statusShowing} /> */}
       {phase === 'title' && <TitleScreen changePhase={changePhase} startSinglePlayerGame={startSinglePlayerGame} />}
-      {phase === 'options' && <OptionsScreen />}
-      {phase === 'admin' && <AdminScreen handleClickPremadePuzzle={startPuzzle} />}
-      {phase === 'select' && <SelectScreen />}
+      {phase === 'options' && <OptionsScreen options={options} changeOption={changeOption} />}
+      {phase === 'admin' && <AdminScreen handleClickPremadePuzzle={startPuzzle} startSinglePlayerGame={startSinglePlayerGame} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />}
+      {phase === 'select' && <LobbyScreen />}
       {phase === 'game-board' &&
         <GameScreen
           player={player}

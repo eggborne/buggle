@@ -1,6 +1,7 @@
 .Footer {
   width: 100%;
-  height: var(--header-height);
+  height: var(--footer-height);
+  min-height: var(--footer-height);
   background-color: #a0ff8622;
   display: flex;
   justify-content: center;
@@ -12,5 +13,7 @@
   position: absolute;
   left: 1rem;
   background: red;
-  padding: 0.5rem 0.75rem;
+  height: calc(var(--footer-height) / 1.5);
+  width: calc(var(--footer-height) / 1.5);
+  padding: 0;
 }

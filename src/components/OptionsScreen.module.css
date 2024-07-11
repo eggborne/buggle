@@ -1,0 +1,34 @@
+.OptionsScreen {
+  background-color: #004d7777;
+  
+  justify-content: flex-start;
+  padding: 1rem;
+}
+
+.optionsList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem;
+}
+
+.optionsList input[type='number'] {
+  text-align: center;
+  width: 6rem;
+  font-size: 2rem;
+  padding: 1rem;
+}
+.optionsList input[type='color'] {
+  width: 6rem;
+  height: 5rem;
+}
+
+.optionsList > * {
+  width: 90%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}

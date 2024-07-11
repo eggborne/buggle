@@ -1,8 +1,9 @@
 .gameScreen {
-  background-color: #5b007777;
+  background-color: var(--game-background-color);
   justify-content: space-evenly;
   padding-top: 2rem;
   padding-bottom: 1rem;
+  z-index: 0;
 }
 
 form {

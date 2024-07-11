@@ -17,7 +17,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 // const analytics = getAnalytics(app);
 
-console.warn('Firebase initialized.')
+console.warn('Firebase initialized.');
 
 export {
   database

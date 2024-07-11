@@ -1,0 +1,60 @@
+.lobbyScreen {
+  background-color: #3fbcff55;
+  justify-content: flex-start;
+}
+
+.chatWindow {
+  width: 100vw;
+  height: 50dvh;
+  background-color: #333;
+  color: #ccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.chatMessages {
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.chatMessage {
+  padding: 0.5rem;
+  background-color: #3e3e3e;
+  border-radius: 0.5rem;
+}
+
+form {
+  width: 100%;
+}
+
+.chatInputArea {
+  width: 100%;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chatInputArea > input {
+  flex-grow: 1;
+  height: 3rem;
+  color: #ccc;
+  background-color: #000;
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+}
+
+.chatInputArea > button {
+  margin-left: 0.5rem;
+  color: #ccc;
+  background-color: #666;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.25rem;
+}

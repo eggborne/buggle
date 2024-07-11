@@ -1,5 +1,6 @@
 import { randomInt } from './util';
 import { Trie } from "./trie";
+import { CreatePuzzleOptions } from '../App';
 
 const wordListUrl = 'https://mikedonovan.dev/buggle/wordsonlylist.json';
 
@@ -13,7 +14,6 @@ const letterFrequencies: { [letter: string]: number } = {
 
 const letterListfromFrequencyMap = (frequencyMap: { [letter: string]: number }): string[] => {
   const proportionalArray = Object.entries(frequencyMap).flatMap(([letter, count]) => Array(count).fill(letter));
-  console.log('prop arr', proportionalArray)
   return Array.from({ length: proportionalArray.length }, () => proportionalArray[randomInt(0, proportionalArray.length - 1)]);
 };
 
@@ -30,7 +30,7 @@ const letterListFromCubes = (cubes: string[]): string[] => cubes.map(cube => cub
 const generateLetterMatrix = (letters: string, width: number, height: number): string[][] => {
   document.documentElement.style.setProperty('--puzzle-width', width.toString());
   document.documentElement.style.setProperty('--puzzle-height', height.toString());
-  
+
   const letterMatrix: string[][] = [];
 
   for (let i = 0; i < height; i++) {
@@ -45,7 +45,7 @@ const generateLetterMatrix = (letters: string, width: number, height: number): s
   return letterMatrix;
 };
 
-const findAllWords = (matrix: string[][]): Set<string> => {
+const findAllWords = (matrix: string[][], maximumPathLength: number): Set<string> => {
   let checked = 0;
   const startTime = Date.now();
   const rows = matrix.length;
@@ -59,19 +59,13 @@ const findAllWords = (matrix: string[][]): Set<string> => {
 
   const dfs = (x: number, y: number, currentWord: string): void => {
 
-    // const maxPathLength = (rows * cols);
-    const maxPathLength = 12;
-
-    if (currentWord.length >= maxPathLength) {
-      return;
-    }
+    if (currentWord.length >= maximumPathLength) return;
 
     visited[x][y] = true;
 
     for (const [dx, dy] of directions) {
       const newX = x + dx;
       const newY = y + dy;
-
       if (
         newX >= 0 &&
         newY >= 0 &&
@@ -84,10 +78,10 @@ const findAllWords = (matrix: string[][]): Set<string> => {
     }
 
     if (currentWord.length >= 3) {
-      checked++;
       if (wordTrie.search(currentWord)) {
         result.add(currentWord);
       }
+      checked++;
     }
 
     visited[x][y] = false;
@@ -104,8 +98,9 @@ const findAllWords = (matrix: string[][]): Set<string> => {
   return result;
 };
 
-const generateBoard = async (width: number, height: number): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
+const generateBoard = async ({ puzzleSize, maximumPathLength }: CreatePuzzleOptions): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
   let letterList;
+  const { width, height } = puzzleSize;
   if (width === height) {
     if (width === 4) {
       letterList = letterListFromCubes(cubes.regular);
@@ -122,11 +117,10 @@ const generateBoard = async (width: number, height: number): Promise<{ randomMat
     }
   } else {
     letterList = letterListfromFrequencyMap(letterFrequencies);
-    console.warn('using freq map letterFrequencies')    
+    console.warn('using freq map letterFrequencies')
   }
   const randomMatrix = generateLetterMatrix(letterList.join(''), width, height);
-  // randomMatrix[0][0] = 'Q';
-  const wordListData = findAllWords(randomMatrix);
+  const wordListData = findAllWords(randomMatrix, maximumPathLength);
   const wordList = new Set(Array.from(wordListData).sort((a, b) => a.length - b.length));
   console.log(wordList.size, 'words in puzzle', randomMatrix.flat().join(''), wordList)
   return { randomMatrix, wordList };

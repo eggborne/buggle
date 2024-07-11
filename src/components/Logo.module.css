@@ -4,13 +4,13 @@
 }
 
 .tile {
-  font-size: calc(var(--header-height) * 0.25);
+  font-size: calc(var(--footer-height) * 0.25);
   background-color: #ffffffaa;
   border-radius: 0.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(var(--header-height) / 2.5);
+  height: calc(var(--footer-height) / 2.5);
   aspect-ratio: 1;
   font-weight: bold;
   color: #000000aa;

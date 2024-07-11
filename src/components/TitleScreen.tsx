@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import styles from './TitleScreen.module.css'
 import { SinglePlayerOptions } from '../App';
 
@@ -10,6 +10,7 @@ interface TitleScreenProps {
 function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
 
   const [optionsExpanded, setOptionsExpanded] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleStartSinglePlayer = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,41 +18,52 @@ function TitleScreen({ changePhase, startSinglePlayerGame }: TitleScreenProps) {
     const options: SinglePlayerOptions = {
       puzzleSize: {
         width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10),
-        height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
+        height: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10)
       },
-      minimumWordAmount: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
     };
 
     startSinglePlayerGame(options);
   }
 
+  const handleSubmitPuzzleOptions = () => {
+    if (formRef.current) {
+      // Find the submit button inside the form
+      const submitButton = formRef.current.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+
+      // Programmatically click the submit button
+      if (submitButton) {
+        submitButton.click();
+      }
+    }
+  };
+
   return (
-    <main className={styles.titleScreen}>      
+    <main className={styles.titleScreen}>
       <div className='button-group'>
+        <form ref={formRef} onSubmit={handleStartSinglePlayer}>
+          <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
+          <div className={styles.puzzleOptions + (optionsExpanded ? `` : ` ${styles.hidden}`)}>
+            <label>
+              <span>Size</span>
+              <input type='number' defaultValue='5' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
+            </label>            
+          </div>
+        </form>
         {optionsExpanded ?
-          <form onSubmit={handleStartSinglePlayer}>
-            <button className={optionsExpanded ? styles.start : `` }>Start!</button>
-            <div className={styles.puzzleOptions + (optionsExpanded ? `` : ` ${styles.hidden}`)}>
-              <label>
-                <span>Width</span>
-                <input type='number' defaultValue='5' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
-              </label>
-              <label>
-                <span>Height</span>
-                <input type='number' defaultValue='5' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
-              </label>
-              <label>
-                <span>Min. Words</span>
-                <input type='number' defaultValue='50' min='15' max='1000' id='minWords' name='minWords' />
-              </label>
-            </div>
-          </form>
+          <>
+            <button onClick={handleSubmitPuzzleOptions} className={optionsExpanded ? styles.start : ``}>Start!</button>
+            <button onClick={() => setOptionsExpanded(false)} className={optionsExpanded ? styles.back : ``}>Back</button>
+          </>
           :
           <button onClick={() => setOptionsExpanded(true)}>Single Player</button>
         }
-        <button onClick={() => changePhase('select')}>Multiplayer</button>
-        <button onClick={() => changePhase('options')}>Options</button>
-        <button style={{ backgroundColor: 'gray' }} onClick={() => changePhase('admin')}>Admin</button>
+        {!optionsExpanded &&
+          <>
+            <button onClick={() => changePhase('select')}>Multiplayer</button>
+            <button onClick={() => changePhase('options')}>Options</button>
+            <button style={{ backgroundColor: 'gray' }} onClick={() => changePhase('admin')}>Create</button>
+          </>
+        }
       </div>
     </main>
   )
