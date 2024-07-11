@@ -17,7 +17,7 @@
 }
 
 .wordDisplayLetter {
-  animation: drop-in 100ms ease;
+  animation: drop-in 50ms ease;
 }
 
 .valid {

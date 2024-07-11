@@ -18,9 +18,9 @@ const letterListfromFrequencyMap = (frequencyMap: { [letter: string]: number }):
 };
 
 const cubes = {
-  regular: ['AAEEGN', 'ABBJOO', 'ACHOPS', 'AFFKPS', 'AOOTTW', 'CIMOTU', 'DEILRX', 'DELRVY', 'DISTTY', 'EEGHNW', 'EEINSU', 'EHRTVW', 'EIOSST', 'ELRTTY', 'HIMNU1', 'HLNNRZ'],
+  regular: ['AAEEGN', 'ABBJOO', 'ACHOPS', 'AFFKPS', 'AOOTTW', 'CIMOTU', 'DEILRX', 'DELRVY', 'DISTTY', 'EEGHNW', 'EEINSU', 'EHRTVW', 'EIOSST', 'ELRTTY', 'HIMNUQ', 'HLNNRZ'],
   big: ['AAAFRS', 'AAEEEE', 'AAFIRS', 'ADENNN', 'AEEEEM', 'AEEGMU', 'AEGMNN', 'AFIRSY', 'BBJKXZ', 'CCENST', 'EIILST', 'CEIPST', 'DDHNOT', 'DHHLOR', 'DHHNOW', 'DHLNOR', 'EIIITT', 'EILPST', 'EMOTTT', 'ENSSSU', 'ENSSSU', 'GORRVW', 'IPRSYY', 'NOOTUW', 'OOOTTU'],
-  superBig: ['AAAFRS', 'AAEEEE', 'AAEEOO', 'AAFIRS', 'ABDEIO', 'ADENNN', 'AEEEEM', 'AEEGMU', 'AEGMNN', 'AEILMN', 'AEINOU', 'AFIRSY', 'AFIRSY', 'BBJKXZ', 'CCENST', 'CDDLNN', 'CEIITT', 'CEIPST', 'CFGNUY', 'DDHNOT', 'DHHLOR', 'DHHNOW', 'DHLNOR', 'EHILRS', 'EIILST', 'EILPST', 'EIO000', 'EMTTTO', 'ENSSSU', 'GORRVW', 'HIRSTV', 'HOPRST', 'IPRSYY', 'JK1WXZ', 'NOOTUW', 'OOOTTU']
+  superBig: ['AAAFRS', 'AAEEEE', 'AAEEOO', 'AAFIRS', 'ABDEIO', 'ADENNN', 'AEEEEM', 'AEEGMU', 'AEGMNN', 'AEILMN', 'AEINOU', 'AFIRSY', 'AFIRSY', 'BBJKXZ', 'CCENST', 'CDDLNN', 'CEIITT', 'CEIPST', 'CFGNUY', 'DDHNOT', 'DHHLOR', 'DHHNOW', 'DHLNOR', 'EHILRS', 'EIILST', 'EILPST', 'EIO000', 'EMTTTO', 'ENSSSU', 'GORRVW', 'HIRSTV', 'HOPRST', 'IPRSYY', 'JKQWXZ', 'NOOTUW', 'OOOTTU']
 };
 
 const letterListFromCubes = (cubes: string[]): string[] => cubes.map(cube => cube[randomInt(0, cube.length - 1)]);
@@ -98,10 +98,10 @@ const findAllWords = (matrix: string[][], maximumPathLength: number): Set<string
   return result;
 };
 
-const generateBoard = async ({ puzzleSize, maximumPathLength }: CreatePuzzleOptions): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
+const generateBoard = async ({ puzzleSize, maximumPathLength, letterDistribution }: CreatePuzzleOptions): Promise<{ randomMatrix: string[][]; wordList: Set<string> }> => {
   let letterList;
   const { width, height } = puzzleSize;
-  if (width === height) {
+  if (width === height && letterDistribution === 'boggle') {
     if (width === 4) {
       letterList = letterListFromCubes(cubes.regular);
       console.warn('using freq map cubes.regular')

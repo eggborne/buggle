@@ -22,28 +22,20 @@ function LobbyScreen() {
     const lobbyRef = ref(database, 'lobby/');
     const listener = onValue(lobbyRef, (snapshot) => {
       const data: LobbyData = snapshot.val();
-      setChatMessages(Object.values(data.messages));
+      const messagesArray = Object.values(data.messages).slice(-10).reverse();
+      setChatMessages(messagesArray);
     });
     return () => {
       off(lobbyRef, 'value', listener);
     };
   }, []);
 
-  useEffect(() => {
-    if (chatMessagesRef.current) {
-      chatMessagesRef.current.scrollTo({
-        top: chatMessagesRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
-  }, [chatMessages]);
-  
   const handleSubmitChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const messageInput = form.querySelector('input[name="chatMessage"]') as HTMLInputElement;
     const newMessage: ChatMessageData = {
-      author: 'Your Name', // Replace with actual user name
+      author: process.env.NODE_ENV === 'development' ? 'Mike' : 'Your Name', // Replace with actual user name
       message: messageInput.value,
       date: Date.now(),
     };
@@ -62,9 +54,17 @@ function LobbyScreen() {
     <main className={styles.lobbyScreen}>
       <div className={styles.chatWindow}>
         <div ref={chatMessagesRef} className={styles.chatMessages}>
-          {chatMessages.map(({ author, message }, m) =>
-            <div className={styles.chatMessage} key={m}>{author}: {message}</div>
-          )}
+          {chatMessages.map(({ author, message, date }) => {
+            const selfIsAuthor = author === 'Mike';
+            let messageClass = styles.chatMessage;
+            if (selfIsAuthor) messageClass += ' ' + styles.self
+            console.log(messageClass)
+            return (
+              <div className={messageClass} key={date}>
+                <div className={styles.chatBody}><span className={styles.chatAuthorLabel}>{author}</span>: {message}</div>
+              <div className={styles.chatTimestamp}>{new Date(date).toLocaleString()}</div>
+            </div>)
+          })}
         </div>
         <form onSubmit={handleSubmitChatMessage}>
           <div className={styles.chatInputArea}>

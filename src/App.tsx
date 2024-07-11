@@ -10,22 +10,29 @@ import AdminScreen from './components/AdminScreen'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { generateBoard } from './scripts/generate.ts';
-import { stringTo2DArray, randomInt } from "./scripts/util.ts";
+import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage } from "./scripts/util.ts";
 
 
 interface PuzzleDimensions {
-  width: number;
   height: number;
+  width: number;
 }
 
 export interface SinglePlayerOptions {
   puzzleSize: PuzzleDimensions;
 }
 
+interface WordRequirement {
+  minRequiredWordAmount: number;
+  requiredWordLength: number;
+}
+
 export interface CreatePuzzleOptions {
-  puzzleSize: PuzzleDimensions;
-  minimumWordAmount: number;
+  letterDistribution: string;
+  lengthRequirements: WordRequirement[];
   maximumPathLength: number;
+  minimumWordAmount: number;
+  puzzleSize: PuzzleDimensions;
 }
 
 export interface PlayerData {
@@ -35,8 +42,8 @@ export interface PlayerData {
 
 export interface CurrentGameData {
   allWords: Set<string>;
-  timeLimit: number;
   gridSize: PuzzleDimensions;
+  timeLimit: number;
 }
 
 interface PointValues {
@@ -45,18 +52,20 @@ interface PointValues {
 
 export interface PuzzleData {
   allWords: Set<string>;
-  letters: string;
   gridSize: PuzzleDimensions;
+  letters: string;
 }
 
 export interface OptionsData {
   cubeRoundness: number;
   gameBackgroundColor: string;
+  swipeBuffer: number;
 }
 
 const defaultOptions = {
-  cubeRoundness: 30,
+  cubeRoundness: 25,
   gameBackgroundColor: '#223300',
+  swipeBuffer: 75,
 };
 
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 }
@@ -65,7 +74,7 @@ function App() {
   // const [statusMessage, setStatusMessage] = useState<string>('');
   // const [statusShowing, setStatusShowing] = useState<boolean>(false);
   const [dictionaryBuilt, setDictionaryBuilt] = useState<boolean>(false);
-  const [options, setOptions] = useState<OptionsData | null>(null);
+  const [options, setOptions] = useState<OptionsData>(defaultOptions);
   const [phase, setPhase] = useState<string>('title');
   const [letterMatrix, setLetterMatrix] = useState<string[][]>([]);
 
@@ -88,7 +97,8 @@ function App() {
       history.pushState(null, '', document.URL);
     });
     history.pushState(null, '', document.URL);
-    setOptions(defaultOptions);
+    const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
+    setOptions(localOptions || defaultOptions);
   }, []);
 
   useEffect(() => {
@@ -146,7 +156,16 @@ function App() {
   const getPuzzle = async (options: CreatePuzzleOptions) => {
     console.log('creating puzzle with options', options)
     const nextPuzzle = await generateBoard(options);
-    if (nextPuzzle.wordList.size < options.minimumWordAmount) {
+    const lengthRequirements = options.lengthRequirements[0];
+    const notEnoughTotalWords = nextPuzzle.wordList.size < options.minimumWordAmount;
+    const amountOfRequiredWords = Array.from(nextPuzzle.wordList).filter(word => word.length === lengthRequirements.requiredWordLength).length;
+    const notEnoughRequiredLengthWords = amountOfRequiredWords < lengthRequirements.minRequiredWordAmount;
+    if (notEnoughTotalWords) {
+      console.error('notEnoughTotalWords ------------- !')
+    } else if (notEnoughRequiredLengthWords) {
+      console.error(amountOfRequiredWords, 'is not enough', lengthRequirements.requiredWordLength, '-letter words!')
+    }
+    if (notEnoughTotalWords || notEnoughRequiredLengthWords) {
       getPuzzle(options);
     } else {
       setLetterMatrix(nextPuzzle.randomMatrix);
@@ -197,8 +216,8 @@ function App() {
 
   const changeOption = (optionKey: string, newValue: string | number) => {
     console.log('changing', optionKey, 'to', newValue);
+    saveToLocalStorage('buggle-options', { ...options, [optionKey]: newValue })
     setOptions(prevOptions => {
-      if (!prevOptions) return null;
       return {
         ...prevOptions,
         [optionKey]: newValue,
@@ -216,6 +235,7 @@ function App() {
         <GameScreen
           player={player}
           currentGame={currentGame}
+          options={options}
           letterMatrix={letterMatrix}
           handleValidWord={handleValidWord}
           uploadPuzzle={uploadPuzzle}

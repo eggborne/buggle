@@ -1,7 +1,6 @@
 .gameBoard {
   width: var(--game-board-size);
   aspect-ratio: var(--puzzle-width) / var(--puzzle-height);
-  background-color: rgb(135, 133, 133);
   border-radius: 0.25rem;
   padding: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 6));
   display: grid;

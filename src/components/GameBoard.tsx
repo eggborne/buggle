@@ -1,4 +1,4 @@
-import { CurrentGameData, PlayerData } from '../App';
+import { CurrentGameData, PlayerData, OptionsData } from '../App';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from './BoardCell';
 import Modal from './Modal';
@@ -8,6 +8,7 @@ import CurrentWordDisplay from './CurrentWordDisplay';
 interface GameBoardProps {
   currentGame: CurrentGameData;
   player: PlayerData;
+  options: OptionsData;
   letterMatrix: string[][];
   onValidWord: (word: string) => void;
   uploadPuzzle: () => void;
@@ -20,7 +21,7 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
+function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
 
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
@@ -93,11 +94,12 @@ function GameBoard({ player, currentGame, letterMatrix, onValidWord, uploadPuzzl
   const handleCellHover = (clientX: number, clientY: number) => {
     const boardRect = gameBoardRef.current?.getBoundingClientRect();
     if (!boardRect) return;
-
-    const cellBuffer = 0.5;
+    const cellBuffer = options.swipeBuffer / 50;
+    console.warn('options.swipeBuffer', options.swipeBuffer)
+    console.warn('using buff', cellBuffer)
     // const cellSize = boardRect.width / letterMatrix.length; // Assuming square board
     const cellSize = boardRect.width / currentGame.gridSize.width; // Assuming square board
-    const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 10) : 0;
+    const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 8) : 0;
 
     const row = Math.floor((clientY - boardRect.top) / cellSize);
     const col = Math.floor((clientX - boardRect.left) / cellSize);

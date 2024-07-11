@@ -23,6 +23,7 @@
 
   --game-background-color: #5b007777;
   --cube-roundness: 0%;
+  --swipe-buffer: 50;
 }
 
 * {
