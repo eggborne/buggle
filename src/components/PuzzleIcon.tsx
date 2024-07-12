@@ -5,13 +5,16 @@ interface PuzzleIconProps {
     width: number;
     height: number;
   }
+  contents: string[];
 }
 
-function PuzzleIcon({ size }: PuzzleIconProps) {
+function PuzzleIcon({ size, contents }: PuzzleIconProps) {
   const { width, height } = size;
-  const cubeArray = [];
-  for (let i = 0; i < (width * height); i++) {
-    cubeArray.push(i)
+  const cubeArray = contents;
+  if (contents.length === 0) {
+    for (let i = 0; i < (width * height); i++) {
+      cubeArray.push('')
+    }
   }
   return (
     <div
@@ -21,8 +24,8 @@ function PuzzleIcon({ size }: PuzzleIconProps) {
         gridTemplateRows: `repeat(${height}, 1rem)`,
       }}
     >
-      {cubeArray.map(cube =>
-        <div key={cube}></div>
+      {contents.map((item, i) =>
+        <div key={`${item}${i}`}>{item}</div>
       )}
     </div>
   )

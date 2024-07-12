@@ -10,7 +10,7 @@ interface OptionsScreenProps {
 function OptionsScreen({ options, changeOption }: OptionsScreenProps) {
   const debouncedChangeOption = debounce((name, value) => {
     changeOption(name as string, value as string);
-  }, 300); // Adjust delay (ms) as needed 
+  }, 300);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     debouncedChangeOption(e.target.name, e.target.value);

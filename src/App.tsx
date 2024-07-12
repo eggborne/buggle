@@ -11,10 +11,10 @@ import CreateScreen from './components/CreateScreen.tsx'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { generateBoard } from './scripts/generate.ts';
-import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage } from "./scripts/util.ts";
-
+import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, unconvertMatrix } from "./scripts/util.ts";
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
 interface PuzzleDimensions {
   height: number;
   width: number;
@@ -77,8 +77,8 @@ const defaultOptions = {
 
 const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = {
   easy: { min: 200, max: 10000 },
-  medium: { min: 100, max: 200 },
-  hard: { min: 1, max: 100 }
+  medium: { min: 150, max: 250 },
+  hard: { min: 1, max: 150 }
 };
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
@@ -88,7 +88,6 @@ function App() {
   const [dictionaryBuilt, setDictionaryBuilt] = useState<boolean>(false);
   const [options, setOptions] = useState<OptionsData>(defaultOptions);
   const [phase, setPhase] = useState<string>('title');
-  const [letterMatrix, setLetterMatrix] = useState<string[][]>([]);
 
   const [player, setPlayer] = useState<PlayerData>({
     score: 0,
@@ -146,15 +145,15 @@ function App() {
     const puzzleData = {
       allWords: Array.from(currentGame.allWords),
       gridSize: currentGame.gridSize,
-      letters: letterMatrix.map(row => row.join('')).join(''),
+      letters: unconvertMatrix(currentGame.letterMatrix).map(row => row.join('')).join(''),
     }
-    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.gridSize.width}${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}`;
+    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}`;
     const nextPuzzleData = {
       allWords: puzzleData.allWords,
       letters: puzzleData.letters,
       gridSize: puzzleData.gridSize,
     }
-    console.log('uploading', newPuzzleId)
+    console.log('uploading', nextPuzzleData)
     await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
     console.warn('puzzle uploaded!')
   }
@@ -196,7 +195,7 @@ function App() {
   }
 
   const createPuzzle = async (options: CreatePuzzleOptions): Promise<CurrentGameData> => {
-    console.log('creating puzzle with options', options)
+    console.log('creating puzzle with options', options);    
     const nextPuzzle = await generateBoard(options);
     const totalWordAmount = nextPuzzle.wordList.size;
     const lengthRequirements = options.lengthRequirements[0];
@@ -214,7 +213,7 @@ function App() {
     if (notEnoughTotalWords || tooManyTotalWords || notEnoughRequiredLengthWords) {
       return createPuzzle(options);
     } else {
-      const nextMatrix = stringTo2DArray(nextPuzzle.letters, options.puzzleSize.width, options.puzzleSize.height);
+      const nextMatrix = nextPuzzle.randomMatrix;
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
         timeLimit: 60,
@@ -232,7 +231,6 @@ function App() {
   const startPremadePuzzle = (puzzle: PuzzleData) => {
     console.log('starting', puzzle);
     const nextMatrix = stringTo2DArray(puzzle.letters, puzzle.gridSize.width, puzzle.gridSize.height);
-    setLetterMatrix(nextMatrix);
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
       timeLimit: 60,
@@ -252,14 +250,12 @@ function App() {
 
   const startSinglePlayerGame = async (options: SinglePlayerOptions) => {
     const randomPuzzle = await fetchRandomPuzzle(options);
-    setLetterMatrix(randomPuzzle.letterMatrix);
     setCurrentGame(randomPuzzle);
     setPhase('game-board');
   }
 
   const startCreatedPuzzlePreview = async (options: CreatePuzzleOptions) => {
     const newPuzzlePreview = await createPuzzle(options);
-    setLetterMatrix(newPuzzlePreview.letterMatrix);
     setCurrentGame(newPuzzlePreview)
     setPhase('game-board');
   }
@@ -298,7 +294,7 @@ function App() {
           player={player}
           currentGame={currentGame}
           options={options}
-          letterMatrix={letterMatrix}
+          letterMatrix={currentGame.letterMatrix}
           handleValidWord={handleValidWord}
           uploadPuzzle={uploadPuzzle}
         />}

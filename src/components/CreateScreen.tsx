@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { PuzzleData, CreatePuzzleOptions } from '../App.tsx';
 import { ref, child, get } from "firebase/database";
 import { database } from '../scripts/firebase.ts';
-import { stringTo2DArray } from '../scripts/util.ts';
+import PuzzleIcon from './PuzzleIcon.tsx';
 import Modal from './Modal.tsx';
 import { createDictionary } from '../scripts/generate.ts';
 
@@ -75,31 +75,35 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
             <label>
               <span>Letter distribution</span>
               <select id='letterDistribution' name='letterDistribution'>
-                <option value='boggle'>Boggle</option>
-                <option value='standard'>Standard</option>
+                <option value='boggle'>Boggle®</option>
+                <option value='scrabble'>Scrabble®</option>
+                <option value='wordsWithFriends'>Words With Friends®</option>
+                <option value='standardEnglish'>Standard English</option>
+                <option value='modifiedEnglish'>Modified English</option>
+                <option value='random'>True Random</option>
               </select>
             </label>
             <label>
               <span>Max. path length</span>
-              <input type='number' defaultValue='10' min='3' max='36' id='maxPathLength' name='maxPathLength' />
+              <input type='number' defaultValue='10' min='3' max='256' id='maxPathLength' name='maxPathLength' />
             </label>
             <label>
               <span>Width</span>
-              <input type='number' defaultValue='5' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
+              <input type='number' defaultValue='6' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
             </label>
             <label>
               <span>Height</span>
-              <input type='number' defaultValue='5' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
+              <input type='number' defaultValue='6' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
             </label>
             <div className={styles.doubleInput}>
               <h4>Total words</h4>
               <label>
                 <span>Min</span>
-                <input type='number' defaultValue='25' min='1' max='1000' id='minWords' name='minWords' />
+                <input type='number' defaultValue='150' min='1' max='1000' id='minWords' name='minWords' />
               </label>
               <label>
                 <span>Max</span>
-                <input type='number' defaultValue='1000' min='2' max='1000' id='maxWords' name='maxWords' />
+                <input type='number' defaultValue='250' min='2' max='2000' id='maxWords' name='maxWords' />
               </label>
             </div>
             <div className={styles.doubleInput}>
@@ -110,7 +114,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
               </label>
               <label>
                 <span>Y</span>
-                <input type='number' defaultValue='5' min='3' max='16' id='requiredWordLength' name='requiredWordLength' />
+                <input type='number' defaultValue='3' min='3' max='16' id='requiredWordLength' name='requiredWordLength' />
               </label>
             </div>
           </div>
@@ -124,21 +128,10 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
         <h2>Saved puzzles</h2>
         <div className={styles.puzzleList}>
           {puzzleList.sort((a, b) => (a.gridSize.width * a.gridSize.height) - (b.gridSize.width * b.gridSize.height)).map((puzzle: PuzzleData) => {
-            const matrix = stringTo2DArray(puzzle.letters, puzzle.gridSize.width, puzzle.gridSize.height);
             return (
               <div key={`${puzzle.gridSize.width}${puzzle.gridSize.width}${puzzle.letters}`} onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
                 <div style={{ fontWeight: 'bold' }}>{puzzle.gridSize.width} x {puzzle.gridSize.height}</div>
-                <div
-                  className={styles.miniPuzzle}
-                  style={{
-                    'gridTemplateColumns': `repeat(${puzzle.gridSize.width}, 1fr)`,
-                    'gridTemplateRows': `repeat(${puzzle.gridSize.height}, 1fr)`
-                  }}
-                >
-                  {matrix.map((row, r) =>
-                    row.map((letter, l) => <span key={r + l}>{letter}</span>)
-                  )}
-                </div>
+                <PuzzleIcon size={{ ...puzzle.gridSize }} contents={puzzle.letters.split('')} />
                 <div style={{ fontWeight: 'bold' }}>{[...puzzle.allWords].length}</div>
               </div>
             )

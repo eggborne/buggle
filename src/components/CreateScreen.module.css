@@ -86,10 +86,10 @@ h1 {
 .puzzleList {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   justify-content: space-between;
-  gap: 1rem;
   transition: all 300ms ease;
+  gap: 0.5rem;
 }
 
 .puzzleListing {
@@ -98,15 +98,6 @@ h1 {
   align-items: center;
   justify-content: space-between;
   color: #111;
-  background-color: #dfdada;
-  gap: 0.25rem;
-  padding: 0.5rem;
+  background-color: #a9a78f;
   border-radius: 0.25rem;
-}
-
-.miniPuzzle {
-  display: grid;
-  line-height: 1.05;
-  letter-spacing: 0.11rem;
-  font-family: monospace;
 }

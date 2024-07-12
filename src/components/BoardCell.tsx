@@ -7,12 +7,11 @@ interface BoardCellProps {
 }
 
 function BoardCell({ letter, touched, wordStatus }: BoardCellProps) {
-  const cellContents = letter == 'Q' ? 'Qu' : letter.toUpperCase();
   return (
     <>
       <div className={'board-cell' + (touched ? ' touched' : '') + ` ${wordStatus}`}>
         <p>
-          {cellContents}
+          {letter}
         </p>
       </div>
       

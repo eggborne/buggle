@@ -4,13 +4,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* font-size: calc((var(--game-board-size) * 0.5) / var(--puzzle-width));
-  min-width: calc((var(--game-board-size) * 0.5) / var(--puzzle-width)); */
   font-weight: bold;
   color: #222;
   border-radius: var(--cube-roundness);
   border: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 2.325)) solid #00000066;
-  /* scale: 0.5; */
 }
 
 .board-cell::after {

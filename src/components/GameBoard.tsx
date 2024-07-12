@@ -192,7 +192,7 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
         )}
       </div>
       <div className={styles.lowerButtonArea}>
-        <button onClick={uploadPuzzle}>Upload</button>
+        {process.env.NODE_ENV === 'development' && <button onClick={uploadPuzzle}>Upload</button>}
         <button onClick={() => setWordListShowing(true)}>Word List</button>
       </div>
       {wordListShowing &&
@@ -200,7 +200,8 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
           {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               opacity: Array.from(player.wordsFound).includes(word) ? '0.75' : '1',
-              textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none'
+              textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none',
+              textTransform: 'uppercase',
             }} key={word}>{word}</div>
           )}
         </Modal>

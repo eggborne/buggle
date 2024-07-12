@@ -39,15 +39,38 @@ export const getFromLocalStorage = <T>(key: string): T | null => {
 
 export const debounce = <Args extends unknown[], R>(func: (...args: Args) => R, delay: number): (...args: Args) => void => {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
   return (...args: Args) => {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
-
     timeoutId = setTimeout(() => {
       func(...args);
       timeoutId = null;
     }, delay);
   };
+};
+
+
+const BOGGLE_LETTER_KEY: Record<string, string> = { '0': '', '1': 'In', '2': 'Th', '3': 'Er', '4': 'He', '5': 'An', 'Q': 'Qu' }
+
+export const convertMatrix = (matrix: string[][], key: Record<string, string> = BOGGLE_LETTER_KEY): string[][] => {
+  const convertedMatrix = matrix.map(row =>
+    row.map(cell => {
+      return key.hasOwnProperty(cell) ? key[cell] : cell;
+    })
+  );
+  return convertedMatrix;
+}
+
+export const unconvertMatrix = (matrix: string[][], key: Record<string, string> = BOGGLE_LETTER_KEY): string[][] => {
+  const reversedKey: Record<string, string> = Object.fromEntries(
+    Object.entries(key).map(([k, v]) => [v, k])
+  );
+
+  const unconvertedMatrix = matrix.map(row =>
+    row.map(cell => {
+      return reversedKey.hasOwnProperty(cell) ? reversedKey[cell] : cell;
+    })
+  );
+  return unconvertedMatrix;
 };
