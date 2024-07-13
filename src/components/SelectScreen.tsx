@@ -14,7 +14,7 @@ function SelectScreen({ startSinglePlayerGame }: SelectScreenProps) {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
     const options: SinglePlayerOptions = {
-      puzzleSize: {
+      dimensions: {
         width: sizeSelected,
         height: sizeSelected
       },

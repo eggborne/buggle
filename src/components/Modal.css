@@ -26,9 +26,9 @@ h2 {
 }
 
 .modal-close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
   font-family: monospace;
   font-size: 2.5rem;
   cursor: pointer;

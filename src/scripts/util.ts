@@ -50,13 +50,12 @@ export const debounce = <Args extends unknown[], R>(func: (...args: Args) => R, 
   };
 };
 
-
 const BOGGLE_LETTER_KEY: Record<string, string> = { '0': '', '1': 'In', '2': 'Th', '3': 'Er', '4': 'He', '5': 'An', 'Q': 'Qu' }
 
 export const convertMatrix = (matrix: string[][], key: Record<string, string> = BOGGLE_LETTER_KEY): string[][] => {
   const convertedMatrix = matrix.map(row =>
     row.map(cell => {
-      return key.hasOwnProperty(cell) ? key[cell] : cell;
+      return Object.prototype.hasOwnProperty.call(key, cell) ? key[cell] : cell;
     })
   );
   return convertedMatrix;
@@ -69,7 +68,7 @@ export const unconvertMatrix = (matrix: string[][], key: Record<string, string> 
 
   const unconvertedMatrix = matrix.map(row =>
     row.map(cell => {
-      return reversedKey.hasOwnProperty(cell) ? reversedKey[cell] : cell;
+      return Object.prototype.hasOwnProperty.call(reversedKey, cell) ? reversedKey[cell] : cell;
     })
   );
   return unconvertedMatrix;

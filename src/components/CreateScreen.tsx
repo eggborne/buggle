@@ -1,21 +1,18 @@
 import styles from './CreateScreen.module.css'
 import { useState, useRef, useEffect } from 'react';
-import { PuzzleData, CreatePuzzleOptions } from '../App.tsx';
+import { PuzzleData, BoardRequestData } from '../App.tsx';
 import { ref, child, get } from "firebase/database";
 import { database } from '../scripts/firebase.ts';
 import PuzzleIcon from './PuzzleIcon.tsx';
 import Modal from './Modal.tsx';
-import { createDictionary } from '../scripts/generate.ts';
 
 
 interface CreateScreenProps {
   handleClickPremadePuzzle: (puzzle: PuzzleData) => void;
-  startCreatedPuzzlePreview: (options: CreatePuzzleOptions) => void;
-  onBuildDictionary: () => void;
-  dictionaryBuilt: boolean;
+  startCreatedPuzzlePreview: (options: BoardRequestData) => void;
 }
 
-function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onBuildDictionary, dictionaryBuilt }: CreateScreenProps) {
+function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: CreateScreenProps) {
 
   const [puzzleList, setPuzzleList] = useState<PuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -24,14 +21,13 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
   const handleStartCreatedPuzzle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
-    const options: CreatePuzzleOptions = {
-      puzzleSize: {
+    const options: any = {
+      dimensions: {
         width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10),
         height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
       },
       minimumWordAmount: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
       maximumWordAmount: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10),
-      maximumPathLength: parseInt((target.elements.namedItem('maxPathLength') as HTMLInputElement).value, 10),
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
       lengthRequirements: [{
         minRequiredWordAmount: parseInt((target.elements.namedItem('minRequiredWordAmount') as HTMLInputElement).value),
@@ -42,13 +38,6 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
   }
 
   useEffect(() => {
-    const checkForDictionary = async () => {
-      if (!dictionaryBuilt) {
-        await createDictionary();
-        onBuildDictionary();
-      }
-    }
-    checkForDictionary();
     const getPuzzles = async () => {
       const dbRef = ref(database);
       get(child(dbRef, `puzzles/`)).then((snapshot) => {
@@ -84,10 +73,6 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
               </select>
             </label>
             <label>
-              <span>Max. path length</span>
-              <input type='number' defaultValue='10' min='3' max='256' id='maxPathLength' name='maxPathLength' />
-            </label>
-            <label>
               <span>Width</span>
               <input type='number' defaultValue='6' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
             </label>
@@ -99,11 +84,11 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
               <h4>Total words</h4>
               <label>
                 <span>Min</span>
-                <input type='number' defaultValue='150' min='1' max='1000' id='minWords' name='minWords' />
+                <input type='number' defaultValue='1' min='1' max='1000' id='minWords' name='minWords' />
               </label>
               <label>
                 <span>Max</span>
-                <input type='number' defaultValue='250' min='2' max='2000' id='maxWords' name='maxWords' />
+                <input type='number' defaultValue='2000' min='2' max='2000' id='maxWords' name='maxWords' />
               </label>
             </div>
             <div className={styles.doubleInput}>
@@ -118,7 +103,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
               </label>
             </div>
           </div>
-          <button disabled={!dictionaryBuilt} type='submit' className={styles.start}>{dictionaryBuilt ? 'Preview puzzle (takes a minute)' : 'Building dictionary...'}</button>
+          <button type='submit' className={styles.start}>Generate puzzle</button>
         </form>
       </div >
       <div className={styles.puzzleListArea}>
@@ -127,11 +112,11 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview, onB
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <h2>Saved puzzles</h2>
         <div className={styles.puzzleList}>
-          {puzzleList.sort((a, b) => (a.gridSize.width * a.gridSize.height) - (b.gridSize.width * b.gridSize.height)).map((puzzle: PuzzleData) => {
+          {puzzleList.sort((a, b) => (a.dimensions.width * a.dimensions.height) - (b.dimensions.width * b.dimensions.height)).map((puzzle: PuzzleData) => {
             return (
-              <div key={`${puzzle.gridSize.width}${puzzle.gridSize.width}${puzzle.letters}`} onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
-                <div style={{ fontWeight: 'bold' }}>{puzzle.gridSize.width} x {puzzle.gridSize.height}</div>
-                <PuzzleIcon size={{ ...puzzle.gridSize }} contents={puzzle.letters.split('')} />
+              <div key={`${puzzle.dimensions.width}${puzzle.dimensions.width}${puzzle.letters}`} onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
+                <div style={{ fontWeight: 'bold' }}>{puzzle.dimensions.width} x {puzzle.dimensions.height}</div>
+                <PuzzleIcon size={{ ...puzzle.dimensions }} contents={puzzle.letters.split('')} />
                 <div style={{ fontWeight: 'bold' }}>{[...puzzle.allWords].length}</div>
               </div>
             )

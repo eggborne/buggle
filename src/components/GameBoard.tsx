@@ -85,7 +85,7 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('mousedown', handleMouseUp); // Cleanup mousedown
+      window.removeEventListener('mousedown', handleMouseUp);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
@@ -95,7 +95,7 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
   const handleCellHover = (clientX: number, clientY: number) => {
     if (!boardRect) return;
     const cellBuffer = options.swipeBuffer / 50;
-    const cellSize = boardRect.width / currentGame.gridSize.width;
+    const cellSize = boardRect.width / currentGame.dimensions.width;
     const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 8) : 0;
 
     const row = Math.floor((clientY - boardRect.top) / cellSize);
@@ -140,7 +140,7 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
     if (touchedCells.find((c) => c.id === cell.id)) return;
     if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
 
-    const nextCurrentWord = currentWord + cell.letter;
+    const nextCurrentWord = (currentWord + cell.letter).toUpperCase();
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
     setCurrentWord(nextCurrentWord);
     const alreadyFound = player.wordsFound.has(nextCurrentWord);
@@ -167,16 +167,13 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
         id='game-board'
         className={styles.gameBoard}
         style={{
-          gridTemplateColumns: `repeat(${currentGame.gridSize.width}, 1fr)`,
-          gridTemplateRows: `repeat(${currentGame.gridSize.height}, 1fr)`,
-          fontSize: `calc((var(--game-board-size) * 0.5) / ${currentGame.gridSize.width})`,
-          minWidth: `calc((var(--game-board-size) * 0.5) / ${currentGame.gridSize.width})`,
-          padding: `calc(1rem / (${currentGame.gridSize.height} * ${currentGame.gridSize.height}) / 6)`,
-          borderRadius: `calc(var(--cube-roundness) / ${currentGame.gridSize.height})`,
-          gap: `calc(var(--cube-gap) / ${currentGame.gridSize.width} * ${currentGame.gridSize.height} / 2)`,
-          // gap: 'calc(var(--game-board-size) / 100)',
-          // width: 'var(--game-board-size)',
-
+          gridTemplateColumns: `repeat(${currentGame.dimensions.width}, 1fr)`,
+          gridTemplateRows: `repeat(${currentGame.dimensions.height}, 1fr)`,
+          fontSize: `calc((var(--game-board-size) * 0.5) / ${currentGame.dimensions.width})`,
+          minWidth: `calc((var(--game-board-size) * 0.5) / ${currentGame.dimensions.width})`,
+          padding: `calc(1rem / (${currentGame.dimensions.height} * ${currentGame.dimensions.height}) / 6)`,
+          borderRadius: `calc(var(--cube-roundness) / ${currentGame.dimensions.height})`,
+          gap: `calc(var(--cube-gap) / ${currentGame.dimensions.width} * ${currentGame.dimensions.height} / 2)`,
         }}
       >
         {letterMatrix.map((row, r) =>

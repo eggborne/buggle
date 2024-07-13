@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Footer from './components/Footer.tsx'
-// import StatusBar from './components/StatusBar'
 import TitleScreen from './components/TitleScreen'
 import LobbyScreen from './components/LobbyScreen.tsx'
 import SelectScreen from './components/SelectScreen.tsx'
@@ -10,8 +9,7 @@ import OptionsScreen from './components/OptionsScreen'
 import CreateScreen from './components/CreateScreen.tsx'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
-import { generateBoard } from './scripts/generate.ts';
-import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, unconvertMatrix } from "./scripts/util.ts";
+import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, convertMatrix, unconvertMatrix } from "./scripts/util.ts";
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -22,7 +20,7 @@ interface PuzzleDimensions {
 
 export interface SinglePlayerOptions {
   difficulty: Difficulty;
-  puzzleSize: PuzzleDimensions;
+  dimensions: PuzzleDimensions;
 }
 
 interface WordRequirement {
@@ -33,10 +31,24 @@ interface WordRequirement {
 export interface CreatePuzzleOptions {
   letterDistribution: string;
   lengthRequirements: WordRequirement[];
-  maximumPathLength: number;
   minimumWordAmount: number;
   maximumWordAmount: number;
-  puzzleSize: PuzzleDimensions;
+  dimensions: PuzzleDimensions;
+}
+
+export interface BoardRequestData {
+  dimensions: PuzzleDimensions;
+  letterDistribution: string;
+  totalWordLimits: {
+    min: number,
+    max: number
+  },
+  wordLengthLimits: Record<string, { min: number, max: number }>;
+}
+
+interface GeneratedBoardData {
+  matrix: string[][];
+  wordList: string[];
 }
 
 export interface PlayerData {
@@ -46,7 +58,7 @@ export interface PlayerData {
 
 export interface CurrentGameData {
   allWords: Set<string>;
-  gridSize: PuzzleDimensions;
+  dimensions: PuzzleDimensions;
   letterMatrix: string[][];
   timeLimit: number;
 }
@@ -57,7 +69,7 @@ interface PointValues {
 
 export interface PuzzleData {
   allWords: Set<string>;
-  gridSize: PuzzleDimensions;
+  dimensions: PuzzleDimensions;
   letters: string;
 }
 
@@ -83,9 +95,6 @@ const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = 
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
-  // const [statusMessage, setStatusMessage] = useState<string>('');
-  // const [statusShowing, setStatusShowing] = useState<boolean>(false);
-  const [dictionaryBuilt, setDictionaryBuilt] = useState<boolean>(false);
   const [options, setOptions] = useState<OptionsData>(defaultOptions);
   const [phase, setPhase] = useState<string>('title');
 
@@ -96,7 +105,7 @@ function App() {
 
   const [currentGame, setCurrentGame] = useState<CurrentGameData>({
     allWords: new Set(),
-    gridSize: {
+    dimensions: {
       width: 5,
       height: 5,
     },
@@ -121,7 +130,7 @@ function App() {
         newValue += '%';
       }
       if (optionKey === 'cubeGap') {
-        newValue = (parseInt(newValue)/10) + 'rem';
+        newValue = (parseInt(newValue) / 10) + 'rem';
       }
       document.documentElement.style.setProperty(varName, newValue)
     }
@@ -144,100 +153,123 @@ function App() {
   async function uploadPuzzle() {
     const puzzleData = {
       allWords: Array.from(currentGame.allWords),
-      gridSize: currentGame.gridSize,
+      dimensions: currentGame.dimensions,
       letters: unconvertMatrix(currentGame.letterMatrix).map(row => row.join('')).join(''),
     }
-    const newPuzzleId = puzzleData.gridSize.width === puzzleData.gridSize.height ? `${puzzleData.letters}` : `${puzzleData.gridSize.width}${puzzleData.gridSize.height}${puzzleData.letters}`;
+    const newPuzzleId = puzzleData.dimensions.width === puzzleData.dimensions.height ? `${puzzleData.letters}` : `${puzzleData.dimensions.width}${puzzleData.dimensions.height}${puzzleData.letters}`;
     const nextPuzzleData = {
       allWords: puzzleData.allWords,
       letters: puzzleData.letters,
-      gridSize: puzzleData.gridSize,
+      dimensions: puzzleData.dimensions,
     }
     console.log('uploading', nextPuzzleData)
     await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
     console.warn('puzzle uploaded!')
   }
-  const fetchRandomPuzzle = async ({ puzzleSize, difficulty }: SinglePlayerOptions): Promise<CurrentGameData> => {
+  const fetchRandomPuzzle = async ({ dimensions, difficulty }: SinglePlayerOptions): Promise<CurrentGameData> => {
     const dbRef = ref(database);
     const snapshot = await get(child(dbRef, `puzzles/`));
     const data: PuzzleData[] = snapshot.val();
     const wordLimits = difficultyWordAmounts[difficulty];
     const randomPool = Object.values(data).filter(puzzle => {
-      const sizeMatches = puzzle.gridSize.width === puzzleSize.width && puzzle.gridSize.height === puzzleSize.height;
+      const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
       const notTooFewWords = Array.from(puzzle.allWords).length >= wordLimits.min;
       const notTooManyWords = Array.from(puzzle.allWords).length <= wordLimits.max;
-      if (!sizeMatches) {
-        console.error('wrong size!');
-      }
-      if (!notTooFewWords) {
-        console.error('too few words!');
-      }
-      if (!notTooManyWords) {
-        console.error('too many words!');
-      }
       return (sizeMatches && notTooFewWords && notTooManyWords);
     });
     if (randomPool.length === 0) {
       console.error('NO PUZZLES FOUND!');
     }
     const randomPuzzle: PuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
-    const nextMatrix = stringTo2DArray(randomPuzzle.letters, puzzleSize.width, puzzleSize.height);
+    const nextMatrix = stringTo2DArray(randomPuzzle.letters, dimensions.width, dimensions.height);
     const nextGameData: CurrentGameData = {
       allWords: new Set(randomPuzzle.allWords),
       timeLimit: 60,
-      letterMatrix: nextMatrix,
-      gridSize: {
-        width: puzzleSize.width,
-        height: puzzleSize.height,
+      letterMatrix: convertMatrix(nextMatrix),
+      dimensions: {
+        width: dimensions.width,
+        height: dimensions.height,
       },
     }
     return nextGameData;
   }
 
-  const createPuzzle = async (options: CreatePuzzleOptions): Promise<CurrentGameData> => {
-    console.log('creating puzzle with options', options);    
-    const nextPuzzle = await generateBoard(options);
-    const totalWordAmount = nextPuzzle.wordList.size;
-    const lengthRequirements = options.lengthRequirements[0];
-    const notEnoughTotalWords = totalWordAmount < options.minimumWordAmount;
-    const tooManyTotalWords = totalWordAmount > options.maximumWordAmount;
-    const amountOfRequiredWords = Array.from(nextPuzzle.wordList).filter(word => word.length === lengthRequirements.requiredWordLength).length;
-    const notEnoughRequiredLengthWords = amountOfRequiredWords < lengthRequirements.minRequiredWordAmount;
-    if (notEnoughTotalWords) {
-      console.error(totalWordAmount, 'is notEnoughTotalWords!')
-    } else if (tooManyTotalWords) {
-      console.error(totalWordAmount, 'is tooManyTotalWords!')
-    } else if (notEnoughRequiredLengthWords) {
-      console.error(amountOfRequiredWords, 'is not enough', lengthRequirements.requiredWordLength, '-letter words!')
+  const generateUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000/language-api/generate/' : 'https://mikedonovan.dev/language-api/generate/'
+
+  const fetchSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
+    console.warn('fetching puzzle from API...');
+    const fetchStart = Date.now();
+    try {
+      const response = await fetch(generateUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(options),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: GeneratedBoardData = await response.json();
+      console.warn('got puzzle from API in', (Date.now() - fetchStart), 'ms');
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching puzzle:', error);
+      return undefined; // Explicitly return undefined in case of an error
     }
-    if (notEnoughTotalWords || tooManyTotalWords || notEnoughRequiredLengthWords) {
-      return createPuzzle(options);
-    } else {
-      const nextMatrix = nextPuzzle.randomMatrix;
+  };
+
+  const createPuzzle = async (options: BoardRequestData): Promise<CurrentGameData | undefined> => {
+    console.log('creating puzzle with options', options);
+    const nextPuzzle = await fetchSolvedPuzzle(options);
+    console.log('got', nextPuzzle)
+    // const totalWordAmount = Array.from(nextPuzzle.wordList).length;
+    // const lengthRequirements = options.lengthRequirements[0];
+    // const notEnoughTotalWords = totalWordAmount < options.minimumWordAmount;
+    // const tooManyTotalWords = totalWordAmount > options.maximumWordAmount;
+    // const amountOfRequiredWords = Array.from(nextPuzzle.wordList).filter(word => word.length === lengthRequirements.requiredWordLength).length;
+    // const notEnoughRequiredLengthWords = amountOfRequiredWords < lengthRequirements.minRequiredWordAmount;
+    // if (notEnoughTotalWords) {
+    //   console.error(totalWordAmount, 'is notEnoughTotalWords!')
+    // } else if (tooManyTotalWords) {
+    //   console.error(totalWordAmount, 'is tooManyTotalWords!')
+    // } else if (notEnoughRequiredLengthWords) {
+    //   console.error(amountOfRequiredWords, 'is not enough', lengthRequirements.requiredWordLength, '-letter words!')
+    // }
+    // if (notEnoughTotalWords || tooManyTotalWords || notEnoughRequiredLengthWords) {
+    //   return createPuzzle(options);
+    // } else {
+    // const nextMatrix = nextPuzzle.randomMatrix;
+    if (nextPuzzle) {
+      const nextMatrix = nextPuzzle.matrix;
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
         timeLimit: 60,
         letterMatrix: nextMatrix,
-        gridSize: {
-          width: options.puzzleSize.width,
-          height: options.puzzleSize.height,
+        dimensions: {
+          width: options.dimensions.width,
+          height: options.dimensions.height,
         },
       }
       console.log('created', nextGameData)
       return nextGameData;
+    } else {
+      return undefined;
     }
+    // }
   }
 
   const startPremadePuzzle = (puzzle: PuzzleData) => {
     console.log('starting', puzzle);
-    const nextMatrix = stringTo2DArray(puzzle.letters, puzzle.gridSize.width, puzzle.gridSize.height);
+    const nextMatrix = convertMatrix(stringTo2DArray(puzzle.letters, puzzle.dimensions.width, puzzle.dimensions.height));
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
       timeLimit: 60,
       letterMatrix: nextMatrix,
-      gridSize: {
-        width: puzzle.gridSize.width,
-        height: puzzle.gridSize.height,
+      dimensions: {
+        width: puzzle.dimensions.width,
+        height: puzzle.dimensions.height,
       },
     }
     setCurrentGame(nextGameData)
@@ -254,10 +286,12 @@ function App() {
     setPhase('game-board');
   }
 
-  const startCreatedPuzzlePreview = async (options: CreatePuzzleOptions) => {
+  const startCreatedPuzzlePreview = async (options: BoardRequestData) => {
     const newPuzzlePreview = await createPuzzle(options);
-    setCurrentGame(newPuzzlePreview)
-    setPhase('game-board');
+    if (newPuzzlePreview) {
+      setCurrentGame(newPuzzlePreview)
+      setPhase('game-board');
+    }
   }
 
   const changeOption = (optionKey: string, newValue: string | number) => {
@@ -272,7 +306,6 @@ function App() {
   }
   return (
     <>
-      {/* <StatusBar message={statusMessage} showing={statusShowing} /> */}
       {phase === 'title' && <TitleScreen
         changePhase={changePhase}
       />}
@@ -281,8 +314,6 @@ function App() {
         changeOption={changeOption}
       />}
       {phase === 'create' && <CreateScreen
-        onBuildDictionary={() => setDictionaryBuilt(true)}
-        dictionaryBuilt={dictionaryBuilt}
         handleClickPremadePuzzle={startPremadePuzzle}
         startCreatedPuzzlePreview={startCreatedPuzzlePreview}
       />}
