@@ -23,19 +23,6 @@ export interface SinglePlayerOptions {
   dimensions: PuzzleDimensions;
 }
 
-interface WordRequirement {
-  minRequiredWordAmount: number;
-  requiredWordLength: number;
-}
-
-export interface CreatePuzzleOptions {
-  letterDistribution: string;
-  lengthRequirements: WordRequirement[];
-  minimumWordAmount: number;
-  maximumWordAmount: number;
-  dimensions: PuzzleDimensions;
-}
-
 export interface BoardRequestData {
   dimensions: PuzzleDimensions;
   letterDistribution: string;
@@ -44,6 +31,10 @@ export interface BoardRequestData {
     max: number
   },
   wordLengthLimits: Record<string, { min: number, max: number }>;
+  averageWordLengthFilter?: {
+    comparison: string,
+    value: number,
+  }
 }
 
 interface GeneratedBoardData {
@@ -194,7 +185,9 @@ function App() {
     return nextGameData;
   }
 
-  const generateUrl = process.env.NODE_ENV === 'development' ? 'http://localhost:3000/language-api/generate/' : 'https://mikedonovan.dev/language-api/generate/'
+  const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generate/` : 'https://mikedonovan.dev/language-api/generate/'
+
+  console.log('genURL', generateUrl)
 
   const fetchSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
     console.warn('fetching puzzle from API...');

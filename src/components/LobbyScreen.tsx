@@ -58,7 +58,6 @@ function LobbyScreen() {
             const selfIsAuthor = author === 'Mike';
             let messageClass = styles.chatMessage;
             if (selfIsAuthor) messageClass += ' ' + styles.self
-            console.log(messageClass)
             return (
               <div className={messageClass} key={date}>
                 <div className={styles.chatBody}><span className={styles.chatAuthorLabel}>{author}</span>: {message}</div>

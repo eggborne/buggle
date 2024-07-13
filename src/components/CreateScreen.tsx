@@ -26,14 +26,18 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
         width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10),
         height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
       },
-      minimumWordAmount: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
-      maximumWordAmount: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10),
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
-      lengthRequirements: [{
-        minRequiredWordAmount: parseInt((target.elements.namedItem('minRequiredWordAmount') as HTMLInputElement).value),
-        requiredWordLength: parseInt((target.elements.namedItem('requiredWordLength') as HTMLInputElement).value)
-      }],
+      totalWordLimits: {
+        min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
+        max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10),
+      },
+      averageWordLengthFilter: {
+        comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
+        value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
+      },
+      wordLengthLimits: {},
     };
+    console.warn('sending puzzle', options)
     startCreatedPuzzlePreview(options);
   }
 
@@ -72,14 +76,16 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                 <option value='random'>True Random</option>
               </select>
             </label>
-            <label>
-              <span>Width</span>
-              <input type='number' defaultValue='6' min='3' max='16' id='puzzleWidth' name='puzzleWidth' />
-            </label>
-            <label>
-              <span>Height</span>
-              <input type='number' defaultValue='6' min='3' max='16' id='puzzleHeight' name='puzzleHeight' />
-            </label>
+            <div className={styles.doubleInput}>
+              <label>
+                <span>Width</span>
+                <input type='number' defaultValue='5' min='3' max='64' id='puzzleWidth' name='puzzleWidth' />
+              </label>
+              <label>
+                <span>Height</span>
+                <input type='number' defaultValue='5' min='3' max='64' id='puzzleHeight' name='puzzleHeight' />
+              </label>
+            </div>
             <div className={styles.doubleInput}>
               <h4>Total words</h4>
               <label>
@@ -88,10 +94,22 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
               </label>
               <label>
                 <span>Max</span>
-                <input type='number' defaultValue='2000' min='2' max='2000' id='maxWords' name='maxWords' />
+                <input type='number' defaultValue='9999' min='2' max='9999' id='maxWords' name='maxWords' />
               </label>
             </div>
-            <div className={styles.doubleInput}>
+            <div className={styles.doubleInput} style={{ width: 'min-content', alignSelf: 'center' }}>
+              <h4>Average Word Length</h4>
+              <label>
+                <select id='averageWordLengthComparison' name='averageWordLengthComparison'>
+                  <option value='lessThan'>Less than</option>
+                  <option selected value='moreThan'>More than</option>
+                </select>
+              </label>
+              <label>
+                <input type='number' step={'0.01'} defaultValue='0' min='0' max='9999' id='averageWordLengthValue' name='averageWordLengthValue' />
+              </label>
+            </div>
+            {/* <div className={styles.doubleInput}>
               <h4>At least X words of length Y</h4>
               <label>
                 <span>X</span>
@@ -101,7 +119,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                 <span>Y</span>
                 <input type='number' defaultValue='3' min='3' max='16' id='requiredWordLength' name='requiredWordLength' />
               </label>
-            </div>
+            </div> */}
           </div>
           <button type='submit' className={styles.start}>Generate puzzle</button>
         </form>
