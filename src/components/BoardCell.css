@@ -8,6 +8,7 @@
   color: #222;
   border-radius: var(--cube-roundness);
   border: calc(1rem / ((var(--puzzle-width) * var(--puzzle-height)) / 2.325)) solid #00000066;
+  text-transform: capitalize;
 }
 
 .board-cell::after {

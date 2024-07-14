@@ -139,7 +139,7 @@ function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: 
     if (touchedCells.find((c) => c.id === cell.id)) return;
     if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
 
-    const nextCurrentWord = (currentWord + cell.letter).toUpperCase();
+    const nextCurrentWord = (currentWord + cell.letter);
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
     setCurrentWord(nextCurrentWord);
     const alreadyFound = player.wordsFound.has(nextCurrentWord);

@@ -108,11 +108,12 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                 <span>Letter distribution</span>
                 <select defaultValue={defaultValues.letterDistribution} id='letterDistribution' name='letterDistribution'>
                   <option value='boggle'>Boggle®</option>
+                  <option value='bigBoggle'>Big Boggle®</option>
+                  <option value='superBigBoggle'>Super Big Boggle®</option>
                   <option value='scrabble'>Scrabble®</option>
-                  <option value='wordsWithFriends'>Words With Friends®</option>
-                  <option value='standardEnglish'>Standard English</option>
-                  <option value='modifiedEnglish'>Modified English</option>
+                  <option value='modernEnglish'>Standard English</option>
                   <option value='random'>True Random</option>
+                  <option value='syllables'>Syllables</option>
                 </select>
               </label>
               <div className={styles.dimensionsInputRow}>
@@ -135,11 +136,11 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                   <h4>Total words</h4>
                   <label>
                     <span>Min</span>
-                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' defaultValue={defaultValues.totalWordLimits.min} min='1' max='1000' id='minWords' name='minWords' />
+                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' placeholder={''} min='1' max='1000' id='minWords' name='minWords' />
                   </label>
                   <label>
                     <span>Max</span>
-                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' defaultValue={defaultValues.totalWordLimits.max} min='2' max='9999' id='maxWords' name='maxWords' />
+                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' placeholder={''} min='2' max='9999' id='maxWords' name='maxWords' />
                   </label>
                 </div>
               </div>
