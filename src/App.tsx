@@ -187,74 +187,46 @@ function App() {
 
   const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generate/` : 'https://mikedonovan.dev/language-api/generate/'
 
-  console.log('genURL', generateUrl)
-
   const fetchSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
-    console.warn('fetching puzzle from API...');
+    console.log('Using API to create puzzle with options', options);
     const fetchStart = Date.now();
     try {
       const response = await fetch(generateUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(options),
       });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data: GeneratedBoardData = await response.json();
-      console.warn('got puzzle from API in', (Date.now() - fetchStart), 'ms');
-      console.log(data);
+      console.warn('API PRODUCED PUZZLE IN', (Date.now() - fetchStart), 'ms')
       return data;
     } catch (error) {
       console.error('Error fetching puzzle:', error);
-      return undefined; // Explicitly return undefined in case of an error
+      return undefined;
     }
   };
 
   const createPuzzle = async (options: BoardRequestData): Promise<CurrentGameData | undefined> => {
-    console.log('creating puzzle with options', options);
     const nextPuzzle = await fetchSolvedPuzzle(options);
-    console.log('got', nextPuzzle)
-    // const totalWordAmount = Array.from(nextPuzzle.wordList).length;
-    // const lengthRequirements = options.lengthRequirements[0];
-    // const notEnoughTotalWords = totalWordAmount < options.minimumWordAmount;
-    // const tooManyTotalWords = totalWordAmount > options.maximumWordAmount;
-    // const amountOfRequiredWords = Array.from(nextPuzzle.wordList).filter(word => word.length === lengthRequirements.requiredWordLength).length;
-    // const notEnoughRequiredLengthWords = amountOfRequiredWords < lengthRequirements.minRequiredWordAmount;
-    // if (notEnoughTotalWords) {
-    //   console.error(totalWordAmount, 'is notEnoughTotalWords!')
-    // } else if (tooManyTotalWords) {
-    //   console.error(totalWordAmount, 'is tooManyTotalWords!')
-    // } else if (notEnoughRequiredLengthWords) {
-    //   console.error(amountOfRequiredWords, 'is not enough', lengthRequirements.requiredWordLength, '-letter words!')
-    // }
-    // if (notEnoughTotalWords || tooManyTotalWords || notEnoughRequiredLengthWords) {
-    //   return createPuzzle(options);
-    // } else {
-    // const nextMatrix = nextPuzzle.randomMatrix;
     if (nextPuzzle) {
-      const nextMatrix = nextPuzzle.matrix;
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
-        timeLimit: 60,
-        letterMatrix: nextMatrix,
+        letterMatrix: nextPuzzle.matrix,
         dimensions: {
           width: options.dimensions.width,
           height: options.dimensions.height,
         },
+        timeLimit: 60,
       }
-      console.log('created', nextGameData)
       return nextGameData;
     } else {
       return undefined;
     }
-    // }
   }
 
   const startPremadePuzzle = (puzzle: PuzzleData) => {
-    console.log('starting', puzzle);
     const nextMatrix = convertMatrix(stringTo2DArray(puzzle.letters, puzzle.dimensions.width, puzzle.dimensions.height));
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
@@ -291,34 +263,23 @@ function App() {
     console.log('changing', optionKey, 'to', newValue);
     saveToLocalStorage('buggle-options', { ...options, [optionKey]: newValue })
     setOptions(prevOptions => {
-      return {
-        ...prevOptions,
-        [optionKey]: newValue,
-      };
+      return { ...prevOptions, [optionKey]: newValue };
     });
   }
   return (
     <>
-      {phase === 'title' && <TitleScreen
-        changePhase={changePhase}
-      />}
-      {phase === 'options' && <OptionsScreen
-        options={options}
-        changeOption={changeOption}
-      />}
+      {phase === 'title' && <TitleScreen changePhase={changePhase} />}
+      {phase === 'options' && <OptionsScreen options={options} changeOption={changeOption} />}
       {phase === 'create' && <CreateScreen
         handleClickPremadePuzzle={startPremadePuzzle}
         startCreatedPuzzlePreview={startCreatedPuzzlePreview}
       />}
-      {phase === 'select' && <SelectScreen
-        startSinglePlayerGame={startSinglePlayerGame}
-      />}
+      {phase === 'select' && <SelectScreen startSinglePlayerGame={startSinglePlayerGame} />}
       {phase === 'game-board' &&
         <GameScreen
           player={player}
           currentGame={currentGame}
           options={options}
-          letterMatrix={currentGame.letterMatrix}
           handleValidWord={handleValidWord}
           uploadPuzzle={uploadPuzzle}
         />}

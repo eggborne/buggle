@@ -8,12 +8,11 @@ interface GameScreenProps {
   player: PlayerData;
   currentGame: CurrentGameData;
   options: OptionsData;
-  letterMatrix: string[][];
   handleValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ player, currentGame, options, letterMatrix, handleValidWord, uploadPuzzle }: GameScreenProps) {
+function GameScreen({ player, currentGame, options, handleValidWord, uploadPuzzle }: GameScreenProps) {
   return (
     <main
       className={styles.gameScreen}
@@ -23,7 +22,6 @@ function GameScreen({ player, currentGame, options, letterMatrix, handleValidWor
         player={player}
         currentGame={currentGame}
         options={options}
-        letterMatrix={letterMatrix}
         onValidWord={handleValidWord}
         uploadPuzzle={uploadPuzzle} />
     </main>

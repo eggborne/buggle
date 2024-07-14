@@ -9,7 +9,6 @@ interface GameBoardProps {
   currentGame: CurrentGameData;
   player: PlayerData;
   options: OptionsData;
-  letterMatrix: string[][];
   onValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
@@ -21,7 +20,7 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, uploadPuzzle }: GameBoardProps) {
+function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: GameBoardProps) {
 
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
@@ -109,12 +108,12 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
     if (
       clientY >= cellTop && clientY <= cellBottom &&
       clientX >= cellLeft && clientX <= cellRight &&
-      row >= 0 && row < letterMatrix.length &&
-      col >= 0 && col < letterMatrix[0].length
+      row >= 0 && row < currentGame.letterMatrix.length &&
+      col >= 0 && col < currentGame.letterMatrix[0].length
     ) {
       const id = `${row}${col}`;
       const cellObj = {
-        letter: letterMatrix[row][col],
+        letter: currentGame.letterMatrix[row][col],
         id,
         row,
         col,
@@ -176,7 +175,7 @@ function GameBoard({ player, currentGame, options, letterMatrix, onValidWord, up
           gap: `calc(var(--cube-gap) / ${currentGame.dimensions.width} * ${currentGame.dimensions.height} / 2)`,
         }}
       >
-        {letterMatrix.map((row, r) =>
+        {currentGame.letterMatrix.map((row, r) =>
           row.map((letter, l) => (
             <div
               key={`${letter}${r}${l}`}

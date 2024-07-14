@@ -12,33 +12,63 @@ interface CreateScreenProps {
   startCreatedPuzzlePreview: (options: BoardRequestData) => void;
 }
 
-function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: CreateScreenProps) {
+const defaultValues = {
+  dimensions: {
+    width: 5,
+    height: 5
+  },
+  letterDistribution: 'boggle',
+  totalWordLimits: {
+    min: 1,
+    max: 9999,
+  },
+  averageWordLengthFilter: {
+    comparison: 'moreThan',
+    value: 0,
+  },
+  wordLengthLimits: {},
+}
 
+function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: CreateScreenProps) {
   const [puzzleList, setPuzzleList] = useState<PuzzleData[]>([]);
+  const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
+    totalWordsOption: false,
+    averageWordLengthOption: false,
+  });
   const [listShowing, setListShowing] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const widthInputRef = useRef<HTMLInputElement>(null);
+  const heightInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartCreatedPuzzle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
-    const options: any = {
+    const options: BoardRequestData = {
       dimensions: {
-        width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10),
-        height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10)
+        width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10) || defaultValues.dimensions.width,
+        height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) || defaultValues.dimensions.height
       },
-      letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
-      totalWordLimits: {
+      letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value || defaultValues.letterDistribution,
+      totalWordLimits: optionsEnabled['totalWordsOption'] ? {
         min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10),
         max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10),
-      },
-      averageWordLengthFilter: {
+      } : defaultValues.totalWordLimits,
+      averageWordLengthFilter: optionsEnabled['averageWordLengthOption'] ? {
         comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
         value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
-      },
-      wordLengthLimits: {},
+      } : defaultValues.averageWordLengthFilter,
+      wordLengthLimits: defaultValues.wordLengthLimits,
     };
-    console.warn('sending puzzle', options)
     startCreatedPuzzlePreview(options);
+  }
+
+  const handleChangeSizeSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const sliderValue = target.value;
+    if (widthInputRef.current && heightInputRef.current) {
+      widthInputRef.current.value = sliderValue.toString();
+      heightInputRef.current.value = sliderValue.toString();
+    }
   }
 
   useEffect(() => {
@@ -58,6 +88,14 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
     getPuzzles();
   }, []);
 
+  const handleClickCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    setOptionsEnabled((prevOptionsEnabled) => ({
+      ...prevOptionsEnabled,
+      [target.name]: !prevOptionsEnabled[target.name],
+    }));
+  };
+
   return (
     <main className={styles.CreateScreen}>
       <div className={styles.creationArea}>
@@ -65,61 +103,62 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
         <form ref={formRef} onSubmit={handleStartCreatedPuzzle}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
-            <label>
-              <span>Letter distribution</span>
-              <select id='letterDistribution' name='letterDistribution'>
-                <option value='boggle'>Boggle®</option>
-                <option value='scrabble'>Scrabble®</option>
-                <option value='wordsWithFriends'>Words With Friends®</option>
-                <option value='standardEnglish'>Standard English</option>
-                <option value='modifiedEnglish'>Modified English</option>
-                <option value='random'>True Random</option>
-              </select>
-            </label>
-            <div className={styles.doubleInput}>
-              <label>
-                <span>Width</span>
-                <input type='number' defaultValue='5' min='3' max='64' id='puzzleWidth' name='puzzleWidth' />
-              </label>
-              <label>
-                <span>Height</span>
-                <input type='number' defaultValue='5' min='3' max='64' id='puzzleHeight' name='puzzleHeight' />
-              </label>
-            </div>
-            <div className={styles.doubleInput}>
-              <h4>Total words</h4>
-              <label>
-                <span>Min</span>
-                <input type='number' defaultValue='1' min='1' max='1000' id='minWords' name='minWords' />
-              </label>
-              <label>
-                <span>Max</span>
-                <input type='number' defaultValue='9999' min='2' max='9999' id='maxWords' name='maxWords' />
-              </label>
-            </div>
-            <div className={styles.doubleInput} style={{ width: 'min-content', alignSelf: 'center' }}>
-              <h4>Average Word Length</h4>
-              <label>
-                <select id='averageWordLengthComparison' name='averageWordLengthComparison'>
-                  <option value='lessThan'>Less than</option>
-                  <option selected value='moreThan'>More than</option>
+            <div className={styles.mainSettings}>
+              <label style={{ flexDirection: 'row', gap: '2rem'}}>
+                <span>Letter distribution</span>
+                <select defaultValue={defaultValues.letterDistribution} id='letterDistribution' name='letterDistribution'>
+                  <option value='boggle'>Boggle®</option>
+                  <option value='scrabble'>Scrabble®</option>
+                  <option value='wordsWithFriends'>Words With Friends®</option>
+                  <option value='standardEnglish'>Standard English</option>
+                  <option value='modifiedEnglish'>Modified English</option>
+                  <option value='random'>True Random</option>
                 </select>
               </label>
-              <label>
-                <input type='number' step={'0.01'} defaultValue='0' min='0' max='9999' id='averageWordLengthValue' name='averageWordLengthValue' />
-              </label>
+              <div className={styles.dimensionsInputRow}>
+                <label>
+                  <span>Width</span>
+                  <input ref={widthInputRef} type='number' defaultValue={defaultValues.dimensions.width} min='3' max='64' id='puzzleWidth' name='puzzleWidth' />
+                </label>
+                <label>
+                  <span>Height</span>
+                  <input ref={heightInputRef} type='number' defaultValue={defaultValues.dimensions.height} min='3' max='64' id='puzzleHeight' name='puzzleHeight' />
+                </label>
+                <input type='range' defaultValue={defaultValues.dimensions.width} onChange={handleChangeSizeSlider} min={3} max={9} step='1' />
+              </div>
             </div>
-            {/* <div className={styles.doubleInput}>
-              <h4>At least X words of length Y</h4>
-              <label>
-                <span>X</span>
-                <input type='number' defaultValue='1' min='1' max='300' id='minRequiredWordAmount' name='minRequiredWordAmount' />
-              </label>
-              <label>
-                <span>Y</span>
-                <input type='number' defaultValue='3' min='3' max='16' id='requiredWordLength' name='requiredWordLength' />
-              </label>
-            </div> */}
+            <div className={styles.optionalSettings}>
+              <h2> Filters</h2>
+              <div className={styles.optionalRow}>
+                <input checked={optionsEnabled['totalWordsOption']} onChange={handleClickCheckbox} type='checkbox' id={'totalWordsOption'} name={'totalWordsOption'} />
+                <div className={`${styles.optionalInputRow} ${optionsEnabled['totalWordsOption'] ? styles.active : styles.inactive}`}>
+                  <h4>Total words</h4>
+                  <label>
+                    <span>Min</span>
+                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' defaultValue={defaultValues.totalWordLimits.min} min='1' max='1000' id='minWords' name='minWords' />
+                  </label>
+                  <label>
+                    <span>Max</span>
+                    <input disabled={!optionsEnabled['totalWordsOption']} type='number' defaultValue={defaultValues.totalWordLimits.max} min='2' max='9999' id='maxWords' name='maxWords' />
+                  </label>
+                </div>
+              </div>
+              <div className={styles.optionalRow}>
+                <input checked={optionsEnabled['averageWordLengthOption']} onChange={handleClickCheckbox} type='checkbox' id={'averageWordLengthOption'} name={'averageWordLengthOption'} />
+                <div className={styles.optionalInputRow}>
+                  <h4>Average Word Length</h4>
+                  <label>
+                    <select disabled={!optionsEnabled['averageWordLengthOption']} defaultValue={defaultValues.averageWordLengthFilter.comparison} id='averageWordLengthComparison' name='averageWordLengthComparison'>
+                      <option value='lessThan'>Less than</option>
+                      <option value='moreThan'>More than</option>
+                    </select>
+                  </label>
+                  <label>
+                    <input disabled={!optionsEnabled['averageWordLengthOption']} type='number' step={'0.01'} defaultValue={defaultValues.averageWordLengthFilter.value} min='0' max={'9999'} id='averageWordLengthValue' name='averageWordLengthValue' />
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           <button type='submit' className={styles.start}>Generate puzzle</button>
         </form>
