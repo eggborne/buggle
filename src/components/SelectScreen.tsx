@@ -1,15 +1,40 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
-import { Difficulty, SinglePlayerOptions } from '../App';
+import { ref, child, get } from "firebase/database";
+import { database } from '../scripts/firebase.ts';
+import { BoardRequestData, Difficulty, SinglePlayerOptions, StoredPuzzleData } from '../App';
 import PuzzleIcon from './PuzzleIcon'
+import Modal from './Modal';
+import StoredPuzzleList from './StoredPuzzleList';
 
 interface SelectScreenProps {
   startSinglePlayerGame: (options: SinglePlayerOptions) => void;
+  handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function SelectScreen({ startSinglePlayerGame }: SelectScreenProps) {
-  const [sizeSelected, setSizeSelected] = useState<number>(5)
+function SelectScreen({ startSinglePlayerGame, handleClickPremadePuzzle }: SelectScreenProps) {
+  const [sizeSelected, setSizeSelected] = useState<number>(5);
+  const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
+  const [listShowing, setListShowing] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const getPuzzles = async () => {
+      const dbRef = ref(database);
+      get(child(dbRef, `puzzles/`)).then((snapshot) => {
+        if (snapshot.exists()) {
+          const nextPuzzleList = snapshot.val();
+          setPuzzleList(Object.values(nextPuzzleList));
+        } else {
+          console.log("No data available");
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+    }
+    getPuzzles();
+  }, []);
+
   const handleStartSinglePlayer = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
@@ -54,6 +79,13 @@ function SelectScreen({ startSinglePlayerGame }: SelectScreenProps) {
         </form>
         <button onClick={handleSubmitPuzzleOptions} className={styles.start}>Start!</button>
       </div>
+      <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>
+      <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
+        <>
+          <h2>Saved puzzles </h2>
+          <StoredPuzzleList list={puzzleList} onClickPremadePuzzle={handleClickPremadePuzzle} />
+        </>
+      </Modal>
     </main>
   )
 }

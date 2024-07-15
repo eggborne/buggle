@@ -1,8 +1,7 @@
 .CreateScreen {
   background-color: var(--create-screen-bg-color);
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: 2rem;
   padding: 1.5rem 0;
   overflow-y: auto;
 }
@@ -10,7 +9,7 @@
 .CreateScreen button.start {
   background-color: green;
   border: 0.1rem solid #ffffff99;
-  margin-top: 1rem;
+  flex-grow: 1;
 }
 
 .creationArea,
@@ -57,9 +56,15 @@ h1 {
   gap: 1rem 0;
 }
 
+.buttonHeader {
+  /* outline: 2px solid #000044; */
+}
+
 .mainSettings {
   gap: 2rem 0;
   padding-top: 1rem;
+  outline: 0.1rem solid #ffffff55;
+  border-radius: 0.25rem;
 }
 
 .mainSettings span {
@@ -84,14 +89,20 @@ input[type='range'] {
   width: 90%;
 }
 
+.filterArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .optionalRow {
   display: grid;
   grid-template-columns: 3.5rem 1fr;
   justify-items: center;
   align-items: center;
   flex-grow: 1;
-  background-color: #00000033;
-  border-radius: 0.325rem;
+  background-color: #00000022;
+  border-radius: 0.5rem;
 }
 
 .puzzleOptions input[type='checkbox'] {
@@ -108,7 +119,7 @@ input[type='range'] {
   grid-column-end: 4;
 }
 
-.sliderDisplayRow > span {
+.sliderDisplayRow>span {
   position: absolute;
   top: 50%;
   right: -0.5rem;
@@ -148,10 +159,10 @@ input.sliderValueDisplay {
 }
 
 .optionalInputRow.inactive {
-  opacity: 0.5;
+  opacity: 0.75;
 }
 
-.optionalInputRow > h4 {
+.optionalInputRow>h4 {
   grid-column-start: 1;
   grid-column-end: 3;
   padding: 0;
@@ -166,6 +177,31 @@ input.sliderValueDisplay {
   margin: 0;
 }
 
-.optionalInputRow > label {
+.optionalInputRow>label {
   grid-row-start: 2;
+}
+
+.submitArea {
+  align-self: stretch;
+  padding: 0rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 6rem;
+  gap: 1rem;
+}
+
+.submitArea>label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.submitArea>label>input {
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  width: 5rem;
 }

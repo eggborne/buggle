@@ -37,18 +37,19 @@ export interface SinglePlayerOptions {
 }
 
 export interface BoardRequestData {
-  uncommonWordLimit: number | undefined;
   dimensions: PuzzleDimensions;
   letterDistribution: string;
-  totalWordLimits: {
+  maxAttempts: number;
+  totalWordLimits?: {
     min: number,
     max: number
   },
-  wordLengthLimits: Record<string, { min: number, max: number }>;
+  uncommonWordLimit?: number | undefined;
   averageWordLengthFilter?: {
     comparison: string,
     value: number,
   }
+  wordLengthLimits?: Record<string, { min: number, max: number }>;
 }
 
 interface GeneratedBoardData {
@@ -291,7 +292,7 @@ function App() {
         handleClickPremadePuzzle={startPremadePuzzle}
         startCreatedPuzzlePreview={startCreatedPuzzlePreview}
       />}
-      {phase === 'select' && <SelectScreen startSinglePlayerGame={startSinglePlayerGame} />}
+      {phase === 'select' && <SelectScreen handleClickPremadePuzzle={startPremadePuzzle} startSinglePlayerGame={startSinglePlayerGame} />}
       {phase === 'game-board' &&
         <GameScreen
           player={player}
