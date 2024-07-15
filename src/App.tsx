@@ -9,13 +9,26 @@ import OptionsScreen from './components/OptionsScreen'
 import CreateScreen from './components/CreateScreen.tsx'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
-import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, convertMatrix, unconvertMatrix } from "./scripts/util.ts";
+import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
+interface PuzzleMetadata {
+  dateCreated: number;
+  key?: Record<string, string>;
+  percentUncommon: number;
+}
 
 interface PuzzleDimensions {
   height: number;
   width: number;
+}
+
+export interface StoredPuzzleData {
+  allWords: Set<string>;
+  dimensions: PuzzleDimensions;
+  letterString: string;
+  metadata: PuzzleMetadata;
 }
 
 export interface SinglePlayerOptions {
@@ -24,6 +37,7 @@ export interface SinglePlayerOptions {
 }
 
 export interface BoardRequestData {
+  uncommonWordLimit: number | undefined;
   dimensions: PuzzleDimensions;
   letterDistribution: string;
   totalWordLimits: {
@@ -40,6 +54,7 @@ export interface BoardRequestData {
 interface GeneratedBoardData {
   matrix: string[][];
   wordList: string[];
+  metadata: PuzzleMetadata;
 }
 
 export interface PlayerData {
@@ -51,17 +66,15 @@ export interface CurrentGameData {
   allWords: Set<string>;
   dimensions: PuzzleDimensions;
   letterMatrix: string[][];
+  metadata: {
+    key?: Record<string, string>;
+    percentUncommon: number;
+  };
   timeLimit: number;
 }
 
 interface PointValues {
   [key: number]: number;
-}
-
-export interface PuzzleData {
-  allWords: Set<string>;
-  dimensions: PuzzleDimensions;
-  letters: string;
 }
 
 export interface OptionsData {
@@ -101,6 +114,10 @@ function App() {
       height: 5,
     },
     letterMatrix: [],
+    metadata: {
+      percentUncommon: 0,
+      key: undefined,
+    },
     timeLimit: 60,
   });
 
@@ -141,26 +158,23 @@ function App() {
     setPlayer(nextPlayer);
   };
 
-  async function uploadPuzzle() {
-    const puzzleData = {
+  const uploadPuzzle = async () => {
+    const nextPuzzleData = {
       allWords: Array.from(currentGame.allWords),
       dimensions: currentGame.dimensions,
-      letters: unconvertMatrix(currentGame.letterMatrix).map(row => row.join('')).join(''),
-    }
-    const newPuzzleId = puzzleData.dimensions.width === puzzleData.dimensions.height ? `${puzzleData.letters}` : `${puzzleData.dimensions.width}${puzzleData.dimensions.height}${puzzleData.letters}`;
-    const nextPuzzleData = {
-      allWords: puzzleData.allWords,
-      letters: puzzleData.letters,
-      dimensions: puzzleData.dimensions,
-    }
+      letterString: encodeMatrix(currentGame.letterMatrix, currentGame.metadata.key).map(row => row.join('')).join(''),
+      metadata: currentGame.metadata,
+    };
+    const newPuzzleId = nextPuzzleData.dimensions.width === nextPuzzleData.dimensions.height ? `${nextPuzzleData.letterString}` : `${currentGame.dimensions.width}${currentGame.dimensions.height}${nextPuzzleData.letterString}`;
     console.log('uploading', nextPuzzleData)
     await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
     console.warn('puzzle uploaded!')
-  }
+  };
+
   const fetchRandomPuzzle = async ({ dimensions, difficulty }: SinglePlayerOptions): Promise<CurrentGameData> => {
     const dbRef = ref(database);
     const snapshot = await get(child(dbRef, `puzzles/`));
-    const data: PuzzleData[] = snapshot.val();
+    const data: StoredPuzzleData[] = snapshot.val();
     const wordLimits = difficultyWordAmounts[difficulty];
     const randomPool = Object.values(data).filter(puzzle => {
       const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
@@ -171,12 +185,13 @@ function App() {
     if (randomPool.length === 0) {
       console.error('NO PUZZLES FOUND!');
     }
-    const randomPuzzle: PuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
-    const nextMatrix = stringTo2DArray(randomPuzzle.letters, dimensions.width, dimensions.height);
+    const randomPuzzle: StoredPuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
+    const nextMatrix = stringTo2DArray(randomPuzzle.letterString, dimensions.width, dimensions.height);
     const nextGameData: CurrentGameData = {
       allWords: new Set(randomPuzzle.allWords),
       timeLimit: 60,
-      letterMatrix: convertMatrix(nextMatrix),
+      letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
+      metadata: randomPuzzle.metadata,
       dimensions: {
         width: dimensions.width,
         height: dimensions.height,
@@ -185,7 +200,7 @@ function App() {
     return nextGameData;
   }
 
-  const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generate/` : 'https://mikedonovan.dev/language-api/generate/'
+  const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
 
   const fetchSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
     console.log('Using API to create puzzle with options', options);
@@ -200,7 +215,7 @@ function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data: GeneratedBoardData = await response.json();
-      console.warn('API PRODUCED PUZZLE IN', (Date.now() - fetchStart), 'ms')
+      console.warn('API PRODUCED PUZZLE IN', (Date.now() - fetchStart), 'ms', data)
       return data;
     } catch (error) {
       console.error('Error fetching puzzle:', error);
@@ -218,6 +233,7 @@ function App() {
           width: options.dimensions.width,
           height: options.dimensions.height,
         },
+        metadata: nextPuzzle.metadata,
         timeLimit: 60,
       }
       return nextGameData;
@@ -226,16 +242,17 @@ function App() {
     }
   }
 
-  const startPremadePuzzle = (puzzle: PuzzleData) => {
-    const nextMatrix = convertMatrix(stringTo2DArray(puzzle.letters, puzzle.dimensions.width, puzzle.dimensions.height));
+  const startPremadePuzzle = (puzzle: StoredPuzzleData) => {
+    const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
       timeLimit: 60,
-      letterMatrix: nextMatrix,
+      letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
       dimensions: {
         width: puzzle.dimensions.width,
         height: puzzle.dimensions.height,
       },
+      metadata: puzzle.metadata
     }
     setCurrentGame(nextGameData)
     changePhase('game-board')

@@ -1,7 +1,7 @@
 .PuzzleIcon {
   display: grid;
   position: relative;
-  gap: 0.15rem;
+  gap: 1.5%;
 }
 
 .PuzzleIcon > div {
@@ -11,7 +11,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 70%;
+  font-size: 100%;
   font-weight: bold;
-  border-radius: 0.1rem;
+  border-radius: 5%;
+  overflow: hidden;
 }

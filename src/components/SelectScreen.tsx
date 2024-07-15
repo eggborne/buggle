@@ -40,9 +40,9 @@ function SelectScreen({ startSinglePlayerGame }: SelectScreenProps) {
           <div className={styles.puzzleOptions}>
             <div className={styles.sizeSelect}>
               <div className={styles.sizeSelections}>
-                <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon size={{ width: 4, height: 4 }} contents={[]} /></span>
-                <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(5)}><PuzzleIcon size={{ width: 5, height: 5 }} contents={[]} /></span>
-                <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(6)}><PuzzleIcon size={{ width: 6, height: 6 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 4, height: 4 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(5)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 5, height: 5 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(6)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 6, height: 6 }} contents={[]} /></span>
               </div>
             </div>
             <select name='difficulty'>

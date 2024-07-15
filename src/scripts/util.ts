@@ -50,26 +50,51 @@ export const debounce = <Args extends unknown[], R>(func: (...args: Args) => R, 
   };
 };
 
-const BOGGLE_LETTER_KEY: Record<string, string> = { '0': '', '1': 'In', '2': 'Th', '3': 'Er', '4': 'He', '5': 'An', 'Q': 'Qu' }
 
-export const convertMatrix = (matrix: string[][], key: Record<string, string> = BOGGLE_LETTER_KEY): string[][] => {
+export const decodeMatrix = (matrix: string[][], key: Record<string, string> | undefined): string[][] => {
+  if (!key) return matrix;
+  console.log('decoding matrix', matrix)
+  console.log('decoding with', key)
   const convertedMatrix = matrix.map(row =>
     row.map(cell => {
+      cell = cell.toLowerCase();
       return Object.prototype.hasOwnProperty.call(key, cell) ? key[cell] : cell;
     })
   );
   return convertedMatrix;
 }
 
-export const unconvertMatrix = (matrix: string[][], key: Record<string, string> = BOGGLE_LETTER_KEY): string[][] => {
+export const encodeMatrix = (matrix: string[][], key: Record<string, string> | undefined): string[][] => {
+  if (!key) return matrix;
+  console.log('encoding matrix', matrix)
+  console.log('emcoding with', key)
   const reversedKey: Record<string, string> = Object.fromEntries(
     Object.entries(key).map(([k, v]) => [v, k])
   );
 
   const unconvertedMatrix = matrix.map(row =>
     row.map(cell => {
+      cell = cell.toLowerCase();
       return Object.prototype.hasOwnProperty.call(reversedKey, cell) ? reversedKey[cell] : cell;
     })
   );
   return unconvertedMatrix;
+};
+
+export const formatDateAndTime = (dateCreated: number) => {
+  const date = new Date(dateCreated);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const year = date.getFullYear().toString().slice(-2);
+  let hours = date.getHours();
+  const minutes = date.getMinutes();
+  const amPm = hours >= 12 ? 'pm' : 'AM';
+
+  // Convert hour from 24-hour to 12-hour format
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+
+  const formattedDate = `${month.toString()}/${day.toString().padStart(2, '0')}/${year}`;
+  const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')}${amPm}`;
+  return { date: formattedDate, time: formattedTime };
 };

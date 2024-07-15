@@ -1,18 +1,19 @@
-import styles from './CreateScreen.module.css'
+import styles from './CreateScreen.module.css';
 import { useState, useRef, useEffect } from 'react';
-import { PuzzleData, BoardRequestData } from '../App.tsx';
+import { StoredPuzzleData, BoardRequestData } from '../App.tsx';
 import { ref, child, get } from "firebase/database";
 import { database } from '../scripts/firebase.ts';
-import PuzzleIcon from './PuzzleIcon.tsx';
 import Modal from './Modal.tsx';
+import StoredPuzzleList from './StoredPuzzleList.tsx';
 
 
 interface CreateScreenProps {
-  handleClickPremadePuzzle: (puzzle: PuzzleData) => void;
+  handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
   startCreatedPuzzlePreview: (options: BoardRequestData) => void;
 }
 
 const defaultValues = {
+  uncommonWordLimit: undefined,
   dimensions: {
     width: 5,
     height: 5
@@ -30,7 +31,7 @@ const defaultValues = {
 }
 
 function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: CreateScreenProps) {
-  const [puzzleList, setPuzzleList] = useState<PuzzleData[]>([]);
+  const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
     totalWordsOption: false,
     averageWordLengthOption: false,
@@ -39,6 +40,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
   const formRef = useRef<HTMLFormElement>(null);
   const widthInputRef = useRef<HTMLInputElement>(null);
   const heightInputRef = useRef<HTMLInputElement>(null);
+  const biasInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartCreatedPuzzle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,6 +59,11 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
         comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
         value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
       } : defaultValues.averageWordLengthFilter,
+      uncommonWordLimit: optionsEnabled['uncommonWordLimitOption'] ? 
+        biasInputRef.current ?
+        !isNaN(parseInt(biasInputRef.current.value)) ? parseInt(biasInputRef.current.value) : defaultValues.uncommonWordLimit
+        : defaultValues.uncommonWordLimit
+        : defaultValues.uncommonWordLimit,
       wordLengthLimits: defaultValues.wordLengthLimits,
     };
     startCreatedPuzzlePreview(options);
@@ -68,6 +75,14 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
     if (widthInputRef.current && heightInputRef.current) {
       widthInputRef.current.value = sliderValue.toString();
       heightInputRef.current.value = sliderValue.toString();
+    }
+  }
+
+  const handleChangeBiasSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const sliderValue = target.value;
+    if (biasInputRef.current) {
+      biasInputRef.current.value = sliderValue;
     }
   }
 
@@ -103,8 +118,9 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
         <form ref={formRef} onSubmit={handleStartCreatedPuzzle}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
+
             <div className={styles.mainSettings}>
-              <label style={{ flexDirection: 'row', gap: '2rem'}}>
+              <label style={{ flexDirection: 'row', gap: '2rem' }}>
                 <span>Letter distribution</span>
                 <select defaultValue={defaultValues.letterDistribution} id='letterDistribution' name='letterDistribution'>
                   <option value='boggle'>Boggle®</option>
@@ -113,7 +129,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                   <option value='scrabble'>Scrabble®</option>
                   <option value='modernEnglish'>Standard English</option>
                   <option value='random'>True Random</option>
-                  <option value='syllables'>Syllables</option>
+                  <option value='syllableUnits'>Syllables</option>
                 </select>
               </label>
               <div className={styles.dimensionsInputRow}>
@@ -128,6 +144,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                 <input type='range' defaultValue={defaultValues.dimensions.width} onChange={handleChangeSizeSlider} min={3} max={9} step='1' />
               </div>
             </div>
+
             <div className={styles.optionalSettings}>
               <h2> Filters</h2>
               <div className={styles.optionalRow}>
@@ -144,9 +161,22 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                   </label>
                 </div>
               </div>
+
+              <div className={styles.optionalRow}>
+                <input checked={optionsEnabled['uncommonWordLimitOption']} onChange={handleClickCheckbox} type='checkbox' id={'uncommonWordLimitOption'} name={'uncommonWordLimitOption'} />
+                <div className={`${styles.optionalInputRow} ${optionsEnabled['uncommonWordLimitOption'] ? styles.active : styles.inactive}`}>
+                  <h4>Uncommon word limit</h4>
+                  <div className={styles.sliderDisplayRow}>
+                    <input readOnly={!optionsEnabled['uncommonWordLimitOption']} type='range' onChange={handleChangeBiasSlider} min={1} max={99} step='1' defaultValue={99} />
+                    <input readOnly className={styles.sliderValueDisplay} ref={biasInputRef} />
+                    <span>%</span>
+                  </div>
+                </div>
+              </div>
+
               <div className={styles.optionalRow}>
                 <input checked={optionsEnabled['averageWordLengthOption']} onChange={handleClickCheckbox} type='checkbox' id={'averageWordLengthOption'} name={'averageWordLengthOption'} />
-                <div className={styles.optionalInputRow}>
+                <div className={`${styles.optionalInputRow} ${optionsEnabled['averageWordLengthOption'] ? styles.active : styles.inactive}`}>
                   <h4>Average Word Length</h4>
                   <label>
                     <select disabled={!optionsEnabled['averageWordLengthOption']} defaultValue={defaultValues.averageWordLengthFilter.comparison} id='averageWordLengthComparison' name='averageWordLengthComparison'>
@@ -160,6 +190,7 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
                 </div>
               </div>
             </div>
+
           </div>
           <button type='submit' className={styles.start}>Generate puzzle</button>
         </form>
@@ -168,18 +199,10 @@ function CreateScreen({ handleClickPremadePuzzle, startCreatedPuzzlePreview }: C
         <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>
       </div>
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
-        <h2>Saved puzzles</h2>
-        <div className={styles.puzzleList}>
-          {puzzleList.sort((a, b) => (a.dimensions.width * a.dimensions.height) - (b.dimensions.width * b.dimensions.height)).map((puzzle: PuzzleData) => {
-            return (
-              <div key={`${puzzle.dimensions.width}${puzzle.dimensions.width}${puzzle.letters}`} onClick={() => handleClickPremadePuzzle(puzzle)} className={styles.puzzleListing}>
-                <div style={{ fontWeight: 'bold' }}>{puzzle.dimensions.width} x {puzzle.dimensions.height}</div>
-                <PuzzleIcon size={{ ...puzzle.dimensions }} contents={puzzle.letters.split('')} />
-                <div style={{ fontWeight: 'bold' }}>{[...puzzle.allWords].length}</div>
-              </div>
-            )
-          })}
-        </div>
+        <>
+          <h2>Saved puzzles </h2>
+          <StoredPuzzleList list={puzzleList} onClickPremadePuzzle={handleClickPremadePuzzle} />
+        </>
       </Modal>
     </main >
   )

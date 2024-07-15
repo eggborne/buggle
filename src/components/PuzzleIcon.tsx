@@ -4,11 +4,12 @@ interface PuzzleIconProps {
   size: {
     width: number;
     height: number;
-  }
+  },
+  iconSize: string;
   contents: string[];
 }
 
-function PuzzleIcon({ size, contents }: PuzzleIconProps) {
+function PuzzleIcon({ size, contents, iconSize }: PuzzleIconProps) {
   const { width, height } = size;
   const cubeArray = contents;
   if (contents.length === 0) {
@@ -20,12 +21,16 @@ function PuzzleIcon({ size, contents }: PuzzleIconProps) {
     <div
       className={styles.PuzzleIcon}
       style={{
-        gridTemplateColumns: `repeat(${width}, 1rem)`,
-        gridTemplateRows: `repeat(${height}, 1rem)`,
+        gridTemplateColumns: `repeat(${width}, 1fr)`,
+        gridTemplateRows: `repeat(${height}, 1fr)`,
+        width: iconSize,
+        aspectRatio: 1,
       }}
     >
       {contents.map((item, i) =>
-        <div key={`${item}${i}`}>{item}</div>
+        <div key={`${item}${i}`}
+          style={{ fontSize: `calc(100vw / ${width * 4.5})`}}
+        >{item}</div>
       )}
     </div>
   )
