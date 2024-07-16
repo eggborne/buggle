@@ -1,6 +1,7 @@
 import styles from './CreateScreen.module.css';
 import { useState, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData } from '../App.tsx';
+import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength } from '../App.tsx';
+import WordLengthLimitSelector from './WordLengthLimitSelector.tsx';
 
 
 interface CreateScreenProps {
@@ -22,39 +23,52 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
     totalWordsOption: false,
     averageWordLengthOption: false,
     uncommonWordLimitOption: false,
+    wordLengthLimitOption: false,
   });
-  const [generating, setGenerating] = useState<boolean>(false);
+  const [wordLengthPrefs, setWordLengthPrefs] = useState<WordLengthPreference[]>([
+    { comparison: 'moreThan', wordLength: 3, value: 120 },
+  ]);
+  // const [generating, setGenerating] = useState<boolean>(false);
   const [filtersShowing, setFiltersShowing] = useState<boolean>(true);
   const formRef = useRef<HTMLFormElement>(null);
   const widthInputRef = useRef<HTMLInputElement>(null);
   const heightInputRef = useRef<HTMLInputElement>(null);
-  const biasInputRef = useRef<HTMLInputElement>(null);
   const attemptsInputRef = useRef<HTMLInputElement>(null);
+  const newWordLengthInputRef = useRef<HTMLInputElement>(null);
 
   const handleStartCreatedPuzzle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
     const options: BoardRequestData = {
-      dimensions: {
-        width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10) || defaultValues.dimensions.width,
-        height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) || defaultValues.dimensions.height
-      },
+      dimensions: { width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10) || defaultValues.dimensions.width, height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) || defaultValues.dimensions.height },
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value || defaultValues.letterDistribution,
-      totalWordLimits: optionsEnabled['totalWordsOption'] ? {
-        min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
-        max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || Infinity,
-      } : undefined,
-      averageWordLengthFilter: optionsEnabled['averageWordLengthOption'] ? {
-        comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
-        value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
-      } : undefined,
-      uncommonWordLimit: optionsEnabled['uncommonWordLimitOption'] ?
-        (biasInputRef.current && !isNaN(parseInt(biasInputRef.current.value))) ?
-          parseInt(biasInputRef.current.value) : undefined
-        : undefined,
-      wordLengthLimits: undefined,
-      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts
+      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
     };
+    if (Object.values(optionsEnabled).some((o => o))) {
+      options.filters = {};
+      if (optionsEnabled['totalWordsOption']) {
+        options.filters.totalWordLimits = {
+          min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
+          max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || 99999,
+        };
+      }
+      if (optionsEnabled['averageWordLengthOption']) {
+        options.filters.averageWordLengthFilter = {
+          comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
+          value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
+        };
+      }
+      if (optionsEnabled['uncommonWordLimitOption']) {
+        options.filters.uncommonWordLimit = {
+          comparison: (target.elements.namedItem('uncommonWordLimitComparison') as HTMLInputElement).value,
+          value: parseInt((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
+        };
+      }
+      if (optionsEnabled['wordLengthLimitOption']) {
+        options.filters.wordLengthLimits = [...wordLengthPrefs];
+      }
+    }
+    console.log('CreateScreen sending options', options)
     startCreatedPuzzlePreview(options);
   }
 
@@ -67,20 +81,50 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
     }
   }
 
-  const handleChangeBiasSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    const sliderValue = target.value;
-    if (biasInputRef.current) {
-      biasInputRef.current.value = sliderValue;
-    }
-  }
-
   const handleClickCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
     setOptionsEnabled((prevOptionsEnabled) => ({
       ...prevOptionsEnabled,
       [target.name]: !prevOptionsEnabled[target.name],
     }));
+  };
+
+  const handleAddNewWordLength = () => {
+    if (newWordLengthInputRef.current) {
+      const wordLength = parseInt(newWordLengthInputRef.current.value);
+      newWordLengthInputRef.current.value = '';
+      if (!isNaN(wordLength) && wordLengthPrefs.filter(pref => pref.wordLength === wordLength).length === 0) {
+        setWordLengthPrefs((prevPrefs) => {
+          return [...prevPrefs, {
+            wordLength,
+            comparison: 'moreThan',
+            value: 1,
+          }]
+        });
+      }
+    }
+  };
+
+  const handleRemoveWordLength = (wordLength: WordLength) => {
+    setWordLengthPrefs((prevPrefs) => {
+      return [...prevPrefs].filter(pref => pref.wordLength !== wordLength);
+    });
+  };
+
+  const handleChangeWordLengthAmount = (e: React.ChangeEvent, wordLength: WordLength) => {
+    const target = e.target as HTMLInputElement;
+    let nextPrefs = [...wordLengthPrefs];
+    let newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
+    newLengthPref.value = parseInt(target.value);
+    setWordLengthPrefs(nextPrefs);
+  };
+
+  const handleChangeWordLengthComparison = (e: React.ChangeEvent, wordLength: WordLength) => {
+    const target = e.target as HTMLInputElement;
+    let nextPrefs = [...wordLengthPrefs];
+    let newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
+    newLengthPref.comparison = target.value;
+    setWordLengthPrefs(nextPrefs);
   };
 
   return (
@@ -138,12 +182,16 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                 <div className={styles.optionalRow}>
                   <input checked={optionsEnabled['uncommonWordLimitOption']} onChange={handleClickCheckbox} type='checkbox' id={'uncommonWordLimitOption'} name={'uncommonWordLimitOption'} />
                   <div className={`${styles.optionalInputRow} ${optionsEnabled['uncommonWordLimitOption'] ? styles.active : styles.inactive}`}>
-                    <h4>Uncommon word limit</h4>
-                    <div className={styles.sliderDisplayRow}>
-                      <input readOnly={!optionsEnabled['uncommonWordLimitOption']} type='range' onChange={handleChangeBiasSlider} min={1} max={99} step='1' defaultValue={99} />
-                      <input readOnly className={styles.sliderValueDisplay} ref={biasInputRef} />
-                      <span>%</span>
-                    </div>
+                    <h4>Uncommon word %</h4>
+                    <label>
+                      <select disabled={!optionsEnabled['uncommonWordLimitOption']} defaultValue={'moreThan'} id='uncommonWordLimitComparison' name='uncommonWordLimitComparison'>
+                        <option value='lessThan'>Less than</option>
+                        <option value='moreThan'>More than</option>
+                      </select>
+                    </label>
+                    <label>
+                      <input disabled={!optionsEnabled['uncommonWordLimitOption']} type='number' step={'1'} defaultValue={'1'} min='0' max={'9999'} id='uncommonWordLimitValue' name='uncommonWordLimitValue' />
+                    </label>
                   </div>
                 </div>
 
@@ -162,6 +210,33 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                     </label>
                   </div>
                 </div>
+
+                <div className={`${styles.optionalRow} ${styles.expandable}`}>
+                  <input checked={optionsEnabled['wordLengthLimitOption']} onChange={handleClickCheckbox} type='checkbox' id={'wordLengthLimitOption'} name={'wordLengthLimitOption'} />
+                  <div className={`${styles.optionalInputRow} ${styles.tripleInput} ${optionsEnabled['wordLengthLimitOption'] ? styles.active : styles.inactive}`}>
+                    <h4>Amount of word lengths</h4>
+                    <div className={styles.gridBody}>
+                      <div>length</div><div>must appear</div><div>amount</div><div></div>
+                      {wordLengthPrefs.map((lengthPref => {
+                        return (
+                          <WordLengthLimitSelector
+                            key={`lengthSelector${lengthPref.wordLength}`}
+                            prefs={lengthPref}
+                            disabled={!optionsEnabled['wordLengthLimitOption']}
+                            handleRemoveWordLength={handleRemoveWordLength}
+                            handleChangeWordLengthAmount={handleChangeWordLengthAmount}
+                            handleChangeWordLengthComparison={handleChangeWordLengthComparison}
+                          />
+                        )
+                      }))}
+                      <label>
+                        <input ref={newWordLengthInputRef} disabled={!optionsEnabled['wordLengthLimitOption']} type='number' step={'0.01'} min='0' max={'9999'} id={`newWordLengthLimitInput`} name={`newWordLengthLimitInput`} />
+                      </label>
+                      <div><button type='button' onClick={handleAddNewWordLength} disabled={!optionsEnabled['wordLengthLimitOption']}>Add</button></div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

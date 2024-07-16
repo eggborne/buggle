@@ -193,13 +193,14 @@ function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: 
       </div>
       {wordListShowing &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
-          {Array.from(currentGame.allWords).map(word =>
+          {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               textTransform: 'uppercase',
-              opacity: Array.from(player.wordsFound).includes(word) ? '0.75' : '1',
-              textDecoration: Array.from(player.wordsFound).includes(word) ? 'line-through' : 'none',
+              opacity: player.wordsFound.has(word) ? '0.75' : '1',
+              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
             }}
-              key={word}>{word}
+              key={word}>
+              {word}
             </div>
           )}
         </Modal>

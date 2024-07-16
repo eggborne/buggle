@@ -56,10 +56,6 @@ h1 {
   gap: 1rem 0;
 }
 
-.buttonHeader {
-  /* outline: 2px solid #000044; */
-}
-
 .mainSettings {
   gap: 2rem 0;
   padding-top: 1rem;
@@ -159,16 +155,56 @@ input.sliderValueDisplay {
 }
 
 .optionalInputRow.inactive {
-  opacity: 0.75;
+  opacity: 0.5;
 }
 
-.optionalInputRow>h4 {
-  grid-column-start: 1;
-  grid-column-end: 3;
+.optionalRow > input {
+  align-self: flex-start;
+  margin-top: 1rem;
+}
+
+.tripleInput {
+  display: flex;
+  flex-direction: column;
+}
+
+.tripleInput input {
+  width: 100%;
+  height: 2.5rem;
   padding: 0;
-  margin: 0;
+}
+
+.tripleInput select {
+  height: 100%;
+}
+
+.gridBody {
+  width: 100%;
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 3rem 1fr 3rem 2rem;
+  grid-template-rows: auto;
+  justify-items: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gridBody>div,.optionalRow select {
+  font-size: 0.8rem;
+  width: 100%;
+  text-align: center;
+}
+
+.gridBody button {
+  height: 100%;
+  width: 95%;
+}
+
+.optionalInputRow > h4 {
+  grid-column-start: 1;
+  grid-column-end: span all;
   font-size: 1.1rem;
-  justify-self: center;
+  justify-self: stretch;
 }
 
 .puzzleOptions h2 {
@@ -179,6 +215,10 @@ input.sliderValueDisplay {
 
 .optionalInputRow>label {
   grid-row-start: 2;
+}
+
+.inactive button {
+  pointer-events: none;
 }
 
 .submitArea {

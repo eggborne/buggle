@@ -11,7 +11,15 @@ import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
 
+// export type WordLength = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+export type WordLength = number;
+export type Comparison = string;
 export type Difficulty = 'easy' | 'medium' | 'hard';
+
+export interface PlayerData {
+  score: number;
+  wordsFound: Set<string>;
+}
 
 interface PuzzleMetadata {
   dateCreated: number;
@@ -24,11 +32,9 @@ interface PuzzleDimensions {
   width: number;
 }
 
-export interface StoredPuzzleData {
-  allWords: Set<string>;
-  dimensions: PuzzleDimensions;
-  letterString: string;
-  metadata: PuzzleMetadata;
+export interface ComparisonFilterData {
+  comparison: Comparison,
+  value: number,
 }
 
 export interface SinglePlayerOptions {
@@ -36,31 +42,35 @@ export interface SinglePlayerOptions {
   dimensions: PuzzleDimensions;
 }
 
+export interface StoredPuzzleData {
+  allWords: string[];
+  dimensions: PuzzleDimensions;
+  letterString: string;
+  metadata: PuzzleMetadata;
+}
+
+export type WordLengthPreference = {
+  comparison: Comparison;
+  wordLength: WordLength;
+  value: number;
+};
+
 export interface BoardRequestData {
   dimensions: PuzzleDimensions;
   letterDistribution: string;
-  maxAttempts: number;
-  totalWordLimits?: {
-    min: number,
-    max: number
-  },
-  uncommonWordLimit?: number | undefined;
-  averageWordLengthFilter?: {
-    comparison: string,
-    value: number,
-  }
-  wordLengthLimits?: Record<string, { min: number, max: number }>;
+  filters?: {
+    averageWordLengthFilter?: ComparisonFilterData;
+    totalWordLimits?: { min?: number, max?: number };
+    uncommonWordLimit?: ComparisonFilterData;
+    wordLengthLimits?: WordLengthPreference[];
+  };
+  maxAttempts?: number;
 }
 
 interface GeneratedBoardData {
   matrix: string[][];
   wordList: string[];
   metadata: PuzzleMetadata;
-}
-
-export interface PlayerData {
-  score: number;
-  wordsFound: Set<string>;
 }
 
 export interface CurrentGameData {
@@ -176,11 +186,17 @@ function App() {
     const dbRef = ref(database);
     const snapshot = await get(child(dbRef, `puzzles/`));
     const data: StoredPuzzleData[] = snapshot.val();
+    console.warn('got puzzles from Firebase DB:', Object.values(data))
+    console.warn('args', dimensions, difficulty);
     const wordLimits = difficultyWordAmounts[difficulty];
     const randomPool = Object.values(data).filter(puzzle => {
+      console.log('list type', puzzle.allWords.length)
       const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
-      const notTooFewWords = Array.from(puzzle.allWords).length >= wordLimits.min;
-      const notTooManyWords = Array.from(puzzle.allWords).length <= wordLimits.max;
+      const notTooFewWords = puzzle.allWords.length >= wordLimits.min;
+      const notTooManyWords = puzzle.allWords.length <= wordLimits.max;
+      sizeMatches && console.log('size match?', sizeMatches);
+      notTooFewWords && console.log('notTooFewWords?', notTooFewWords);
+      notTooManyWords && console.log('notTooManyWords?', notTooManyWords, '\n\n');
       return (sizeMatches && notTooFewWords && notTooManyWords);
     });
     if (randomPool.length === 0) {
@@ -203,7 +219,7 @@ function App() {
 
   const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
 
-  const fetchSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
+  const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
     console.log('Using API to create puzzle with options', options);
     const fetchStart = Date.now();
     try {
@@ -225,7 +241,8 @@ function App() {
   };
 
   const createPuzzle = async (options: BoardRequestData): Promise<CurrentGameData | undefined> => {
-    const nextPuzzle = await fetchSolvedPuzzle(options);
+    const nextPuzzle = await createSolvedPuzzle(options);
+    console.log(nextPuzzle);
     if (nextPuzzle) {
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
