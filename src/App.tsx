@@ -11,7 +11,6 @@ import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
 
-// export type WordLength = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
 export type WordLength = number;
 export type Comparison = string;
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -22,9 +21,10 @@ export interface PlayerData {
 }
 
 interface PuzzleMetadata {
+  averageWordLength: number;
   dateCreated: number;
-  key?: Record<string, string>;
   percentUncommon: number;
+  key?: Record<string, string>;
 }
 
 interface PuzzleDimensions {
@@ -64,10 +64,12 @@ export interface BoardRequestData {
     uncommonWordLimit?: ComparisonFilterData;
     wordLengthLimits?: WordLengthPreference[];
   };
-  maxAttempts?: number;
+  maxAttempts: number;
+  returnBest: boolean;
 }
 
 interface GeneratedBoardData {
+  attempts: number,
   matrix: string[][];
   wordList: string[];
   metadata: PuzzleMetadata;
@@ -223,17 +225,24 @@ function App() {
     console.log('Using API to create puzzle with options', options);
     const fetchStart = Date.now();
     try {
-      const response = await fetch(generateUrl, {
+      const rawResponse = await fetch(generateUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(options),
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
+      const response = await rawResponse.json();
+      if (response.success) {
+        const data: GeneratedBoardData = response.data
+        console.warn(`${response.message} in ${Date.now() - fetchStart}ms`);
+        console.warn('returning GeneratedBoardData', response.data);
+        return data;
+      } else {
+        console.error(response.message);
+        return undefined;
       }
-      const data: GeneratedBoardData = await response.json();
-      console.warn('API PRODUCED PUZZLE IN', (Date.now() - fetchStart), 'ms', data)
-      return data;
     } catch (error) {
       console.error('Error fetching puzzle:', error);
       return undefined;
@@ -242,7 +251,6 @@ function App() {
 
   const createPuzzle = async (options: BoardRequestData): Promise<CurrentGameData | undefined> => {
     const nextPuzzle = await createSolvedPuzzle(options);
-    console.log(nextPuzzle);
     if (nextPuzzle) {
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
@@ -254,6 +262,7 @@ function App() {
         metadata: nextPuzzle.metadata,
         timeLimit: 60,
       }
+      console.log('made CurrentGameData nextGameData', nextGameData)
       return nextGameData;
     } else {
       return undefined;
@@ -289,9 +298,10 @@ function App() {
   const startCreatedPuzzlePreview = async (options: BoardRequestData) => {
     const newPuzzlePreview = await createPuzzle(options);
     if (newPuzzlePreview) {
-      setCurrentGame(newPuzzlePreview)
-      setPhase('game-board');
+      // setCurrentGame(newPuzzlePreview)
+      // setPhase('game-board');
     }
+    return;
   }
 
   const changeOption = (optionKey: string, newValue: string | number) => {
