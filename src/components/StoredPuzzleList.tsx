@@ -39,7 +39,7 @@ function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps)
           <label>{listObj.label}</label>
           <div className={styles.sizeList}>{
             listObj.list.map((puzzle) => {
-              const { percentUncommon, dateCreated } = puzzle.metadata;
+              const { averageWordLength, dateCreated, percentUncommon } = puzzle.metadata;
               const { dimensions } = puzzle;
               const dateTime = formatDateAndTime(dateCreated);
               return (
@@ -47,9 +47,10 @@ function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps)
                 } onClick={() => onClickPremadePuzzle(puzzle)} className={styles.puzzleListing} >
                   <PuzzleIcon iconSize={'90%'} size={{ ...dimensions }} contents={puzzle.letterString.split('')} />
                   <div className={styles.puzzleInfo}>
-                    <p>{[...puzzle.allWords].length} words </p>
+                    <p>{[...puzzle.allWords].length} words</p>
+                    <p>Avg. length: {(averageWordLength).toFixed(2)}</p>
                     <p> {percentUncommon}% uncommon</p>
-                    <p> {dateTime.date} {dateTime.time} </p>
+                    <small>{dateTime.date} {dateTime.time}</small>
                   </div>
                 </div>
               )

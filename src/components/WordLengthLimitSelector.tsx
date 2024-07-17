@@ -24,7 +24,7 @@ function WordLengthLimitSelector({ prefs, disabled, handleRemoveWordLength, hand
         </select>
       </label>
       <label>
-        <input onChange={(e) => handleChangeWordLengthAmount(e, wordLength)} disabled={disabled} type='number' step={'0.01'} defaultValue={'1'} min='0' max={'9999'} id={`length${wordLength}${value}Id`} name={`length${wordLength}${value}Id`} />
+        <input onChange={(e) => handleChangeWordLengthAmount(e, wordLength)} disabled={disabled} type='number' step={'1'} defaultValue={'0'} min='0' max={'99999'} id={`length${wordLength}${value}Id`} name={`length${wordLength}${value}Id`} />
       </label>
       <button
         onClick={() => handleRemoveWordLength(wordLength)}

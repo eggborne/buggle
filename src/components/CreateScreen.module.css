@@ -158,7 +158,7 @@ input.sliderValueDisplay {
   opacity: 0.5;
 }
 
-.optionalRow > input {
+.optionalRow>input {
   align-self: flex-start;
   margin-top: 1rem;
 }
@@ -189,7 +189,8 @@ input.sliderValueDisplay {
   gap: 0.5rem;
 }
 
-.gridBody>div,.optionalRow select {
+.gridBody>div,
+.optionalRow select {
   font-size: 0.8rem;
   width: 100%;
   text-align: center;
@@ -200,7 +201,7 @@ input.sliderValueDisplay {
   width: 95%;
 }
 
-.optionalInputRow > h4 {
+.optionalInputRow>h4 {
   grid-column-start: 1;
   grid-column-end: span all;
   font-size: 1.1rem;
@@ -223,25 +224,71 @@ input.sliderValueDisplay {
 
 .submitArea {
   align-self: stretch;
-  padding: 0rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 1rem 1.5rem;
+  display: grid;
+  grid-template-columns: 6rem 5rem 1fr;
+  align-items: stretch;
   height: 6rem;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .submitArea>label {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   font-size: 0.8rem;
 }
 
-.submitArea>label>input {
-  padding: 0.25rem 0;
+.submitArea span {
+  width: max-content;
+}
+
+.submitArea>label>input[type='number'] {
   display: flex;
   flex-direction: column;
   text-align: center;
+  font-size: 1.2rem;
   width: 5rem;
+  height: 100%;
+}
+
+.checkboxArea {
+  width: 100%;
+  height: 100%;
+}
+
+.checkboxArea > input[type='checkbox'] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  /* visibility: hidden; */
+}
+
+.checkboxArea>input::before, .checkboxArea>input::after {
+  content: 'ON';
+  color: rgb(163, 244, 116);
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-top: 0.3rem;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 4rem;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.checkboxArea>input:not(:checked)::after {
+  content: 'OFF';
+  color: rgb(241, 113, 113);
+  opacity: 1;
+}
+
+.checkboxArea > input:checked::before {
+  opacity: 1;
 }

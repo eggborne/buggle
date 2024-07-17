@@ -6,16 +6,17 @@ import WordLengthLimitSelector from './WordLengthLimitSelector.tsx';
 
 interface CreateScreenProps {
   handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
-  startCreatedPuzzlePreview: (options: BoardRequestData) => void;
+  startCreatedPuzzlePreview: (options: BoardRequestData) => Promise<void>;
 }
 
-const defaultValues = {
+const defaultValues: BoardRequestData = {
   dimensions: {
     width: 5,
     height: 5
   },
   letterDistribution: 'boggle',
   maxAttempts: 10,
+  returnBest: true,
 }
 
 function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
@@ -25,24 +26,26 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
     uncommonWordLimitOption: false,
     wordLengthLimitOption: false,
   });
-  const [wordLengthPrefs, setWordLengthPrefs] = useState<WordLengthPreference[]>([
-    { comparison: 'moreThan', wordLength: 3, value: 120 },
-  ]);
-  // const [generating, setGenerating] = useState<boolean>(false);
+  const [wordLengthPrefs, setWordLengthPrefs] = useState<WordLengthPreference[]>([]);
+  const [generating, setGenerating] = useState<boolean>(false);
   const [filtersShowing, setFiltersShowing] = useState<boolean>(true);
   const formRef = useRef<HTMLFormElement>(null);
   const widthInputRef = useRef<HTMLInputElement>(null);
   const heightInputRef = useRef<HTMLInputElement>(null);
-  const attemptsInputRef = useRef<HTMLInputElement>(null);
   const newWordLengthInputRef = useRef<HTMLInputElement>(null);
+  const attemptsInputRef = useRef<HTMLInputElement>(null);
+  const returnBestInputRef = useRef<HTMLInputElement>(null);
 
-  const handleStartCreatedPuzzle = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleStartCreatedPuzzle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('returnBestInputRef', returnBestInputRef.current && returnBestInputRef.current.checked)
     const target = e.currentTarget as HTMLFormElement;
     const options: BoardRequestData = {
-      dimensions: { width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10) || defaultValues.dimensions.width, height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) || defaultValues.dimensions.height },
-      letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value || defaultValues.letterDistribution,
+      ...defaultValues,
+      dimensions: { width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10), height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) },
+      letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
       maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
+      returnBest: returnBestInputRef.current ? returnBestInputRef.current.checked : defaultValues.returnBest,
     };
     if (Object.values(optionsEnabled).some((o => o))) {
       options.filters = {};
@@ -68,8 +71,10 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
         options.filters.wordLengthLimits = [...wordLengthPrefs];
       }
     }
-    console.log('CreateScreen sending options', options)
-    startCreatedPuzzlePreview(options);
+    console.log('CreateScreen sending options', options);
+    setGenerating(true);
+    await startCreatedPuzzlePreview(options);
+    setGenerating(false);
   }
 
   const handleChangeSizeSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -113,16 +118,16 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
 
   const handleChangeWordLengthAmount = (e: React.ChangeEvent, wordLength: WordLength) => {
     const target = e.target as HTMLInputElement;
-    let nextPrefs = [...wordLengthPrefs];
-    let newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
+    const nextPrefs = [...wordLengthPrefs];
+    const newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
     newLengthPref.value = parseInt(target.value);
     setWordLengthPrefs(nextPrefs);
   };
 
   const handleChangeWordLengthComparison = (e: React.ChangeEvent, wordLength: WordLength) => {
     const target = e.target as HTMLInputElement;
-    let nextPrefs = [...wordLengthPrefs];
-    let newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
+    const nextPrefs = [...wordLengthPrefs];
+    const newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
     newLengthPref.comparison = target.value;
     setWordLengthPrefs(nextPrefs);
   };
@@ -170,11 +175,11 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                     <h4>Total words</h4>
                     <label>
                       <span>Min</span>
-                      <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='1' max='1000' id='minWords' name='minWords' />
+                      <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='1' max='9999' id='minWords' name='minWords' />
                     </label>
                     <label>
                       <span>Max</span>
-                      <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='2' max='9999' id='maxWords' name='maxWords' />
+                      <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='2' max='99999' id='maxWords' name='maxWords' />
                     </label>
                   </div>
                 </div>
@@ -206,7 +211,7 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                       </select>
                     </label>
                     <label>
-                      <input disabled={!optionsEnabled['averageWordLengthOption']} type='number' step={'0.01'} defaultValue={'1'} min='0' max={'9999'} id='averageWordLengthValue' name='averageWordLengthValue' />
+                      <input disabled={!optionsEnabled['averageWordLengthOption']} type='number' step={'0.1'} defaultValue={'1'} min='0' max={'9999'} id='averageWordLengthValue' name='averageWordLengthValue' />
                     </label>
                   </div>
                 </div>
@@ -230,7 +235,7 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                         )
                       }))}
                       <label>
-                        <input ref={newWordLengthInputRef} disabled={!optionsEnabled['wordLengthLimitOption']} type='number' step={'0.01'} min='0' max={'9999'} id={`newWordLengthLimitInput`} name={`newWordLengthLimitInput`} />
+                        <input ref={newWordLengthInputRef} disabled={!optionsEnabled['wordLengthLimitOption']} type='number' step={'1'} min='0' max={'15'} id={`newWordLengthLimitInput`} name={`newWordLengthLimitInput`} />
                       </label>
                       <div><button type='button' onClick={handleAddNewWordLength} disabled={!optionsEnabled['wordLengthLimitOption']}>Add</button></div>
                     </div>
@@ -241,11 +246,15 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
             </div>
           </div>
           <div className={styles.submitArea}>
-            <label>
+            <label htmlFor={'attempts'}>
               <span>Max. attempts</span>
-              <input ref={attemptsInputRef} type='number' min={10} max={10000} defaultValue={10} />
+              <input id={'attempts'} name={'attempts'} ref={attemptsInputRef} type='number' min={1} max={100000} defaultValue={10} />
             </label>
-            <button type='submit' className={styles.start}>Generate puzzle</button>
+            <label htmlFor={'returnBest'} className={styles.checkboxArea}>
+              <span>Return best</span>
+              <input id={'returnBest'} name={'returnBest'} ref={returnBestInputRef} type='checkbox' />
+            </label>
+            <button disabled={generating} type='submit' className={styles.start}>{generating ? `Generating...` : `Generate puzzle`}</button>
           </div>
         </form>
       </div>
