@@ -1,7 +1,10 @@
 .PuzzleIcon {
   display: grid;
   position: relative;
-  gap: 1.5%;
+  gap: var(--cube-gap);
+  padding: var(--game-board-padding);
+  color: var(--cube-text-color);
+  background-color: var(--game-board-background-color);
 }
 
 .PuzzleIcon > div {
@@ -13,6 +16,6 @@
   justify-content: center;
   font-size: 100%;
   font-weight: bold;
-  border-radius: 5%;
+  border-radius: var(--cube-roundness);
   overflow: hidden;
 }

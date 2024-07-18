@@ -1,19 +1,23 @@
 .Logo {
+  --logo-height: clamp(1.75rem, calc(var(--footer-height) / 4), 2.2rem);
+  height: var(--logo-height);
   display: flex;
-  gap: calc(var(--footer-height) / 20);
+  justify-content: center;
+  align-items: stretch;
+  /* gap: calc(var(--logo-height) / 8); */
+  gap: calc( (var(--logo-height) / 8) + (var(--cube-gap) / 2));
 }
 
 .tile {
-  font-size: calc(var(--footer-height) * 0.3);
-  line-height: 0;
-  background-color: #ffffffaa;
-  border-radius: 0.125rem;
+  font-size: calc(var(--logo-height) * 0.7);
+  /* background-color: #ffffffaa; */
+  background-color: var(--cube-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: calc(var(--footer-height) / 2);
-  max-height: calc(var(--footer-height) / 2);
   aspect-ratio: 1;
   font-weight: bold;
-  color: #000000aa;
+  color: var(--cube-text-color);
+  border-radius: calc(var(--logo-height) / 8);
+  border-radius: var(--cube-roundness);
 }

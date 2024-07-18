@@ -14,16 +14,17 @@ interface GameScreenProps {
 
 function GameScreen({ player, currentGame, options, handleValidWord, uploadPuzzle }: GameScreenProps) {
   return (
-    <main
-      className={styles.gameScreen}
-    >
+    <main className={styles.gameScreen} >
       <GameStatusDisplay player={player} currentGame={currentGame} />
-      <GameBoard
-        player={player}
-        currentGame={currentGame}
-        options={options}
-        onValidWord={handleValidWord}
-        uploadPuzzle={uploadPuzzle} />
+      {/* <div className={styles.gameArea}> */}
+        <GameBoard
+          player={player}
+          currentGame={currentGame}
+          options={options}
+          onValidWord={handleValidWord}
+          uploadPuzzle={uploadPuzzle}
+        />
+      {/* </div> */}
     </main>
   )
 }

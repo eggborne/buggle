@@ -32,8 +32,7 @@ function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps)
   }
 
   return (
-    <div className={styles.puzzleList}>
-      
+    <div className={styles.puzzleList}>      
       {organizedPuzzles(list).map((listObj) =>
         <div key={listObj.label} className={styles.sizeGroup}>
           <label>{listObj.label}</label>

@@ -10,24 +10,38 @@
   -moz-osx-font-smoothing: grayscale;
 
   --actual-height: 100dvh;
-  --game-board-size: 90dvw;
-  --footer-height: 4rem;
-  --main-background-color: #202020;
-  --header-background-color: #242424;
-  --text-color: #ffffffde;
   --current-word-display-height: 12vh;
+  --main-background-color: #1A1A1A;
 
-  --title-screen-bg-color: #377244;
-  --select-screen-bg-color: #28611b;
-  --lobby-screen-bg-color: #2a5b76;
-  --options-screen-bg-color: #765a3177;
-  --create-screen-bg-color: #9ea55b77;
+  --main-text-color: #FFFFFB;
+  --header-background-color: #2A2A2A;
+  --title-screen-bg-color: #355236;
+  --select-screen-bg-color: #5f4e4f;
+  --lobby-screen-bg-color: #51516f;
+  --options-screen-bg-color: #485650;
+  --create-screen-bg-color: #745d49;
 
   /* user options */
-  --game-background-color: #5b007777;
-  --cube-roundness: 0%;
-  --swipe-buffer: 50;
-  --cube-gap: 0.5rem;
+  --user-cube-color: #aaaaaa;
+  --user-cube-gap: 20;
+  --user-cube-text-color: #222222;
+  --user-cube-roundness: 40;
+  --user-footer-height: 5;
+  --user-game-background-color: #5b007777;
+  --user-game-board-background-color: #515142;
+  --user-game-board-size: 95;
+  --user-game-board-padding: 20;
+  
+  /* vars made with user options */
+  --cube-color: var(--user-cube-color);
+  --cube-gap: calc(100% * (var(--user-cube-gap) / 3000));
+  --cube-roundness: calc(var(--user-cube-roundness) * 0.5%);
+  --cube-text-color: var(--user-cube-text-color);
+  --footer-height: calc(3.25rem + (var(--user-footer-height) * 0.125rem));
+  --game-background-color: var(--user-game-background-color);
+  --game-board-background-color: var(--user-game-board-background-color);
+  --game-board-size: calc(var(--user-game-board-size) * 1dvw);
+  --game-board-padding: calc(100% * (var(--user-game-board-padding) / 1000));
 }
 
 * {
@@ -42,16 +56,6 @@ html {
   ;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
   display: flex;
@@ -59,7 +63,7 @@ body {
   min-width: 320px;
   min-height: 100dvh;
   max-height: 100dvh;
-  color: var(--text-color);
+  color: var(--main-text-color);
 }
 
 small {
@@ -83,7 +87,7 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
+  border-radius: 0.625rem;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
@@ -91,7 +95,7 @@ button {
   font-family: inherit;
   background-color: #1a1a1a;
   cursor: pointer;
-  border: 0.1rem solid #ffffff99;
+  border: 0.1rem solid #ffffff77;
   transition: border-color 0.25s;
 }
 
@@ -104,7 +108,7 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
@@ -117,7 +121,7 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+} */
 
 
 main {

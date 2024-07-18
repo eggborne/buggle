@@ -27,7 +27,7 @@ interface PuzzleMetadata {
   key?: Record<string, string>;
 }
 
-interface PuzzleDimensions {
+export interface PuzzleDimensions {
   height: number;
   width: number;
 }
@@ -64,6 +64,10 @@ export interface BoardRequestData {
     uncommonWordLimit?: ComparisonFilterData;
     wordLengthLimits?: WordLengthPreference[];
   };
+  customizations?: {
+    requiredWords?: string[];
+    customLetters?: string;
+  };
   maxAttempts: number;
   returnBest: boolean;
 }
@@ -91,17 +95,29 @@ interface PointValues {
 }
 
 export interface OptionsData {
+  cubeColor: string,
+  cubeTextColor: string,
+  footerHeight: number,
+  cubeGap: number;
   cubeRoundness: number;
   gameBackgroundColor: string;
+  gameBoardBackgroundColor: string,
+  gameBoardPadding: number;
+  gameBoardSize: number;
   swipeBuffer: number;
-  cubeGap: number;
 }
 
-const defaultOptions = {
-  cubeRoundness: 25,
+const defaultStyleOptions = {
+  cubeColor: '#aaaaaa',
+  cubeGap: 30,
+  cubeTextColor: '#222222',
+  cubeRoundness: 35,
+  footerHeight: 8,
   gameBackgroundColor: '#223300',
-  swipeBuffer: 75,
-  cubeGap: 5,
+  gameBoardBackgroundColor: '#8b8a6f',
+  gameBoardPadding: 20,
+  gameBoardSize: 95,
+  swipeBuffer: 70,
 };
 
 const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = {
@@ -112,7 +128,7 @@ const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = 
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
-  const [options, setOptions] = useState<OptionsData>(defaultOptions);
+  const [options, setOptions] = useState<OptionsData>(defaultStyleOptions);
   const [phase, setPhase] = useState<string>('title');
 
   const [player, setPlayer] = useState<PlayerData>({
@@ -140,19 +156,15 @@ function App() {
     });
     history.pushState(null, '', document.URL);
     const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
-    setOptions(localOptions || defaultOptions);
+    const initialOptions = localOptions || defaultStyleOptions;
+    console.log('setting options', initialOptions);
+    setOptions(localOptions || defaultStyleOptions);
   }, []);
 
   useEffect(() => {
     for (const optionKey in options) {
-      const varName = '--' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+      const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
       let newValue = options[optionKey as keyof OptionsData].toString();
-      if (optionKey === 'cubeRoundness') {
-        newValue += '%';
-      }
-      if (optionKey === 'cubeGap') {
-        newValue = (parseInt(newValue) / 10) + 'rem';
-      }
       document.documentElement.style.setProperty(varName, newValue)
     }
 
@@ -222,7 +234,7 @@ function App() {
   const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
 
   const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
-    console.log('Using API to create puzzle with options', options);
+    console.log('>>>>>>>>>>>>  Using API to create puzzle with options', options);
     const fetchStart = Date.now();
     try {
       const rawResponse = await fetch(generateUrl, {
@@ -237,7 +249,7 @@ function App() {
       if (response.success) {
         const data: GeneratedBoardData = response.data
         console.warn(`${response.message} in ${Date.now() - fetchStart}ms`);
-        console.warn('returning GeneratedBoardData', response.data);
+        console.warn('<<<<<<<<<<<<  returning GeneratedBoardData', response.data);
         return data;
       } else {
         console.error(response.message);
@@ -298,8 +310,8 @@ function App() {
   const startCreatedPuzzlePreview = async (options: BoardRequestData) => {
     const newPuzzlePreview = await createPuzzle(options);
     if (newPuzzlePreview) {
-      // setCurrentGame(newPuzzlePreview)
-      // setPhase('game-board');
+      setCurrentGame(newPuzzlePreview)
+      setPhase('game-board');
     }
     return;
   }

@@ -11,7 +11,7 @@
 
 .numeralDigit {
   box-sizing: content-box;
-  background-image: url('/slimnumerals.png');
+  background-image: url('/assets/slimnumerals.png');
   background-repeat: no-repeat;
   background-size: 100% auto;
   background-position-x: center;

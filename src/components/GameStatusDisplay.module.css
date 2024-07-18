@@ -1,12 +1,11 @@
 .gameStatusDisplay {
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: space-between;
   padding: 0 1rem;
   gap: 1rem;
   width: 100%;
-  flex-grow: 1;
-  color: #ddd;
+  padding: 1rem;
 }
 
 .gameStatsArea {

@@ -21,11 +21,11 @@
 }
 
 .valid {
-  color: rgb(129, 254, 129);
+  color: #81fe81;
 }
 
 .duplicate {
-  color: rgb(172, 192, 94);
+  color: #acc05e;
 }
 
 .invalid {

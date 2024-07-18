@@ -38,6 +38,7 @@ h1 {
   gap: 0.5rem;
   width: 100%;
   line-height: 1.2rem;
+  padding: 1rem 0;
 }
 
 .puzzleOptions input {
@@ -58,7 +59,6 @@ h1 {
 
 .mainSettings {
   gap: 2rem 0;
-  padding-top: 1rem;
   outline: 0.1rem solid #ffffff55;
   border-radius: 0.25rem;
 }
@@ -104,6 +104,29 @@ input[type='range'] {
 .puzzleOptions input[type='checkbox'] {
   width: 2rem;
   height: 2rem;
+}
+
+.puzzleOptions .textRow {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  position: relative;
+}
+
+.textRow > label > input {
+  width: 100%;
+  padding: 0.5rem;
+  text-transform: uppercase;
+}
+
+.inactive .textReminder {
+  opacity: 0;
+}
+
+.textReminder {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #e0b4b4;
 }
 
 .sliderDisplayRow {
@@ -269,7 +292,7 @@ input.sliderValueDisplay {
 
 .checkboxArea>input::before, .checkboxArea>input::after {
   content: 'ON';
-  color: rgb(163, 244, 116);
+  color: #a3f474;
   font-weight: bold;
   font-size: 1.5rem;
   margin-top: 0.3rem;
@@ -285,10 +308,18 @@ input.sliderValueDisplay {
 
 .checkboxArea>input:not(:checked)::after {
   content: 'OFF';
-  color: rgb(241, 113, 113);
+  color: #f17171;
   opacity: 1;
 }
 
 .checkboxArea > input:checked::before {
   opacity: 1;
+}
+
+.columnRow {
+  flex-direction: column;
+}
+
+.columnRow > span {
+  width: max-content;
 }

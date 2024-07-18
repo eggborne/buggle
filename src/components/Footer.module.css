@@ -1,20 +1,27 @@
 .Footer {
-  width: 100%;
   height: var(--footer-height);
   min-height: var(--footer-height);
-  background-color: #a0ff8622;
+  background-color: #77c36022;
   display: grid;
   place-items: center;
-  justify-content: center;
-  align-content: center;
-  grid-template-columns: var(--footer-height) 1fr var(--footer-height);
-  grid-template-rows: 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 .Footer > button {
-  background: red;
-  height: calc(var(--footer-height) / 1.75);
-  width: calc(var(--footer-height) / 1.75);
+  /* background: red; */
+  width: 2.5rem;
+  height: 2.5rem;
+  aspect-ratio: 1;
   padding: 0;
   border-radius: 50%;
+  border: 0;
+  background-color: transparent;
+}
+
+.Footer > button > img {
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.543);
+  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
 }

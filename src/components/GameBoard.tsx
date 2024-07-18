@@ -159,7 +159,7 @@ function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: 
   };
 
   return (
-    <>
+    <div className={styles.gameArea}>
       <CurrentWordDisplay letters={currentWord.split('')} wordStatus={wordStatus} />
       <div
         ref={gameBoardRef}
@@ -205,7 +205,7 @@ function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: 
           )}
         </Modal>
       }
-    </>
+    </div>
   )
 }
 

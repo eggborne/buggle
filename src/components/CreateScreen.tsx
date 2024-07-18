@@ -1,6 +1,6 @@
 import styles from './CreateScreen.module.css';
-import { useState, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength } from '../App.tsx';
+import { useState, useEffect, useRef } from 'react';
+import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength, PuzzleDimensions } from '../App.tsx';
 import WordLengthLimitSelector from './WordLengthLimitSelector.tsx';
 
 
@@ -21,30 +21,41 @@ const defaultValues: BoardRequestData = {
 
 function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
+    customLettersOption: false,
     totalWordsOption: false,
     averageWordLengthOption: false,
     uncommonWordLimitOption: false,
     wordLengthLimitOption: false,
   });
+  const [dimensions, setDimensions] = useState<PuzzleDimensions>({
+    width: defaultValues.dimensions.width,
+    height: defaultValues.dimensions.height,
+  });
+  const [userLetters, setUserLetters] = useState<string[]>([]);
   const [wordLengthPrefs, setWordLengthPrefs] = useState<WordLengthPreference[]>([]);
   const [generating, setGenerating] = useState<boolean>(false);
   const [filtersShowing, setFiltersShowing] = useState<boolean>(true);
-  const formRef = useRef<HTMLFormElement>(null);
-  const widthInputRef = useRef<HTMLInputElement>(null);
-  const heightInputRef = useRef<HTMLInputElement>(null);
+
   const newWordLengthInputRef = useRef<HTMLInputElement>(null);
   const attemptsInputRef = useRef<HTMLInputElement>(null);
   const returnBestInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (optionsEnabled['customLettersOption'] && userLetters.length > (dimensions.width * dimensions.height)) {
+      const shortenedLetters = [...userLetters];
+      shortenedLetters.length = dimensions.width * dimensions.height;
+      setUserLetters(shortenedLetters);
+    }
+  }, [dimensions, optionsEnabled]);
+
   const handleStartCreatedPuzzle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('returnBestInputRef', returnBestInputRef.current && returnBestInputRef.current.checked)
     const target = e.currentTarget as HTMLFormElement;
     const options: BoardRequestData = {
       ...defaultValues,
-      dimensions: { width: parseInt((target.elements.namedItem('puzzleWidth') as HTMLInputElement).value, 10), height: parseInt((target.elements.namedItem('puzzleHeight') as HTMLInputElement).value, 10) },
+      dimensions,
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
-      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
+      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,      
       returnBest: returnBestInputRef.current ? returnBestInputRef.current.checked : defaultValues.returnBest,
     };
     if (Object.values(optionsEnabled).some((o => o))) {
@@ -70,20 +81,29 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
       if (optionsEnabled['wordLengthLimitOption']) {
         options.filters.wordLengthLimits = [...wordLengthPrefs];
       }
+      if (optionsEnabled['customLettersOption']) {
+        options.customizations = options.customizations || {};
+        options.customizations.customLetters = userLetters.join('');
+      }
     }
-    console.log('CreateScreen sending options', options);
     setGenerating(true);
     await startCreatedPuzzlePreview(options);
     setGenerating(false);
   }
 
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = parseInt(e.target.value, 10);
+    setDimensions({ ...dimensions, width: newWidth });
+  };
+
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHeight = parseInt(e.target.value, 10);
+    setDimensions({ ...dimensions, height: newHeight });
+  };
+
   const handleChangeSizeSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    const sliderValue = target.value;
-    if (widthInputRef.current && heightInputRef.current) {
-      widthInputRef.current.value = sliderValue.toString();
-      heightInputRef.current.value = sliderValue.toString();
-    }
+    const newSize = parseInt(e.target.value, 10);
+    setDimensions({ width: newSize, height: newSize });
   }
 
   const handleClickCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,11 +152,20 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
     setWordLengthPrefs(nextPrefs);
   };
 
+  const handleChangeCustomLetters = (e: React.ChangeEvent) => {
+    const cleanInput = (e.target as HTMLInputElement).value.trim().replace(/[^a-zA-Z]/g, '').toLowerCase().split('');
+    if (cleanInput.length <= dimensions.width * dimensions.height) {
+      setUserLetters(cleanInput)
+    }
+  }
+
+  const getTotalLetterAmount = () => dimensions.width * dimensions.height;
+
   return (
     <main className={styles.CreateScreen}>
       <div className={styles.creationArea}>
         <h1>Create Puzzle</h1>
-        <form ref={formRef} onSubmit={handleStartCreatedPuzzle}>
+        <form onSubmit={handleStartCreatedPuzzle}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
             <div className={styles.mainSettings}>
@@ -155,14 +184,29 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
               <div className={styles.dimensionsInputRow}>
                 <label>
                   <span>Width</span>
-                  <input ref={widthInputRef} type='number' defaultValue={defaultValues.dimensions.width} min='3' max='64' id='puzzleWidth' name='puzzleWidth' />
+                  <input value={dimensions.width} onChange={handleWidthChange} type='number' placeholder={defaultValues.dimensions.width.toString()} min='3' max='64' id='puzzleWidth' name='puzzleWidth' />
                 </label>
                 <label>
                   <span>Height</span>
-                  <input ref={heightInputRef} type='number' defaultValue={defaultValues.dimensions.height} min='3' max='64' id='puzzleHeight' name='puzzleHeight' />
+                  <input value={dimensions.height} onChange={handleHeightChange} type='number' placeholder={defaultValues.dimensions.height.toString()} min='3' max='64' id='puzzleHeight' name='puzzleHeight' />
                 </label>
                 <input type='range' defaultValue={defaultValues.dimensions.width} onChange={handleChangeSizeSlider} min={3} max={9} step='1' />
               </div>
+            </div>
+            <div className={styles.optionalSettings}>
+              <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>
+                <h2>Customization</h2>
+              </div>
+              <div className={styles.optionalRow}>
+                <input checked={optionsEnabled['customLettersOption']} onChange={handleClickCheckbox} type='checkbox' id={'customLettersOption'} name={'customLettersOption'} />
+                <div className={`${styles.optionalInputRow} ${styles.textRow} ${optionsEnabled['customLettersOption'] ? styles.active : styles.inactive}`}>
+                  <h4>Letters</h4>
+                  <div className={styles.textReminder}>{`${getTotalLetterAmount() - userLetters.length} remaining`}</div>
+                  <label>    
+                    <input onChange={handleChangeCustomLetters} value={userLetters.join('')} disabled={!optionsEnabled['customLettersOption']} type='text' min='9' max='144'/>
+                  </label>
+                </div>
+              </div>              
             </div>
             <div className={styles.optionalSettings}>
               <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>

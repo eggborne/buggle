@@ -7,7 +7,6 @@
   width: 100vw;
   height: 50dvh;
   background-color: #333;
-  color: #ccc;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -44,7 +43,6 @@
 }
 
 .chatAuthorLabel {
-  color: rgb(247, 226, 187);
   font-weight: bold;
 }
 
@@ -65,22 +63,19 @@ form {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
 }
 
 .chatInputArea > input {
   flex-grow: 1;
   height: 3rem;
-  color: #ccc;
-  background-color: #000;
   border-radius: 0.25rem;
   padding: 0 0.5rem;
 }
 
 .chatInputArea>button {
-  margin-left: 0.5rem;
-  color: #ccc;
-  background-color: #666;
-  padding: 0.5rem 0.75rem;
+  align-self: stretch;
   border-radius: 0.25rem;
 }
 
