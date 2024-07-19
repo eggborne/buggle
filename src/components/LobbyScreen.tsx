@@ -3,6 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 import { database } from '../scripts/firebase';
 import { ref, onValue, push, off } from "firebase/database";
 
+interface LobbyScreenProps {
+  hidden: boolean;
+}
+
 interface ChatMessageData {
   author: string;
   message: string;
@@ -13,7 +17,7 @@ interface LobbyData {
   messages: ChatMessageData[];
 }
 
-function LobbyScreen() {
+function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   const [chatMessages, setChatMessages] = useState<ChatMessageData[]>([]);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -50,8 +54,9 @@ function LobbyScreen() {
       });
   };
 
+  const lobbyScreenClass = `${styles.LobbyScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={styles.lobbyScreen}>
+    <main className={lobbyScreenClass}>
       <div className={styles.chatWindow}>
         <div ref={chatMessagesRef} className={styles.chatMessages}>
           {chatMessages.map(({ author, message, date }) => {
@@ -61,8 +66,8 @@ function LobbyScreen() {
             return (
               <div className={messageClass} key={date}>
                 <div className={styles.chatBody}><span className={styles.chatAuthorLabel}>{author}</span>: {message}</div>
-              <div className={styles.chatTimestamp}>{new Date(date).toLocaleString()}</div>
-            </div>)
+                <div className={styles.chatTimestamp}>{new Date(date).toLocaleString()}</div>
+              </div>)
           })}
         </div>
         <form onSubmit={handleSubmitChatMessage}>

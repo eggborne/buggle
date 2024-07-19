@@ -1,13 +1,14 @@
 import styles from './TitleScreen.module.css'
 
 interface TitleScreenProps {
+  hidden: boolean;
   changePhase: (phase: string) => void;
 }
 
-function TitleScreen({ changePhase }: TitleScreenProps) {
-
+function TitleScreen({ hidden, changePhase }: TitleScreenProps) {
+  const titleScreenClass = `${styles.TitleScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={styles.TitleScreen}>
+    <main className={titleScreenClass}>
       <div className='button-group'>
         <button onClick={() => changePhase('select')}>Single Player</button>
         <button onClick={() => changePhase('lobby')}>Multiplayer</button>

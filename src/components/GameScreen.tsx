@@ -5,26 +5,27 @@ import GameStatusDisplay from './GameStatusDisplay';
 
 
 interface GameScreenProps {
-  player: PlayerData;
   currentGame: CurrentGameData;
   options: OptionsData;
+  player: PlayerData;
+  hidden: boolean;
   handleValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ player, currentGame, options, handleValidWord, uploadPuzzle }: GameScreenProps) {
+function GameScreen({ currentGame, options, player, hidden, handleValidWord, uploadPuzzle }: GameScreenProps) {
+
+  const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={styles.gameScreen} >
+    <main className={gameScreenClass} >
       <GameStatusDisplay player={player} currentGame={currentGame} />
-      {/* <div className={styles.gameArea}> */}
-        <GameBoard
-          player={player}
-          currentGame={currentGame}
-          options={options}
-          onValidWord={handleValidWord}
-          uploadPuzzle={uploadPuzzle}
-        />
-      {/* </div> */}
+      <GameBoard
+        player={player}
+        currentGame={currentGame}
+        options={options}
+        onValidWord={handleValidWord}
+        uploadPuzzle={uploadPuzzle}
+      />
     </main>
   )
 }

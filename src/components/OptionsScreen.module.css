@@ -8,26 +8,58 @@
 
 .optionsList {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 2rem;
-  margin-top: 1rem;
-}
-
-.optionsList input[type='color'] {
-  width: 100%;
-  height: 4rem;
-  place-self: end;
-}
-.optionsList input[type='range'] {
-  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: stretch;
+  gap: 2rem 1rem;
+  padding: 1.5rem;
 }
 
 .optionsList > label {
   display: grid;
-  grid-template-columns: 1fr 40%;
+  grid-template-columns: 1fr 5rem;
   gap: 0.5rem;
+}
+
+.puzzlePreview {
+  width: 100vw;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.puzzlePreview.elevated {
+  position: fixed;
+  translate: -50% -50%;
+  top: 50%;
+  left: 50%;
+  opacity: 0.5;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.puzzlePreview * div {
+  font-size: calc(var(--game-board-size) / 12) !important;
+}
+
+.optionInput.color {
+  grid-column-end: span 1;
+}
+
+.optionInput.color > input {
+  grid-column-end: span 1;
+  height: 5rem;
+  width: 5rem;
+  border: 0.1rem solid #ffffff66;
+}
+
+.optionInput.range {
+  grid-column-start: 1;
+  grid-column-end: 3;
+}
+
+.optionInput.range>input {
+  width: 100%;
 }

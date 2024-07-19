@@ -109,14 +109,14 @@ export interface OptionsData {
 
 const defaultStyleOptions = {
   cubeColor: '#aaaaaa',
-  cubeGap: 30,
+  cubeGap: 44,
   cubeTextColor: '#222222',
-  cubeRoundness: 35,
-  footerHeight: 8,
+  cubeRoundness: 32,
+  footerHeight: 6,
   gameBackgroundColor: '#223300',
-  gameBoardBackgroundColor: '#8b8a6f',
-  gameBoardPadding: 20,
-  gameBoardSize: 95,
+  gameBoardBackgroundColor: '#2a283e',
+  gameBoardPadding: 32,
+  gameBoardSize: 96,
   swipeBuffer: 70,
 };
 
@@ -294,7 +294,7 @@ function App() {
       metadata: puzzle.metadata
     }
     setCurrentGame(nextGameData)
-    changePhase('game-board')
+    changePhase('game')
   }
 
   const changePhase = (newPhase: string) => {
@@ -304,14 +304,14 @@ function App() {
   const startSinglePlayerGame = async (options: SinglePlayerOptions) => {
     const randomPuzzle = await fetchRandomPuzzle(options);
     setCurrentGame(randomPuzzle);
-    setPhase('game-board');
+    setPhase('game');
   }
 
   const startCreatedPuzzlePreview = async (options: BoardRequestData) => {
     const newPuzzlePreview = await createPuzzle(options);
     if (newPuzzlePreview) {
       setCurrentGame(newPuzzlePreview)
-      setPhase('game-board');
+      setPhase('game');
     }
     return;
   }
@@ -325,26 +325,15 @@ function App() {
   }
   return (
     <>
-      {phase === 'title' && <TitleScreen changePhase={changePhase} />}
-      {phase === 'options' && <OptionsScreen options={options} changeOption={changeOption} />}
-      {phase === 'create' && <CreateScreen
-        handleClickPremadePuzzle={startPremadePuzzle}
-        startCreatedPuzzlePreview={startCreatedPuzzlePreview}
-      />}
-      {phase === 'select' && <SelectScreen handleClickPremadePuzzle={startPremadePuzzle} startSinglePlayerGame={startSinglePlayerGame} />}
-      {phase === 'game-board' &&
-        <GameScreen
-          player={player}
-          currentGame={currentGame}
-          options={options}
-          handleValidWord={handleValidWord}
-          uploadPuzzle={uploadPuzzle}
-        />}
-      {phase === 'lobby' && <LobbyScreen />}
-      <Footer
-        phase={phase}
-        changePhase={changePhase}
-      />
+      <div className={'screen-container'}>
+        <TitleScreen hidden={phase !== 'title'} changePhase={changePhase} />
+        <OptionsScreen hidden={phase !== 'options'} options={options} changeOption={changeOption} />
+        <CreateScreen hidden={phase !== 'create'} handleClickPremadePuzzle={startPremadePuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
+        <SelectScreen hidden={phase !== 'select'} handleClickPremadePuzzle={startPremadePuzzle} startSinglePlayerGame={startSinglePlayerGame} />
+        <GameScreen hidden={phase !== 'game'} player={player} currentGame={currentGame} options={options} handleValidWord={handleValidWord} uploadPuzzle={uploadPuzzle} />
+        <LobbyScreen hidden={phase !== 'lobby'} />
+      </div>
+      <Footer phase={phase} changePhase={changePhase} />
     </>
   )
 }

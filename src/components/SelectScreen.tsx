@@ -8,11 +8,12 @@ import Modal from './Modal';
 import StoredPuzzleList from './StoredPuzzleList';
 
 interface SelectScreenProps {
+  hidden: boolean;
   startSinglePlayerGame: (options: SinglePlayerOptions) => void;
   handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function SelectScreen({ startSinglePlayerGame, handleClickPremadePuzzle }: SelectScreenProps) {
+function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle }: SelectScreenProps) {
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -57,8 +58,9 @@ function SelectScreen({ startSinglePlayerGame, handleClickPremadePuzzle }: Selec
     }
   };
 
+  const selectScreenClass = `${styles.SelectScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={styles.SelectScreen}>
+    <main className={selectScreenClass}>
       <div className='button-group'>
         <form ref={formRef} onSubmit={handleStartSinglePlayer}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>

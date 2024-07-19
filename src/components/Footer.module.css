@@ -5,6 +5,7 @@
   display: grid;
   place-items: center;
   grid-template-columns: 1fr 1fr 1fr;
+  z-index: 2;
 }
 
 .Footer > button {

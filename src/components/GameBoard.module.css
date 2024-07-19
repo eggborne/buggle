@@ -15,8 +15,8 @@
 }
 
 .gameArea {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   place-items: center;
   justify-content: center;
   flex-grow: 1;

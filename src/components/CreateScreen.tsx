@@ -5,6 +5,7 @@ import WordLengthLimitSelector from './WordLengthLimitSelector.tsx';
 
 
 interface CreateScreenProps {
+  hidden: boolean;
   handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
   startCreatedPuzzlePreview: (options: BoardRequestData) => Promise<void>;
 }
@@ -19,7 +20,7 @@ const defaultValues: BoardRequestData = {
   returnBest: true,
 }
 
-function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
+function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) {
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
     customLettersOption: false,
     totalWordsOption: false,
@@ -55,7 +56,7 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
       ...defaultValues,
       dimensions,
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
-      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,      
+      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
       returnBest: returnBestInputRef.current ? returnBestInputRef.current.checked : defaultValues.returnBest,
     };
     if (Object.values(optionsEnabled).some((o => o))) {
@@ -161,8 +162,9 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
 
   const getTotalLetterAmount = () => dimensions.width * dimensions.height;
 
+  const createScreenClass = `${styles.CreateScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={styles.CreateScreen}>
+    <main className={createScreenClass}>
       <div className={styles.creationArea}>
         <h1>Create Puzzle</h1>
         <form onSubmit={handleStartCreatedPuzzle}>
@@ -202,11 +204,11 @@ function CreateScreen({ startCreatedPuzzlePreview }: CreateScreenProps) {
                 <div className={`${styles.optionalInputRow} ${styles.textRow} ${optionsEnabled['customLettersOption'] ? styles.active : styles.inactive}`}>
                   <h4>Letters</h4>
                   <div className={styles.textReminder}>{`${getTotalLetterAmount() - userLetters.length} remaining`}</div>
-                  <label>    
-                    <input onChange={handleChangeCustomLetters} value={userLetters.join('')} disabled={!optionsEnabled['customLettersOption']} type='text' min='9' max='144'/>
+                  <label>
+                    <input onChange={handleChangeCustomLetters} value={userLetters.join('')} disabled={!optionsEnabled['customLettersOption']} type='text' min='9' max='144' />
                   </label>
                 </div>
-              </div>              
+              </div>
             </div>
             <div className={styles.optionalSettings}>
               <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>

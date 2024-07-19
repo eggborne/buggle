@@ -5,12 +5,14 @@
   padding: var(--game-board-padding);
   color: var(--cube-text-color);
   background-color: var(--game-board-background-color);
+  border-radius: calc(var(--cube-roundness) / 5);
+  box-shadow: 0 0 0.75rem #00000044;
 }
 
 .PuzzleIcon > div {
   width: 100%;
   height: 100%;
-  background-color: #ddd;
+  background-color: var(--cube-color);
   display: flex;
   align-items: center;
   justify-content: center;

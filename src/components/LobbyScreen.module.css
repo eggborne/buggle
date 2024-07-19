@@ -1,4 +1,4 @@
-.lobbyScreen {
+.LobbyScreen {
   background-color: var(--lobby-screen-bg-color);
   justify-content: flex-start;
 }
