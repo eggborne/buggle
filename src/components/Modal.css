@@ -1,4 +1,4 @@
-.modal-overlay{
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -8,6 +8,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .modal {
@@ -21,7 +23,7 @@
   overflow-y: auto;
 }
 
-h2 {
+.modal h2 {
   margin-bottom: 1rem;
 }
 
@@ -29,4 +31,5 @@ h2 {
   position: fixed;
   top: 1.75rem;
   right: 2rem;
+  z-index: 4;
 }

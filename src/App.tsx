@@ -164,7 +164,7 @@ function App() {
   useEffect(() => {
     for (const optionKey in options) {
       const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-      let newValue = options[optionKey as keyof OptionsData].toString();
+      const newValue = options[optionKey as keyof OptionsData].toString();
       document.documentElement.style.setProperty(varName, newValue)
     }
 

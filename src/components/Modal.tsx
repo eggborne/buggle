@@ -3,19 +3,21 @@ import ReactDOM from 'react-dom';
 import './Modal.css';
 
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
   children?: ReactNode;
+  isOpen: boolean;
+  noCloseButton?: boolean;
+  style?: Record<string, string | number>;
+  onClose?: () => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ children, isOpen, onClose }) => {
+const Modal: React.FC<ModalProps> = ({ children, isOpen, noCloseButton, style, onClose }) => {
   if (!isOpen) return null;
   return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="x-close" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={style}>
+        {!noCloseButton && <button className="x-close" onClick={onClose}>
           &times;
-        </button>
+        </button>}
         {children}
       </div>
     </div>,

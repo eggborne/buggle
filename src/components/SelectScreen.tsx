@@ -6,6 +6,7 @@ import { Difficulty, SinglePlayerOptions, StoredPuzzleData } from '../App';
 import PuzzleIcon from './PuzzleIcon'
 import Modal from './Modal';
 import StoredPuzzleList from './StoredPuzzleList';
+import { pause } from '../scripts/util';
 
 interface SelectScreenProps {
   hidden: boolean;
@@ -36,7 +37,7 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
     getPuzzles();
   }, []);
 
-  const handleStartSinglePlayer = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleStartSinglePlayer = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
     const options: SinglePlayerOptions = {
@@ -45,7 +46,7 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
         height: sizeSelected
       },
       difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value as Difficulty
-    };
+    };    
     startSinglePlayerGame(options);
   }
 
@@ -67,9 +68,18 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
           <div className={styles.puzzleOptions}>
             <div className={styles.sizeSelect}>
               <div className={styles.sizeSelections}>
-                <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 4, height: 4 }} contents={[]} /></span>
-                <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(5)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 5, height: 5 }} contents={[]} /></span>
-                <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(6)}><PuzzleIcon iconSize={'4.5rem'} size={{ width: 6, height: 6 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={{
+                  width: `4.5rem`,
+                  height: `4.5rem`
+                }} puzzleDimensions={{ width: 4, height: 4 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(5)}><PuzzleIcon iconSize={{
+                  width: `4.5rem`,
+                  height: `4.5rem`
+                }} puzzleDimensions={{ width: 5, height: 5 }} contents={[]} /></span>
+                <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(6)}><PuzzleIcon iconSize={{
+                  width: `4.5rem`,
+                  height: `4.5rem`
+                }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
               </div>
             </div>
             <select name='difficulty'>
@@ -85,7 +95,13 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <>
           <h2>Saved puzzles </h2>
-          <StoredPuzzleList list={puzzleList} onClickPremadePuzzle={handleClickPremadePuzzle} />
+          <StoredPuzzleList list={puzzleList} onClickPremadePuzzle={async (e) => {
+            handleClickPremadePuzzle(e)
+            if (listShowing) {
+              await pause(100);
+              setListShowing(false);
+            };
+          }} />
         </>
       </Modal>
     </main>

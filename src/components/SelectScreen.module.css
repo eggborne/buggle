@@ -31,7 +31,7 @@
 }
 
 .SelectScreen button.start {
-  background-color: green;  
+  background-color: var(--start-color);  
 }
 
 .puzzleOptions {

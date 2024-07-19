@@ -1,76 +1,95 @@
 {
-  "userOptionInputs": [
-    {
-      "label": "Game Background Color",
-      "name": "gameBackgroundColor",
-      "type": "color",
-      "defaultValue": "#ffffff"
+  "userOptions": {
+    "style": {
+      "colors": {
+        "label": "Colors",
+        "inputDataList": [
+          {
+            "label": "Game Background",
+            "name": "gameBackgroundColor",
+            "type": "color",
+            "defaultValue": "#ffffff"
+          },
+          {
+            "label": "Board Background",
+            "name": "gameBoardBackgroundColor",
+            "type": "color",
+            "defaultValue": "#eeeeee"
+          },
+          {
+            "label": "Cube",
+            "name": "cubeColor",
+            "type": "color",
+            "defaultValue": "#3498db"
+          },
+          {
+            "label": "Cube Text",
+            "name": "cubeTextColor",
+            "type": "color",
+            "defaultValue": "#ffffff"
+          }
+        ]
+      },
+      "sizes": {
+        "label": "Sizes",
+        "inputDataList": [
+          {
+            "label": "Board size",
+            "name": "gameBoardSize",
+            "type": "range",
+            "min": 80,
+            "max": 100,
+            "defaultValue": 90
+          },
+          {
+            "label": "Board padding",
+            "name": "gameBoardPadding",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "defaultValue": 10
+          },
+          {
+            "label": "Cube gap",
+            "name": "cubeGap",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "defaultValue": 5
+          },
+          {
+            "label": "Cube Roundness",
+            "name": "cubeRoundness",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "defaultValue": 10
+          },
+          {
+            "label": "Footer Height",
+            "name": "footerHeight",
+            "type": "range",
+            "min": 0,
+            "max": 40,
+            "defaultValue": 5
+          }
+        ]
+      }
     },
-    {
-      "label": "Board Background Color",
-      "name": "gameBoardBackgroundColor",
-      "type": "color",
-      "defaultValue": "#eeeeee"
-    },
-    {
-      "label": "Cube Color",
-      "name": "cubeColor",
-      "type": "color",
-      "defaultValue": "#3498db"
-    },
-    {
-      "label": "Cube Text Color",
-      "name": "cubeTextColor",
-      "type": "color",
-      "defaultValue": "#ffffff"
-    },
-    {
-      "label": "Board size",
-      "name": "gameBoardSize",
-      "type": "range",
-      "min": 80,
-      "max": 100,
-      "defaultValue": 90
-    },
-    {
-      "label": "Board padding",
-      "name": "gameBoardPadding",
-      "type": "range",
-      "min": 0,
-      "max": 100,
-      "defaultValue": 10
-    },
-    {
-      "label": "Cube gap",
-      "name": "cubeGap",
-      "type": "range",
-      "min": 0,
-      "max": 100,
-      "defaultValue": 5
-    },
-    {
-      "label": "Cube Roundness",
-      "name": "cubeRoundness",
-      "type": "range",
-      "min": 0,
-      "max": 100,
-      "defaultValue": 10
-    },    
-    {
-      "label": "Footer Height",
-      "name": "footerHeight",
-      "type": "range",
-      "min": 0,
-      "max": 40,
-      "defaultValue": 5
-    },
-    {
-      "label": "Swipe buffer",
-      "name": "swipeBuffer",
-      "type": "range",
-      "min": 0,
-      "max": 100,
-      "defaultValue": 20
+    "gameplay": {
+      "touch": {
+        "label": "Gameplay",
+        "inputDataList": [
+          {
+            "label": "Swipe buffer",
+            "name": "swipeBuffer",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "defaultValue": 20
+          }
+        ]
+      }
     }
-  ]
+  }
 }

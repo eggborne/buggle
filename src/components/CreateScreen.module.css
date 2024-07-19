@@ -1,22 +1,16 @@
 .CreateScreen {
   background-color: var(--create-screen-bg-color);
-  align-items: stretch;
   justify-content: flex-start;
-  padding: 1.5rem 0;
+  padding: 0 1rem;
   overflow-y: auto;
 }
 
 .CreateScreen button.start {
-  background-color: green;
+  background-color: var(--start-color);
   border: 0.1rem solid #ffffff99;
   flex-grow: 1;
-}
-
-.creationArea,
-.puzzleListArea {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  height: auto;
+  margin: 0.5rem 0;
 }
 
 h1 {
@@ -27,8 +21,8 @@ h1 {
 .puzzleOptions {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 1rem;
-  width: 90vw;
 }
 
 .puzzleOptions label {
@@ -38,7 +32,7 @@ h1 {
   gap: 0.5rem;
   width: 100%;
   line-height: 1.2rem;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
 }
 
 .puzzleOptions input {
@@ -50,42 +44,46 @@ h1 {
   text-align: right;
 }
 
-.mainSettings,
-.optionalSettings {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem 0;
+.mainSettings {
+  border-radius: 0.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+  align-items: stretch;
+  gap: 0 1rem;
+  padding: 0.5rem 1rem;
+  border: 0.1rem solid #ffffff66;
 }
 
-.mainSettings {
-  gap: 2rem 0;
-  outline: 0.1rem solid #ffffff55;
-  border-radius: 0.25rem;
+.mainSettings > .selectRow {
+  grid-column-end: span 2;
+  display: flex;
+  justify-content: space-between;
+}
+
+.mainSettings > .selectRow span {
+  width: max-content;
 }
 
 .mainSettings span {
   width: min-content;
 }
 
-.mainSettings input {
+.mainSettings label:last-child {
+  grid-column-start: 1;
+  grid-column-end: span 2;
+}
+
+.mainSettings input[type='range'] {
+  width: 90%;  
+}
+
+.mainSettings input[type='number'] {
   font-size: 1.5rem;
   padding: 0.5rem 0.25rem;
 }
 
-.dimensionsInputRow {
-  display: grid;
-  grid-template-rows: 3rem 3rem;
-  grid-template-columns: 1fr 1fr;
-  justify-items: center;
-  transition: opacity 100ms ease;
-}
-
-input[type='range'] {
-  grid-column-end: span 2;
-  width: 90%;
-}
-
-.filterArea {
+.optionalSettings {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -164,10 +162,10 @@ input.sliderValueDisplay {
 
 .optionalInputRow {
   min-height: 5rem;
-  padding: 1rem;
+  padding: 1rem 0.5rem;
   display: grid;
   grid-template-rows: 2.5rem 1fr;
-  grid-template-columns: auto auto;
+  grid-template-columns: auto;
   font-size: 1rem;
   transition: opacity 100ms ease;
   justify-self: stretch;
@@ -181,7 +179,7 @@ input.sliderValueDisplay {
   opacity: 0.5;
 }
 
-.optionalRow>input {
+.optionalRow>input[type='checkbox'] {
   align-self: flex-start;
   margin-top: 1rem;
 }
@@ -234,7 +232,8 @@ input.sliderValueDisplay {
 .puzzleOptions h2 {
   width: 100%;
   text-align: center;
-  margin: 0;
+  padding: 0.5rem 0;
+  background: #22167f2e;
 }
 
 .optionalInputRow>label {
@@ -246,13 +245,10 @@ input.sliderValueDisplay {
 }
 
 .submitArea {
-  align-self: stretch;
-  padding: 1rem 1.5rem;
   display: grid;
   grid-template-columns: 6rem 5rem 1fr;
-  align-items: stretch;
-  height: 6rem;
   gap: 0.5rem;
+  padding-bottom: 1rem;
 }
 
 .submitArea>label {
@@ -260,7 +256,9 @@ input.sliderValueDisplay {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   font-size: 0.8rem;
+  height: 100%;
 }
 
 .submitArea span {
@@ -287,21 +285,17 @@ input.sliderValueDisplay {
   left: 0;
   width: 0;
   height: 0;
-  /* visibility: hidden; */
 }
 
 .checkboxArea>input::before, .checkboxArea>input::after {
   content: 'ON';
+  position: absolute;  
   color: #a3f474;
   font-weight: bold;
   font-size: 1.5rem;
-  margin-top: 0.3rem;
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 5rem;
-  height: 4rem;
+  height: 100%;
+  padding-top: 2rem;
   opacity: 0;
   transition: opacity 200ms ease;
 }

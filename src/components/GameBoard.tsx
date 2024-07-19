@@ -7,8 +7,8 @@ import CurrentWordDisplay from './CurrentWordDisplay';
 
 interface GameBoardProps {
   currentGame: CurrentGameData;
-  player: PlayerData;
   options: OptionsData;
+  player: PlayerData;
   onValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
@@ -20,8 +20,9 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({ player, currentGame, options, onValidWord, uploadPuzzle }: GameBoardProps) {
-
+function GameBoard({  currentGame, options, player, onValidWord, uploadPuzzle }: GameBoardProps) {
+  console.log('gb currentGame', currentGame)
+  console.log('gb player', player)
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
   const [dragging, setDragging] = useState<boolean>(false);
