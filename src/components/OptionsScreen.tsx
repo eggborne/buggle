@@ -53,6 +53,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
   }, 200);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('changing e', e)
     const name = e.target.name as string;
     const value = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
     if (e.target.type === 'range') {
@@ -70,45 +71,65 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
 
   const optionsScreenClass = `${styles.OptionsScreen}${hidden ? ' hidden' : ''}`;
   return (
-    <main className={optionsScreenClass}>
-      <h1>Options</h1>
-
-      <div className={`${styles.optionCategorySection} ${styles.color}`}>
-        <h2>{colorOptions.label}</h2>
-        <div className={`${styles.optionsList} ${styles.color}`}>
-          {colorOptions.inputDataList.map(({ name, label, type, defaultValue, min, max, onChange }) => {
-            // <OptionInput key={name} label={label} name={name} type={type} value={options[name as keyof OptionsData]} defaultValue={defaultValue} onChange={handleChange} onPointerUp={undefined} min={min} max={max} />
-            return (<label className={`${styles.optionInput} ${styles[type + '-label']}`}>
-              <span>{label}</span>
-              <input
-                id={name}
-                name={name}
-                type={type}
-                value={options[name as keyof OptionsData]}
-                defaultValue={defaultValue}
-                onChange={onChange}
-                min={min}
-                max={max}
-              />
-            </label>)
-          })}
+    <>
+      <main className={optionsScreenClass}>
+        <h1>Options</h1>
+        <h2>Appearance</h2>
+        <div className={styles.appearancePreview}>
+          <PuzzleIcon
+            contents={sampleLetterList}
+            iconSize={{
+              width: `var(--game-board-size)`,
+            }}
+            puzzleDimensions={{ width: 5, height: 5 }}
+          />
         </div>
-      </div>
-
-      <div className={`${styles.optionCategorySection} ${styles.range}`}>
-        <h2>{sizeOptions.label}</h2>
-        <div className={`${styles.optionsList} ${styles.range}`}>
-          {sizeOptions.inputDataList.map((input) => (
-            <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
-          ))}
+        <div className={`${styles.optionCategorySection} ${styles.color}`}>
+          {/* <h2>{colorOptions.label}</h2> */}
+          <div className={`${styles.optionsList} ${styles.color}`}>
+            {colorOptions.inputDataList.map(({ name, label, type, defaultValue, min, max }) => {
+              // <OptionInput key={name} label={label} name={name} type={type} value={options[name as keyof OptionsData]} defaultValue={defaultValue} onChange={handleChange} onPointerUp={undefined} min={min} max={max} />
+              return (<label className={`${styles.optionInput} ${styles[type + '-label']}`}>
+                <span>{label}</span>
+                <input
+                  id={name}
+                  name={name}
+                  type={type}
+                  value={options[name as keyof OptionsData]}
+                  defaultValue={defaultValue}
+                  onChange={handleChange}
+                  min={min}
+                  max={max}
+                />
+              </label>)
+            })}
+          </div>
         </div>
-      </div>
+
+        <div className={`${styles.optionCategorySection} ${styles.range}`}>
+          {/* <h2>{sizeOptions.label}</h2> */}
+          <div className={`${styles.optionsList} ${styles.range}`}>
+            {sizeOptions.inputDataList.map((input) => (
+              <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
+            ))}
+          </div>
+        </div>
+        <div className={`${styles.optionCategorySection} ${styles.range}`}>
+          {/* <h2>{gameplayOptions.label}</h2> */}
+          <div className={`${styles.optionsList} ${styles.range}`}>
+            {gameplayOptions.inputDataList.map((input) => (
+              <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
+            ))}
+          </div>
+        </div>
+
+      </main>
       <Modal style={{
         padding: 0,
         width: '100%',
         background: 'transparent',
-      }} isOpen={false} noCloseButton={true} onClose={() => setPreviewShowing(false)}>
-        <div className={styles.puzzlePreview}>
+      }} isOpen={previewShowing} noCloseButton={true} onClose={() => setPreviewShowing(false)}>
+        {/* <div className={styles.puzzlePreview}>
           <PuzzleIcon
             puzzleDimensions={{ width: 5, height: 5 }}
             contents={sampleLetterList}
@@ -117,19 +138,10 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
               height: `var(--game-board-size)`
             }}
           />
-        </div>
-        <div>cocks</div>
+        </div> */}
+        
       </Modal>
-
-      <div className={`${styles.optionCategorySection} ${styles.range}`}>
-        <h2>{gameplayOptions.label}</h2>
-        <div className={`${styles.optionsList} ${styles.range}`}>
-          {gameplayOptions.inputDataList.map((input) => (
-            <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
-          ))}
-        </div>
-      </div>
-    </main>
+    </>
   )
 }
 

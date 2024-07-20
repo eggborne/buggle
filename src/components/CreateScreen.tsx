@@ -219,14 +219,16 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
             <input checked={optionsEnabled['totalWordsOption']} onChange={handleClickCheckbox} type='checkbox' id={'totalWordsOption'} name={'totalWordsOption'} />
             <div className={`${styles.optionalInputRow} ${optionsEnabled['totalWordsOption'] ? styles.active : styles.inactive}`}>
               <h4>Total words</h4>
-              <label>
-                <span>Min</span>
-                <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='1' max='9999' id='minWords' name='minWords' />
-              </label>
-              <label>
-                <span>Max</span>
-                <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='2' max='99999' id='maxWords' name='maxWords' />
-              </label>
+              <div className={styles.doubleInputRow}>
+                <label>
+                  <span>Min</span>
+                  <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='1' max='999 99' id='minWords' name='minWords' />
+                </label>
+                <label>
+                  <span>Max</span>
+                  <input disabled={!optionsEnabled['totalWordsOption']} type='number' min='2' max='99999' id='maxWords' name='maxWords' />
+                </label>
+              </div>
             </div>
           </div>
 
@@ -292,7 +294,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
         <div className={styles.submitArea}>
           <label htmlFor={'attempts'}>
             <span>Max. attempts</span>
-            <input id={'attempts'} name={'attempts'} ref={attemptsInputRef} type='number' min={1} max={100000} defaultValue={10} />
+            <input id={'attempts'} name={'attempts'} ref={attemptsInputRef} type='number' min={1} max={1000000} defaultValue={10} />
           </label>
           <label htmlFor={'returnBest'} className={styles.checkboxArea}>
             <span>Return best</span>

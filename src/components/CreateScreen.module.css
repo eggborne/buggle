@@ -65,6 +65,10 @@ h1 {
   width: max-content;
 }
 
+.mainSettings > .selectRow select {
+  font-size: 0.8rem;
+}
+
 .mainSettings span {
   width: min-content;
 }
@@ -75,12 +79,11 @@ h1 {
 }
 
 .mainSettings input[type='range'] {
-  width: 90%;  
+  width: 910%;  
 }
 
 .mainSettings input[type='number'] {
-  font-size: 1.5rem;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0;
 }
 
 .optionalSettings {
@@ -147,28 +150,25 @@ h1 {
   pointer-events: none;
 }
 
-input.sliderValueDisplay {
-  pointer-events: none;
-  padding: 0;
-  margin: 0;
-  background: transparent;
-  border: 0;
-  width: 2rem;
-}
-
-.requiredInputRow {
-  display: flex;
-}
-
 .optionalInputRow {
-  min-height: 5rem;
   padding: 1rem 0.5rem;
+  width: 100%;
   display: grid;
   grid-template-rows: 2.5rem 1fr;
-  grid-template-columns: auto;
+  grid-template-columns: 1fr 1fr;
   font-size: 1rem;
   transition: opacity 100ms ease;
   justify-self: stretch;
+}
+
+.doubleInputRow {
+  grid-column-start: 1;
+  grid-column-end: span all;
+  display: flex;
+}
+
+.doubleInputRow input {
+  width: 5rem;
 }
 
 .optionalInputRow.active {
@@ -210,7 +210,7 @@ input.sliderValueDisplay {
   gap: 0.5rem;
 }
 
-.gridBody>div,
+.gridBody > div,
 .optionalRow select {
   font-size: 0.8rem;
   width: 100%;
@@ -222,9 +222,10 @@ input.sliderValueDisplay {
   width: 95%;
 }
 
-.optionalInputRow>h4 {
+.optionalInputRow > h4 {
+  width: 100%;
   grid-column-start: 1;
-  grid-column-end: span all;
+  grid-column-end: span 3;
   font-size: 1.1rem;
   justify-self: stretch;
 }
@@ -234,10 +235,6 @@ input.sliderValueDisplay {
   text-align: center;
   padding: 0.5rem 0;
   background: #22167f2e;
-}
-
-.optionalInputRow>label {
-  grid-row-start: 2;
 }
 
 .inactive button {
@@ -308,12 +305,4 @@ input.sliderValueDisplay {
 
 .checkboxArea > input:checked::before {
   opacity: 1;
-}
-
-.columnRow {
-  flex-direction: column;
-}
-
-.columnRow > span {
-  width: max-content;
 }

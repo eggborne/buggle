@@ -23,6 +23,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto 1fr;
+  align-items: stretch;
 }
 
 .puzzleListing {
@@ -30,8 +31,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 0;
-  border-radius: 0.25rem;
+  gap: 0.5rem 0;
   padding: 15% 0;
 }
 
@@ -40,6 +40,4 @@
   flex-direction: column;
   align-items: center;
   font-size: 0.75rem;
-  gap: 0.1rem;
-  margin: 0 1rem;
 }

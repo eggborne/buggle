@@ -10,6 +10,7 @@
   -moz-osx-font-smoothing: grayscale;
 
   --actual-height: 100dvh;
+  --main-width: 100vw;
   --current-word-display-height: 12vh;
   --main-background-color: #1A1A1A;
 
@@ -36,6 +37,7 @@
   /* vars made with user options */
   --cube-color: var(--user-cube-color);
   --cube-gap: calc(100% * (var(--user-cube-gap) / 3000));
+  --cube-gap: calc(var(--main-width) * (var(--user-cube-gap) / 3000));
   --cube-roundness: calc(var(--user-cube-roundness) * 0.5%);
   --cube-text-color: var(--user-cube-text-color);
   --footer-height: calc(3.25rem + (var(--user-footer-height) * 0.125rem));

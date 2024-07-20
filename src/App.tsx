@@ -190,7 +190,7 @@ function App() {
       letterString: encodeMatrix(currentGame.letterMatrix, currentGame.metadata.key).map(row => row.join('')).join(''),
       metadata: currentGame.metadata,
     };
-    const newPuzzleId = nextPuzzleData.dimensions.width === nextPuzzleData.dimensions.height ? `${nextPuzzleData.letterString}` : `${currentGame.dimensions.width}${currentGame.dimensions.height}${nextPuzzleData.letterString}`;
+    const newPuzzleId = `${currentGame.dimensions.width}${currentGame.dimensions.height}${nextPuzzleData.letterString}`;
     console.log('uploading', nextPuzzleData)
     await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
     console.warn('puzzle uploaded!')

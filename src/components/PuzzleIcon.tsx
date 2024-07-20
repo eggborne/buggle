@@ -1,3 +1,4 @@
+import BoardCell from './BoardCell';
 import styles from './PuzzleIcon.module.css'
 
 interface PuzzleIconProps {
@@ -28,16 +29,18 @@ function PuzzleIcon({ puzzleDimensions, contents, iconSize }: PuzzleIconProps) {
         gridTemplateColumns: `repeat(${width}, 1fr)`,
         gridTemplateRows: `repeat(${height}, 1fr)`,
         width: iconSize.width,
-        height: iconSize.height || '100%',
+        aspectRatio: (width / height),
       }}
     >
       {contents.map((item, i) =>
-        <div key={`${item}${i}`}
-          style={{
-            fontSize: `calc(100vw / ${width * 4.5})`,
-            height: `calc()`
-          }}
-        >{item}</div>
+        // <div key={`${item}${i}`}
+        //   style={{
+        //     fontSize: `calc((${iconSize.width} / ${width * 1.5}) - (${width - 2} * 4 * var(--cube-gap)) - (8 * var(--game-board-padding)) )`,
+        //     // fontSize: `calc(${iconSize.width} - (var(--cube-gap) * ${width - 2}) - (var(--game-board-padding) * 2))`,
+
+        //   }}
+        // >{item}</div>
+        <BoardCell key={`${item}${i}`} letter={item} touched={false} wordStatus={''} />
       )}
     </div>
   )

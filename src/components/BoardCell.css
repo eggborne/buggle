@@ -9,7 +9,10 @@
   border-radius: var(--cube-roundness);
   border: 0.1rem solid #00000066;
   text-transform: capitalize;
-  transition: all 80ms ease;
+  outline-width: calc(var(--cube-gap) / 3);
+  outline-style: solid;
+  outline-color: transparent;
+  z-index: 2;
 }
 
 .board-cell::after {
@@ -44,7 +47,7 @@ p {
 }
 
 .board-cell.touched {
-  outline: 0.15rem solid rgb(214, 201, 178);
+  outline-color: rgb(214, 201, 178);
 }
 
 .board-cell.touched::before {
