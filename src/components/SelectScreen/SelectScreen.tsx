@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
 import { ref, child, get } from "firebase/database";
-import { database } from '../scripts/firebase.ts';
-import { Difficulty, SinglePlayerOptions, StoredPuzzleData } from '../App';
-import PuzzleIcon from './PuzzleIcon'
-import Modal from './Modal';
-import StoredPuzzleList from './StoredPuzzleList';
-import { pause } from '../scripts/util';
+import { database } from '../../scripts/firebase.ts';
+import { Difficulty, SinglePlayerOptions, StoredPuzzleData } from '../../App.tsx';
+import PuzzleIcon from '../PuzzleIcon.tsx'
+import Modal from '../Modal.tsx';
+import StoredPuzzleList from '../StoredPuzzleList.tsx';
+import { pause } from '../../scripts/util.ts';
 
 interface SelectScreenProps {
   hidden: boolean;
   startSinglePlayerGame: (options: SinglePlayerOptions) => void;
-  handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
+  handleClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle }: SelectScreenProps) {
+function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }: SelectScreenProps) {
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -46,7 +46,7 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
         height: sizeSelected
       },
       difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value as Difficulty
-    };    
+    };
     startSinglePlayerGame(options);
   }
 
@@ -95,12 +95,12 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickPremadePuzzle 
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <>
           <h2>Saved puzzles </h2>
-          <StoredPuzzleList list={puzzleList} onClickPremadePuzzle={async (e) => {
-            handleClickPremadePuzzle(e)
+          <StoredPuzzleList list={puzzleList} onClickStoredPuzzle={async (e) => {
+            handleClickStoredPuzzle(e)
             if (listShowing) {
               await pause(100);
               setListShowing(false);
-            };
+            }
           }} />
         </>
       </Modal>

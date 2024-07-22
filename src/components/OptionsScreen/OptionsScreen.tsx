@@ -1,10 +1,10 @@
 import styles from './OptionsScreen.module.css'
-import { useState } from 'react'
-import { OptionsData } from '../App'
-import { debounce } from '../scripts/util'
-import { userOptions } from '../config.json'
-import PuzzleIcon from './PuzzleIcon'
-import Modal from './Modal'
+import { useEffect, useState } from 'react'
+import { OptionsData } from '../../App'
+import { debounce } from '../../scripts/util'
+import { userOptions } from '../../config.json'
+import PuzzleIcon from '../PuzzleIcon'
+import Modal from '../Modal'
 
 interface OptionsScreenProps {
   hidden: boolean;
@@ -48,6 +48,7 @@ const OptionInput = ({ label, name, type, value, defaultValue, onChange, onPoint
 
 function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
   const [previewShowing, setPreviewShowing] = useState<boolean>(false);
+
   const debouncedChangeOption = debounce((name: string, value: string | number) => {
     changeOption(name, value);
   }, 200);
@@ -74,8 +75,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
     <>
       <main className={optionsScreenClass}>
         <h1>Options</h1>
-        <h2>Appearance</h2>
-        <div className={styles.appearancePreview}>
+        {/* <div className={styles.appearancePreview}>
           <PuzzleIcon
             contents={sampleLetterList}
             iconSize={{
@@ -83,13 +83,13 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
             }}
             puzzleDimensions={{ width: 5, height: 5 }}
           />
-        </div>
+        </div> */}
         <div className={`${styles.optionCategorySection} ${styles.color}`}>
-          {/* <h2>{colorOptions.label}</h2> */}
+          <h2>{colorOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.color}`}>
             {colorOptions.inputDataList.map(({ name, label, type, defaultValue, min, max }) => {
               // <OptionInput key={name} label={label} name={name} type={type} value={options[name as keyof OptionsData]} defaultValue={defaultValue} onChange={handleChange} onPointerUp={undefined} min={min} max={max} />
-              return (<label className={`${styles.optionInput} ${styles[type + '-label']}`}>
+              return (<label key={name} className={`${styles.optionInput} ${styles[type + '-label']}`}>
                 <span>{label}</span>
                 <input
                   id={name}
@@ -107,7 +107,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
         </div>
 
         <div className={`${styles.optionCategorySection} ${styles.range}`}>
-          {/* <h2>{sizeOptions.label}</h2> */}
+          <h2>{sizeOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.range}`}>
             {sizeOptions.inputDataList.map((input) => (
               <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
@@ -115,7 +115,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
           </div>
         </div>
         <div className={`${styles.optionCategorySection} ${styles.range}`}>
-          {/* <h2>{gameplayOptions.label}</h2> */}
+          <h2>{gameplayOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.range}`}>
             {gameplayOptions.inputDataList.map((input) => (
               <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
@@ -124,12 +124,12 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
         </div>
 
       </main>
-      <Modal style={{
+      {/* <Modal style={{
         padding: 0,
         width: '100%',
         background: 'transparent',
       }} isOpen={previewShowing} noCloseButton={true} onClose={() => setPreviewShowing(false)}>
-        {/* <div className={styles.puzzlePreview}>
+        <div className={styles.puzzlePreview}>
           <PuzzleIcon
             puzzleDimensions={{ width: 5, height: 5 }}
             contents={sampleLetterList}
@@ -138,9 +138,9 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
               height: `var(--game-board-size)`
             }}
           />
-        </div> */}
+        </div>
         
-      </Modal>
+      </Modal> */}
     </>
   )
 }

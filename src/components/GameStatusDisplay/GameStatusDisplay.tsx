@@ -1,6 +1,6 @@
-import { PlayerData, CurrentGameData } from '../App';
+import { PlayerData, CurrentGameData } from '../../App';
 import styles from './GameStatusDisplay.module.css';
-import NumeralDisplay from './NumeralDisplay';
+import NumeralDisplay from '../NumeralDisplay';
 
 
 interface GameStatusDisplayProps {
@@ -14,13 +14,13 @@ function GameStatusDisplay({ player, currentGame }: GameStatusDisplayProps) {
       <div className={styles.gameStatsArea}>
         <div className={styles.labeledCounter}>
           <div>Words found</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem'}}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
             <NumeralDisplay length={3} digits={player.wordsFound.size} />
             <span>of</span>
             <NumeralDisplay length={3} digits={currentGame.allWords.size} />
           </div>
         </div>
-        
+
       </div>
       <div className={styles.timeScoreArea}>
         <div className={styles.labeledCounter}>

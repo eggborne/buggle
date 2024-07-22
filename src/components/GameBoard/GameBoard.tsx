@@ -1,11 +1,14 @@
-import { CurrentGameData, PlayerData, OptionsData } from '../App';
+import { off, onValue, ref } from 'firebase/database';
+import { database } from '../../scripts/firebase';
+import { CurrentGameData, PlayerData, OptionsData } from '../../App';
 import { useEffect, useRef, useState } from 'react';
-import BoardCell from './BoardCell';
-import Modal from './Modal';
+import BoardCell from '../BoardCell/BoardCell';
+import Modal from '../Modal';
 import styles from './GameBoard.module.css'
-import CurrentWordDisplay from './CurrentWordDisplay';
+import CurrentWordDisplay from '../CurrentWordDisplay/CurrentWordDisplay';
 
 interface GameBoardProps {
+  gameId?: string;
   currentGame: CurrentGameData;
   options: OptionsData;
   player: PlayerData;
@@ -20,17 +23,33 @@ interface CellObj {
   col: number;
 }
 
-function GameBoard({  currentGame, options, player, onValidWord, uploadPuzzle }: GameBoardProps) {
+function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPuzzle }: GameBoardProps) {
   console.log('gb currentGame', currentGame)
   console.log('gb player', player)
+  console.log('gb gameId', gameId)
   const gameBoardRef = useRef<HTMLDivElement>(null);
-
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
   const [wordValid, setWordValid] = useState<boolean>(false);
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const [wordListShowing, setWordListShowing] = useState<boolean>(false);
+  const [game, setGame] = useState<CurrentGameData>(currentGame);
+
+  if (gameId) {
+    useEffect(() => {
+      const gameRef = ref(database, `/gameRooms/${gameId}/gameData`);
+      const listener = onValue(gameRef, (snapshot) => {
+        const data = snapshot.val();
+        setGame(data);
+      });
+      console.warn(`STARTED game listener at ${gameId}`)
+      return () => {
+        off(gameRef, 'value', listener);
+        console.warn(`STOPPED game listener at ${gameId}`)
+      };
+    }, [gameId]);
+  }
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -144,7 +163,7 @@ function GameBoard({  currentGame, options, player, onValidWord, uploadPuzzle }:
     setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
     setCurrentWord(nextCurrentWord);
     const alreadyFound = player.wordsFound.has(nextCurrentWord);
-    const wordExistsInPuzzle = currentGame.allWords.has(nextCurrentWord);
+    const wordExistsInPuzzle = new Set(currentGame.allWords).has(nextCurrentWord);
     setWordStatus(alreadyFound ? 'duplicate' : wordExistsInPuzzle ? 'valid' : 'invalid');
     setWordValid(!alreadyFound && wordExistsInPuzzle);
   };
@@ -158,6 +177,8 @@ function GameBoard({  currentGame, options, player, onValidWord, uploadPuzzle }:
     const colDiff = Math.abs(cell1.col - cell2.col);
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
+
+  currentGame = game;
 
   return (
     <div className={styles.gameArea}>

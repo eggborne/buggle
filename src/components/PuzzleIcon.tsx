@@ -1,4 +1,4 @@
-import BoardCell from './BoardCell';
+import BoardCell from './BoardCell/BoardCell';
 import styles from './PuzzleIcon.module.css'
 
 interface PuzzleIconProps {

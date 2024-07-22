@@ -2,7 +2,6 @@
   background-color: var(--create-screen-bg-color);
   justify-content: flex-start;
   padding: 0 1rem;
-  overflow-y: auto;
 }
 
 .CreateScreen button.start {
@@ -79,7 +78,7 @@ h1 {
 }
 
 .mainSettings input[type='range'] {
-  width: 910%;  
+  width: 900%;  
 }
 
 .mainSettings input[type='number'] {
@@ -108,9 +107,39 @@ h1 {
 }
 
 .puzzleOptions .textRow {
+  padding: 1rem;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
   position: relative;
+}
+
+.wordCollection {
+  grid-column-end: span 2;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.collectionMember {
+  background: #12bb12;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.collectionMember > button {
+  font-size: 1.5rem;
+  border-radius: 0.125rem;
+  aspect-ratio: 1;
+}
+
+.textRow > label {
+  grid-column-start: 1;
+  grid-column-end: 3;
 }
 
 .textRow > label > input {

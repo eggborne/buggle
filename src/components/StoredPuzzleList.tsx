@@ -5,10 +5,10 @@ import PuzzleIcon from './PuzzleIcon.tsx';
 
 interface StoredPuzzleListProps {
   list: StoredPuzzleData[];
-  onClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
+  onClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps) {
+function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) {
   function organizedPuzzles(puzzleList: StoredPuzzleData[]): {
     label: string;
     list: StoredPuzzleData[];
@@ -32,7 +32,7 @@ function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps)
   }
 
   return (
-    <div className={styles.puzzleList}>      
+    <div className={styles.puzzleList}>
       {organizedPuzzles(list).map((listObj) =>
         <div key={listObj.label} className={styles.sizeGroup}>
           <label>{listObj.label}</label>
@@ -43,7 +43,7 @@ function StoredPuzzleList({ list, onClickPremadePuzzle }: StoredPuzzleListProps)
               const dateTime = formatDateAndTime(dateCreated);
               return (
                 <div key={`${puzzle.dimensions.width}${dimensions.width}${puzzle.letterString}`
-                } onClick={() => onClickPremadePuzzle(puzzle)} className={styles.puzzleListing} >
+                } onClick={() => onClickStoredPuzzle(puzzle)} className={styles.puzzleListing} >
                   <PuzzleIcon iconSize={{
                     width: 'var(--main-width) * 0.425',
                   }} puzzleDimensions={{ ...dimensions }} contents={puzzle.letterString.split('')} />

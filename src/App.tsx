@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 import Footer from './components/Footer.tsx'
-import TitleScreen from './components/TitleScreen'
-import LobbyScreen from './components/LobbyScreen.tsx'
-import SelectScreen from './components/SelectScreen.tsx'
-import GameScreen from './components/GameScreen'
-import OptionsScreen from './components/OptionsScreen'
-import CreateScreen from './components/CreateScreen.tsx'
+import TitleScreen from './components/TitleScreen/TitleScreen.tsx'
+import LobbyScreen from './components/LobbyScreen/LobbyScreen.tsx'
+import SelectScreen from './components/SelectScreen/SelectScreen.tsx'
+import GameScreen from './components/GameScreen/GameScreen.tsx'
+import OptionsScreen from './components/OptionsScreen/OptionsScreen.tsx'
+import CreateScreen from './components/CreateScreen/CreateScreen.tsx'
 import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
+import Modal from './components/Modal.tsx'
 
 export type WordLength = number;
 export type Comparison = string;
@@ -55,21 +56,32 @@ export type WordLengthPreference = {
   value: number;
 };
 
+interface BoardCustomizations {
+    requiredWords?: {
+      wordList: string[],
+      convertQ?: boolean,
+    };
+    customLetters?: {
+      letterList: string[],
+      convertQ?: boolean,
+      shuffle?: boolean;
+    };
+}
+  
+interface BoardFilters {
+  averageWordLengthFilter?: ComparisonFilterData;
+  totalWordLimits?: { min?: number, max?: number };
+  uncommonWordLimit?: ComparisonFilterData;
+  wordLengthLimits?: WordLengthPreference[];
+}
+
 export interface BoardRequestData {
   dimensions: PuzzleDimensions;
-  letterDistribution: string;
-  filters?: {
-    averageWordLengthFilter?: ComparisonFilterData;
-    totalWordLimits?: { min?: number, max?: number };
-    uncommonWordLimit?: ComparisonFilterData;
-    wordLengthLimits?: WordLengthPreference[];
-  };
-  customizations?: {
-    requiredWords?: string[];
-    customLetters?: string;
-  };
+  letterDistribution?: string;
   maxAttempts: number;
   returnBest: boolean;
+  customizations?: BoardCustomizations;
+  filters?: BoardFilters;
 }
 
 interface GeneratedBoardData {
@@ -77,6 +89,8 @@ interface GeneratedBoardData {
   matrix: string[][];
   wordList: string[];
   metadata: PuzzleMetadata;
+  customizations?: BoardCustomizations;
+  filters?: BoardFilters;
 }
 
 export interface CurrentGameData {
@@ -112,7 +126,7 @@ const defaultStyleOptions = {
   cubeGap: 44,
   cubeTextColor: '#222222',
   cubeRoundness: 32,
-  footerHeight: 6,
+  footerHeight: 16,
   gameBackgroundColor: '#223300',
   gameBoardBackgroundColor: '#2a283e',
   gameBoardPadding: 32,
@@ -130,6 +144,8 @@ const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 function App() {
   const [options, setOptions] = useState<OptionsData>(defaultStyleOptions);
   const [phase, setPhase] = useState<string>('title');
+  const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
+  const [confirmingGameExit, setConfirmingGameExit] = useState<boolean>(false);
 
   const [player, setPlayer] = useState<PlayerData>({
     score: 0,
@@ -201,16 +217,16 @@ function App() {
     const snapshot = await get(child(dbRef, `puzzles/`));
     const data: StoredPuzzleData[] = snapshot.val();
     console.warn('got puzzles from Firebase DB:', Object.values(data))
-    console.warn('args', dimensions, difficulty);
+    // console.warn('args', dimensions, difficulty);
     const wordLimits = difficultyWordAmounts[difficulty];
     const randomPool = Object.values(data).filter(puzzle => {
-      console.log('list type', puzzle.allWords.length)
+      // console.log('list type', puzzle.allWords.length)
       const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
       const notTooFewWords = puzzle.allWords.length >= wordLimits.min;
       const notTooManyWords = puzzle.allWords.length <= wordLimits.max;
-      sizeMatches && console.log('size match?', sizeMatches);
-      notTooFewWords && console.log('notTooFewWords?', notTooFewWords);
-      notTooManyWords && console.log('notTooManyWords?', notTooManyWords, '\n\n');
+      // sizeMatches && console.log('size match?', sizeMatches);
+      // notTooFewWords && console.log('notTooFewWords?', notTooFewWords);
+      // notTooManyWords && console.log('notTooManyWords?', notTooManyWords, '\n\n');
       return (sizeMatches && notTooFewWords && notTooManyWords);
     });
     if (randomPool.length === 0) {
@@ -242,9 +258,6 @@ function App() {
         headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(options),
       });
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
       const response = await rawResponse.json();
       if (response.success) {
         const data: GeneratedBoardData = response.data
@@ -281,7 +294,8 @@ function App() {
     }
   }
 
-  const startPremadePuzzle = (puzzle: StoredPuzzleData) => {
+  const startStoredPuzzle = (puzzle: StoredPuzzleData) => {
+    console.log('startStoredPuzzle', puzzle)
     const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
@@ -293,11 +307,18 @@ function App() {
       },
       metadata: puzzle.metadata
     }
+
     setCurrentGame(nextGameData)
     changePhase('game')
   }
 
   const changePhase = (newPhase: string) => {
+    if (phase === 'game') {
+      if (currentGame) {
+        setConfirmingGameExit(true);
+        return;
+      }
+    }
     setPhase(newPhase);
   }
 
@@ -323,17 +344,56 @@ function App() {
       return { ...prevOptions, [optionKey]: newValue };
     });
   }
+
+  const handleConfirmGameExit = () => {
+    setConfirmingGameExit(false);
+    setPhase('title');
+  }
+
+  // const multiplayerGameId = 'public/1'
+
   return (
     <>
       <div className={'screen-container'}>
-        <TitleScreen hidden={phase !== 'title'} changePhase={changePhase} />
-        <OptionsScreen hidden={phase !== 'options'} options={options} changeOption={changeOption} />
-        <CreateScreen hidden={phase !== 'create'} handleClickPremadePuzzle={startPremadePuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
-        <SelectScreen hidden={phase !== 'select'} handleClickPremadePuzzle={startPremadePuzzle} startSinglePlayerGame={startSinglePlayerGame} />
-        <GameScreen hidden={phase !== 'game'} player={player} currentGame={currentGame} options={options} handleValidWord={handleValidWord} uploadPuzzle={uploadPuzzle} />
-        <LobbyScreen hidden={phase !== 'lobby'} />
+        {/* {phase === 'title' && <TitleScreen hidden={false} changePhase={changePhase} />} {phase === 'options' && <OptionsScreen hidden={false} options={options} changeOption={changeOption} />} {phase === 'create' && <CreateScreen hidden={false} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />} {phase === 'select' && <SelectScreen hidden={false} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />} {phase === 'lobby' && <LobbyScreen hidden={false} />} {phase === 'game' && <GameScreen hidden={false} player={player} currentGame={currentGame} options={options} handleValidWord={handleValidWord} uploadPuzzle={uploadPuzzle} />} */}
+        <TitleScreen hidden={phase !== 'title'} changePhase={changePhase} showOptions={() => setOptionsShowing(true)} />
+        <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
+        <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
+        {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
+        {phase === 'game' &&
+          <GameScreen
+            // gameId={multiplayerGameId}
+            hidden={phase !== 'game'}
+            player={player}
+            currentGame={currentGame}
+            options={options}
+            handleValidWord={handleValidWord}
+            uploadPuzzle={uploadPuzzle}
+          />
+        }
+        <OptionsScreen hidden={!optionsShowing} options={options} changeOption={changeOption} />
+
+        <Modal isOpen={confirmingGameExit} noCloseButton style={{
+          height: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '2rem',
+          padding: '2.5rem',
+        }}>
+          <h3>Really leave the game?</h3>
+          <div className={'button-group row'}>
+            <button onClick={handleConfirmGameExit} className={'start'}>OK</button>
+            <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
+          </div>
+        </Modal>
       </div>
-      <Footer phase={phase} changePhase={changePhase} />
+      <Footer
+        phase={phase}
+        changePhase={changePhase}
+        toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
+        optionsShowing={optionsShowing}
+      />
     </>
   )
 }

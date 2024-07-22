@@ -6,14 +6,13 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  /* justify-content: center; */
 }
 
-.screen-container {
+
+/* .screen-container {
   position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100%;
-  /* overflow: hidden; */
 }
 
 main {
@@ -22,7 +21,7 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
+  overflow-y: auto;
   transition:
     opacity 200ms ease,
     scale 200ms ease;
@@ -30,11 +29,33 @@ main {
 
 main.hidden {
   opacity: 0;
-  /* scale: 1.05 1; */
   pointer-events: none;
-  z-index: 1;
+} */
+
+.screen-container {
+  position: relative;
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-width: 100vw;
+  height: 100%;
+  overflow-y: auto;
+  transition: opacity 200ms ease;
+}
+
+main.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 main h1 {
-  padding: 1rem;
+  padding: 0.5rem 0;
 }

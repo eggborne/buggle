@@ -1,17 +1,19 @@
 .Footer {
   height: var(--footer-height);
   min-height: var(--footer-height);
-  background-color: #77c36022;
   display: grid;
-  place-items: center;
-  grid-template-columns: 1fr 1fr 1fr;
+  /* justify-content: center; */
+  /* place-items: center; */
+  justify-items: center;
+  align-items: center;
+  grid-template-columns: calc(var(--menu-button-size) + 2rem) 1fr calc(var(--menu-button-size) + 2rem);
+  grid-template-rows: var(--footer-height);
   z-index: 2;
 }
 
 .Footer > button {
-  /* background: red; */
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--menu-button-size);
+  height: var(--menu-button-size);
   aspect-ratio: 1;
   padding: 0;
   border-radius: 50%;
@@ -20,9 +22,19 @@
 }
 
 .Footer > button > img {
-  border-radius: 50%;
-  background-color: rgba(255, 0, 0, 0.543);
-  aspect-ratio: 1;
   width: 100%;
   height: 100%;
+  aspect-ratio: 1;
+}
+
+button.back, button.close {
+  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.543);
+  outline: 2px solid #ddd;
+}
+
+button.options {
+  border-radius: 0;
+  background-color: transparent;
+  outline: 0 !important;
 }

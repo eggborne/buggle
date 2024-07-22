@@ -1,0 +1,39 @@
+.TitleScreen {
+  background-color: var(--title-screen-bg-color);
+}
+
+.TitleScreen button {
+  padding: 1rem;
+  font-size: 1.5rem;
+}
+
+button.select {
+  background-color: var(--select-screen-bg-color);
+}
+
+button.lobby {
+  background-color: var(--lobby-screen-bg-color);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+button.options {
+  background-color: var(--options-screen-bg-color);
+}
+
+button.create {
+  background-color: var(--create-screen-bg-color);
+}
+
+.buttonMenu {
+  
+}
+
+button.lobby > label {
+  
+}
+
+.TitleScreen button > * {
+  outline: 1px solid;
+}

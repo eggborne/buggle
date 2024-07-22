@@ -1,6 +1,6 @@
 import styles from './LobbyScreen.module.css'
 import { useState, useRef, useEffect } from 'react';
-import { database } from '../scripts/firebase';
+import { database } from '../../scripts/firebase';
 import { ref, onValue, push, off } from "firebase/database";
 
 interface LobbyScreenProps {
@@ -24,13 +24,15 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   useEffect(() => {
     const lobbyRef = ref(database, 'lobby/');
-    const listener = onValue(lobbyRef, (snapshot) => {
+    const lobbyListener = onValue(lobbyRef, (snapshot) => {
       const data: LobbyData = snapshot.val();
       const messagesArray = Object.values(data.messages).slice(-10).reverse();
       setChatMessages(messagesArray);
     });
+    console.warn(`STARTED lobby listener at ${lobbyRef}`)
     return () => {
-      off(lobbyRef, 'value', listener);
+      off(lobbyRef, 'value', lobbyListener);
+      console.warn(`STOPPED lobby listener at ${lobbyRef}`)
     };
   }, []);
 

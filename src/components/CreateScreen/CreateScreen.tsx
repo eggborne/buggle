@@ -1,13 +1,51 @@
 import styles from './CreateScreen.module.css';
 import { useState, useEffect, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength, PuzzleDimensions } from '../App.tsx';
-import WordLengthLimitSelector from './WordLengthLimitSelector.tsx';
-
+import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength, PuzzleDimensions } from '../../App.tsx';
 
 interface CreateScreenProps {
   hidden: boolean;
-  handleClickPremadePuzzle: (puzzle: StoredPuzzleData) => void;
+  handleClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
   startCreatedPuzzlePreview: (options: BoardRequestData) => Promise<void>;
+}
+
+interface WordLengthLimitSelectorProps {
+  prefs: WordLengthPreference;
+  disabled: boolean;
+  handleRemoveWordLength: (wordLength: WordLength) => void;
+  handleChangeWordLengthAmount: (e: React.ChangeEvent, wordLength: WordLength) => void;
+  handleChangeWordLengthComparison: (e: React.ChangeEvent, wordLength: WordLength) => void;
+}
+
+
+function WordLengthLimitSelector({ prefs, disabled, handleRemoveWordLength, handleChangeWordLengthAmount, handleChangeWordLengthComparison }: WordLengthLimitSelectorProps) {
+  const { comparison, value, wordLength } = prefs;
+  return (
+    <>
+      <label>
+        <input readOnly disabled={disabled} type='number' step={'0.01'} defaultValue={wordLength} min='0' max={'9999'} id={`length${wordLength}Id`} name={`length${wordLength}Id`} />
+      </label>
+      <label>
+        <select onChange={(e) => handleChangeWordLengthComparison(e, wordLength)} disabled={disabled} defaultValue={'moreThan'} id={`length${wordLength}${comparison}Id`} name={`length${wordLength}${comparison}Id`}>
+          <option value='lessThan'>Less than</option>
+          <option value='moreThan'>More than</option>
+        </select>
+      </label>
+      <label>
+        <input onChange={(e) => handleChangeWordLengthAmount(e, wordLength)} disabled={disabled} type='number' step={'1'} defaultValue={'0'} min='0' max={'99999'} id={`length${wordLength}${value}Id`} name={`length${wordLength}${value}Id`} />
+      </label>
+      <button
+        onClick={() => handleRemoveWordLength(wordLength)}
+        className={`x-close`}
+        style={{
+          fontSize: '1rem',
+          width: '1.75rem',
+          height: '1.75rem',
+          padding: '0',
+          borderRadius: '0.1rem',
+        }}
+      >X</button>
+    </>
+  );
 }
 
 const defaultValues: BoardRequestData = {
@@ -15,7 +53,6 @@ const defaultValues: BoardRequestData = {
     width: 5,
     height: 5
   },
-  letterDistribution: 'boggle',
   maxAttempts: 10,
   returnBest: true,
 }
@@ -33,6 +70,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
     height: defaultValues.dimensions.height,
   });
   const [userLetters, setUserLetters] = useState<string[]>([]);
+  const [userWords, setUserWords] = useState<string[]>([]);
   const [wordLengthPrefs, setWordLengthPrefs] = useState<WordLengthPreference[]>([]);
   const [generating, setGenerating] = useState<boolean>(false);
   const [filtersShowing, setFiltersShowing] = useState<boolean>(true);
@@ -40,12 +78,14 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
   const newWordLengthInputRef = useRef<HTMLInputElement>(null);
   const attemptsInputRef = useRef<HTMLInputElement>(null);
   const returnBestInputRef = useRef<HTMLInputElement>(null);
+  const shuffleCustomLettersRef = useRef<HTMLInputElement>(null);
+  const requiredWordInputRef = useRef<HTMLInputElement>(null);
+  const convertQForLettersRef = useRef<HTMLInputElement>(null);
+  const convertQForWordsRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (optionsEnabled['customLettersOption'] && userLetters.length > (dimensions.width * dimensions.height)) {
-      const shortenedLetters = [...userLetters];
-      shortenedLetters.length = dimensions.width * dimensions.height;
-      setUserLetters(shortenedLetters);
+      setUserLetters((prevLetters) => prevLetters.slice(0, dimensions.width * dimensions.height));
     }
   }, [dimensions, optionsEnabled]);
 
@@ -84,7 +124,18 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
       }
       if (optionsEnabled['customLettersOption']) {
         options.customizations = options.customizations || {};
-        options.customizations.customLetters = userLetters.join('');
+        options.customizations.customLetters = {
+          letterList: userLetters,
+          convertQ: convertQForLettersRef.current !== null && convertQForLettersRef.current.checked,
+          shuffle: shuffleCustomLettersRef.current !== null && shuffleCustomLettersRef.current.checked
+        };
+      }
+      if (optionsEnabled['requiredWordsOption']) {
+        options.customizations = options.customizations || {};
+        options.customizations.requiredWords = {
+          wordList: userWords,
+          convertQ: convertQForWordsRef.current !== null && convertQForWordsRef.current.checked
+        };
       }
     }
     setGenerating(true);
@@ -109,10 +160,21 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
 
   const handleClickCheckbox = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
-    setOptionsEnabled((prevOptionsEnabled) => ({
-      ...prevOptionsEnabled,
-      [target.name]: !prevOptionsEnabled[target.name],
-    }));
+    setOptionsEnabled((prevOptionsEnabled) => {
+      const newOption = target.name;
+      const nextChangedOptionStatus = !prevOptionsEnabled[newOption];
+      const nextOptions = { ...prevOptionsEnabled };
+      nextOptions[target.name] = nextChangedOptionStatus;
+      if (nextChangedOptionStatus === true) {
+        if (newOption === 'requiredWordsOption') {
+          nextOptions.customLettersOption = false;
+        }
+        if (newOption === 'customLettersOption') {
+          nextOptions.requiredWordsOption = false;
+        }
+      }
+      return nextOptions;
+    });
   };
 
   const handleAddNewWordLength = () => {
@@ -160,6 +222,36 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
     }
   }
 
+  const handleAddRequiredWord = (e?: React.FormEvent) => {
+    if (requiredWordInputRef.current) {
+      const newWord = requiredWordInputRef.current.value;
+      const cleanedWord = newWord.trim().replace(/[^a-zA-Z]/g, '').toUpperCase();
+      console.log('cleanedWord', cleanedWord);
+      if (!cleanedWord || cleanedWord.length < 3 || userWords.includes(cleanedWord)) {
+        requiredWordInputRef.current.value = cleanedWord;
+        return;
+      }
+      setUserWords(prevRequiredWords => [...prevRequiredWords, cleanedWord]);
+      // how do I add user focus back to the text box now?
+      requiredWordInputRef.current.value = '';
+      requiredWordInputRef.current.focus();
+    }
+  }
+
+  const handleRemoveRequiredWord = (wordToRemove: string) => {
+    setUserWords((prevUserWords) => {
+      const nextUserWords = [...prevUserWords.filter(word => word !== wordToRemove)];
+      return nextUserWords;
+    });
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission
+      handleAddRequiredWord();
+    }
+  }
+
   const getTotalLetterAmount = () => dimensions.width * dimensions.height;
 
   const createScreenClass = `${styles.CreateScreen}${hidden ? ' hidden' : ''}`;
@@ -172,7 +264,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
         <div className={styles.mainSettings}>
           <label className={styles.selectRow}>
             <span>Letter distribution</span>
-            <select defaultValue={defaultValues.letterDistribution} id='letterDistribution' name='letterDistribution'>
+            <select disabled={optionsEnabled['customLettersOption']} id='letterDistribution' name='letterDistribution'>
               <option value='boggle'>Boggle®</option>
               <option value='bigBoggle'>Big Boggle®</option>
               <option value='superBigBoggle'>Super Big Boggle®</option>
@@ -195,7 +287,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
           </label>
         </div>
 
-        <div className={styles.optionalSettings}>          
+        <div className={styles.optionalSettings}>
           <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>
             <h2>Customization</h2>
           </div>
@@ -206,6 +298,38 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
               <div className={styles.textReminder}>{`${getTotalLetterAmount() - userLetters.length} remaining`}</div>
               <label>
                 <input onChange={handleChangeCustomLetters} value={userLetters.join('')} disabled={!optionsEnabled['customLettersOption']} type='text' min='9' max='144' />
+              </label>
+              <label style={{
+                gridColumnStart: 2,
+              }}>
+                <span>Convert Q to Qu</span>
+                <input ref={convertQForLettersRef} disabled={!optionsEnabled['customLettersOption']} type='checkbox' />
+                <span>Shuffle</span>
+                <input ref={shuffleCustomLettersRef} disabled={!optionsEnabled['customLettersOption']} type='checkbox' />
+              </label>
+            </div>
+          </div>
+          <div className={styles.optionalRow}>
+            <input checked={optionsEnabled['requiredWordsOption']} onChange={handleClickCheckbox} type='checkbox' id={'requiredWordsOption'} name={'requiredWordsOption'} />
+            <div className={`${styles.optionalInputRow} ${styles.textRow} ${optionsEnabled['requiredWordsOption'] ? styles.active : styles.inactive}`}>
+              <h4>Required words</h4>
+              <div className={styles.wordCollection}>
+                {userWords.map(word =>
+                  <div key={word} className={styles.collectionMember}>
+                    <span>{word}</span>
+                    <button onClick={() => handleRemoveRequiredWord(word)} type='button' className='x-close'>X</button>
+                  </div>
+                )}
+              </div>
+              <label>
+                <input onKeyDown={handleKeyPress} ref={requiredWordInputRef} disabled={!optionsEnabled['requiredWordsOption']} type='text' min='3' max='15' />
+                <button onClick={handleAddRequiredWord} type='button'>Add</button>
+              </label>
+              <label style={{
+                gridColumnStart: 2,
+              }}>
+                <span>Convert Q to Qu</span>
+                <input ref={convertQForWordsRef} disabled={!optionsEnabled['requiredWordsOption']} type='checkbox' />
               </label>
             </div>
           </div>

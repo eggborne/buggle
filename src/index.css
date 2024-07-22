@@ -2,26 +2,28 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light dark;
+  /* color-scheme: light dark; */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  --actual-height: 100vh;
   --actual-height: 100dvh;
   --main-width: 100vw;
+  --menu-button-size: 2.5rem;
   --current-word-display-height: 12vh;
-  --main-background-color: #1A1A1A;
 
-  --main-text-color: #FFFFFB;
-  --header-background-color: #2A2A2A;
-  --title-screen-bg-color: #355236;
-  --select-screen-bg-color: #5f4e4f;
-  --lobby-screen-bg-color: #51516f;
-  --options-screen-bg-color: #485650;
-  --create-screen-bg-color: #595a35;
-  --start-color: green;
+  --main-text-color: #e0e0e0;
+  --header-background-color: #4266B2;
+  --title-screen-bg-color: #32864A;
+  --select-screen-bg-color: #D69604;
+  --lobby-screen-bg-color: #C53929;
+  --options-screen-bg-color: #4A4A4A;
+  --create-screen-bg-color: #4a6081;
+  --start-color: #32864A;
+  --cancel-color: #847f27;
 
   /* user options */
   --user-cube-color: #aaaaaa;
@@ -59,13 +61,11 @@ html {
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
-  min-height: 100dvh;
-  max-height: 100dvh;
+  height: var(--actual-height);
+  max-height: var(--actual-height);
   color: var(--main-text-color);
+  background-color: var(--title-screen-bg-color);
 }
 
 small {
@@ -73,7 +73,6 @@ small {
 }
 
 select {
-  font-size: 1.25rem;
   padding: 0.5rem 0.5rem;
   border-radius: 0.25rem;
 }
@@ -83,9 +82,8 @@ input {
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-  margin: 0 !important;
+  font-size: 2rem;
+  margin: 0;
 }
 
 button {
@@ -99,10 +97,15 @@ button {
   cursor: pointer;
   border: 0.1rem solid #ffffff77;
   transition: border-color 0.25s;
+  color: inherit;
 }
 
 button.start {
   background-color: var(--start-color);
+}
+
+button.cancel {
+  background-color: var(--cancel-color);
 }
 
 button:hover {
@@ -113,22 +116,6 @@ button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
-
-/* @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover {
-    color: #747bff;
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
-} */
-
 
 main {
   display: flex !important;
@@ -147,6 +134,15 @@ main {
   gap: 1rem
 }
 
+.button-group.row {
+  width: unset;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: 1rem
+}
+
 .x-close {
   font-family: monospace;
   font-size: 2.5rem;
@@ -160,3 +156,9 @@ main {
   justify-content: center;
   z-index: 1;
 }
+
+/* @media (min-width: 1024px) {
+  main {
+    opacity: 0.5 !important;
+  }
+} */
