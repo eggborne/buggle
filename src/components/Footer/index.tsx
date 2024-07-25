@@ -1,9 +1,9 @@
 import styles from './Footer.module.css'
-import Logo from 'components/Logo';
+import Logo from '../../components/Logo';
 import backArrow from '/assets/back_arrow.svg';
 import optionsIcon from '/assets/options_icon.svg';
 import closeIcon from '/assets/close_icon.svg';
-import { useUser } from 'context/UserContext';
+import { useUser } from '../../context/UserContext';
 
 interface FooterProps {
   optionsShowing: boolean;

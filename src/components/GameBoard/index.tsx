@@ -1,12 +1,12 @@
 import styles from './GameBoard.module.css'
 import { off, onValue, ref } from 'firebase/database';
-import { database } from 'scripts/firebase';
-import { CellObj, CurrentGameData, PlayerData, OptionsData } from 'types/types';
+import { database } from '../../scripts/firebase';
+import { CellObj, CurrentGameData, PlayerData, OptionsData } from '../../types/types';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
-import Modal from 'components/Modal';
+import Modal from '../Modal';
 import CurrentWordDisplay from '../CurrentWordDisplay';
-import { useUser } from 'context/UserContext';
+import { useUser } from '../../context/UserContext';
 
 interface GameBoardProps {
   gameId?: string;

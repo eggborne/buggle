@@ -4,7 +4,7 @@ import { auth } from '../../scripts/firebase';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
 import { useUser } from '../../context/UserContext';
-import { UserData } from 'types/types';
+import { UserData } from '../../types/types';
 
 const Login = () => {
   const { setUser, setIsLoggedIn } = useUser();

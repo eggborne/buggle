@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
 import { ref, child, get } from "firebase/database";
 import { database } from '../../scripts/firebase';
-import { GameOptions, StoredPuzzleData } from 'types/types';
+import { GameOptions, StoredPuzzleData } from '../../types/types';
 import PuzzleIcon from '../PuzzleIcon'
 import Modal from '../Modal';
 import StoredPuzzleList from '../StoredPuzzleList';

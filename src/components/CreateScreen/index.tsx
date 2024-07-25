@@ -1,6 +1,6 @@
 import styles from './CreateScreen.module.css';
 import { useState, useEffect, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData, WordLengthPreference, PuzzleDimensions } from 'types/types';
+import { StoredPuzzleData, BoardRequestData, WordLengthPreference, PuzzleDimensions } from '../../types/types';
 
 interface CreateScreenProps {
   hidden: boolean;

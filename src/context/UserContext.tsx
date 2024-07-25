@@ -1,8 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { UserData } from 'types/types';
+import { UserData } from '../types/types';
 import { ref, remove, set, update } from 'firebase/database';
-import { database } from 'scripts/firebase';
+import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
 
 interface UserContextProps {

@@ -1,6 +1,6 @@
 import styles from './TitleScreen.module.css'
-import { useUser } from 'context/UserContext'
-import { useFirebase } from 'context/FirebaseContext'
+import { useUser } from '../../context/UserContext'
+import { useFirebase } from '../../context/FirebaseContext'
 import Login from '../Login';
 
 interface TitleScreenProps {

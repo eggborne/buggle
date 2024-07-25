@@ -1,12 +1,12 @@
 import styles from './LobbyScreen.module.css'
-import { useUser } from 'context/UserContext'
+import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect } from 'react';
-import { database } from 'scripts/firebase';
+import { database } from '../../scripts/firebase';
 import { ref, onValue, push, off } from "firebase/database";
-import Modal from 'components/Modal';
-import PuzzleIcon from 'components/PuzzleIcon';
-import { ChallengeData, ChatMessageData, LobbyData, UserData } from 'types/types';
-import { useFirebase } from 'context/FirebaseContext';
+import Modal from '../../components/Modal';
+import PuzzleIcon from '../../components/PuzzleIcon';
+import { ChallengeData, ChatMessageData, LobbyData, UserData } from '../../types/types';
+import { useFirebase } from '../../context/FirebaseContext';
 
 interface LobbyScreenProps {
   hidden: boolean;

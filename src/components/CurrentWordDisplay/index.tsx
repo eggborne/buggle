@@ -1,5 +1,4 @@
 
-
 import styles from './CurrentWordDisplay.module.css';
 
 interface CurrentWordDisplayProps {

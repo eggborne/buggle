@@ -1,20 +1,20 @@
 import { useState, useEffect, useLayoutEffect } from 'react'
 import './App.css'
-import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, OptionsData, PlayerData, PointValues, StoredPuzzleData, UserData } from './types/types.ts';
-import { useUser } from 'context/UserContext';
-import Footer from 'components/Footer'
-import TitleScreen from 'components/TitleScreen'
-import LobbyScreen from 'components/LobbyScreen'
-import SelectScreen from 'components/SelectScreen'
-import GameScreen from 'components/GameScreen'
-import OptionsScreen from 'components/OptionsScreen'
-import CreateScreen from 'components/CreateScreen'
+import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, OptionsData, PlayerData, PointValues, StoredPuzzleData, UserData } from './types/types';
+import { useUser } from './context/UserContext';
+import Footer from './components/Footer'
+import TitleScreen from './components/TitleScreen'
+import LobbyScreen from './components/LobbyScreen'
+import SelectScreen from './components/SelectScreen'
+import GameScreen from './components/GameScreen'
+import OptionsScreen from './components/OptionsScreen'
+import CreateScreen from './components/CreateScreen'
 import { set, get, ref, child } from 'firebase/database';
-import { database } from 'scripts/firebase';
-import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
-import Modal from 'components/Modal.tsx'
-import MessageBanner from 'components/MessageBanner/index.tsx';
-import UserMenu from 'components/UserMenu/index.tsx';
+import { database } from './scripts/firebase';
+import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util";
+import Modal from './components/Modal'
+import MessageBanner from './components/MessageBanner/';
+import UserMenu from './components/UserMenu/';
 // import { useFirebase } from 'context/FirebaseContext.tsx';
 
 const defaultUserOptions = {

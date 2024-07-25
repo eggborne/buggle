@@ -1,7 +1,7 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction } from 'react';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { ChallengeData, CurrentGameData, UserData } from 'types/types';
-import { database } from 'scripts/firebase';
+import { ChallengeData, CurrentGameData, UserData } from '../types/types';
+import { database } from '../scripts/firebase';
 
 interface FirebaseContextProps {
   playerList: UserData[] | null;

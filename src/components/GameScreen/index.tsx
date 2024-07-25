@@ -1,4 +1,4 @@
-import { PlayerData, CurrentGameData } from 'types/types';
+import { PlayerData, CurrentGameData } from '../../types/types';
 import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
 import GameStatusDisplay from '../GameStatusDisplay';

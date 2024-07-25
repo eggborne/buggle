@@ -1,7 +1,7 @@
 import styles from './StoredPuzzleList.module.css'
-import { StoredPuzzleData } from '../types/types.ts';
-import { formatDateAndTime } from '../scripts/util.ts'
-import PuzzleIcon from './PuzzleIcon.tsx';
+import { StoredPuzzleData } from '../types/types';
+import { formatDateAndTime } from '../scripts/util'
+import PuzzleIcon from './PuzzleIcon';
 
 interface StoredPuzzleListProps {
   list: StoredPuzzleData[];

@@ -7,13 +7,5 @@ export default defineConfig({
   build: {
     target: ['chrome90', 'edge90', 'firefox90', 'safari15']
   },
-  resolve: {
-    alias: {
-      'context': '/src/context',
-      'components': '/src/components',
-      'scripts': '/src/scripts',
-      'types': '/src/types'
-    },
-    extensions: ['.js', '.jsx', '.ts', '.tsx']
-  }
+  
 });

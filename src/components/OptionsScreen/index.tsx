@@ -3,7 +3,7 @@ import styles from './OptionsScreen.module.css'
 import { debounce } from '../../scripts/util'
 import { userOptions } from '../../config.json'
 import { OptionInputData, OptionsData, OptionTypeData } from '../../types/types';
-import { useUser } from 'context/UserContext';
+import { useUser } from '../../context/UserContext';
 // import PuzzleIcon from '../PuzzleIcon'
 // import Modal from '../Modal'
 
