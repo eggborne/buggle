@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import Footer from './components/Footer.tsx'
+import { useUser } from './context/UserContext.tsx';
+import Footer from './components/Footer/Footer.tsx'
 import TitleScreen from './components/TitleScreen/TitleScreen.tsx'
 import LobbyScreen from './components/LobbyScreen/LobbyScreen.tsx'
 import SelectScreen from './components/SelectScreen/SelectScreen.tsx'
@@ -19,6 +20,15 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface PlayerData {
   score: number;
   wordsFound: Set<string>;
+}
+
+export interface UserData {
+  currentGame?: CurrentGameData;
+  displayName: string | null,
+  photoURL: string | null,
+  phase: string | null;
+  preferences: OptionsData | null;
+  uid: string | null,
 }
 
 interface PuzzleMetadata {
@@ -57,17 +67,17 @@ export type WordLengthPreference = {
 };
 
 interface BoardCustomizations {
-    requiredWords?: {
-      wordList: string[],
-      convertQ?: boolean,
-    };
-    customLetters?: {
-      letterList: string[],
-      convertQ?: boolean,
-      shuffle?: boolean;
-    };
+  requiredWords?: {
+    wordList: string[],
+    convertQ?: boolean,
+  };
+  customLetters?: {
+    letterList: string[],
+    convertQ?: boolean,
+    shuffle?: boolean;
+  };
 }
-  
+
 interface BoardFilters {
   averageWordLengthFilter?: ComparisonFilterData;
   totalWordLimits?: { min?: number, max?: number };
@@ -101,6 +111,8 @@ export interface CurrentGameData {
     key?: Record<string, string>;
     percentUncommon: number;
   };
+  customizations?: BoardCustomizations;
+  filters?: BoardFilters;
   timeLimit: number;
 }
 
@@ -121,7 +133,7 @@ export interface OptionsData {
   swipeBuffer: number;
 }
 
-const defaultStyleOptions = {
+const defaultUserOptions = {
   cubeColor: '#aaaaaa',
   cubeGap: 44,
   cubeTextColor: '#222222',
@@ -142,7 +154,8 @@ const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = 
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
-  const [options, setOptions] = useState<OptionsData>(defaultStyleOptions);
+  const { user, isLoggedIn, setUser } = useUser();
+  const [options, setOptions] = useState<OptionsData>(defaultUserOptions);
   const [phase, setPhase] = useState<string>('title');
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [confirmingGameExit, setConfirmingGameExit] = useState<boolean>(false);
@@ -167,14 +180,49 @@ function App() {
   });
 
   useEffect(() => {
+    if (isLoggedIn && user) {
+      console.warn('App.useEffect[isLoggedIn]: USER SIGNED IN!', user);
+      const getUserData = async () => {
+        const dbRef = ref(database);
+        const snapshot = await get(child(dbRef, `users/${user.uid}`));
+        if (snapshot.exists()) {
+          const userData: UserData = snapshot.val();
+          setUser(userData);
+          console.log('set userData', userData);
+          // setOptions(userData.preferences);
+          
+        } else {
+          // create in database
+          const userData: UserData = {
+            ...user,
+            phase,
+            preferences: options,
+          };
+          console.log(`No user data available for uid ${userData.uid}. Creating new user in database!`);
+          console.log('sending user data to db:', userData)
+          await set(ref(database, `users/${userData.uid}`), userData);
+        }
+      }
+      getUserData();
+    } else {
+      // check for local saved options
+      let initialOptions = defaultUserOptions;
+      const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
+      if (localOptions) {
+        initialOptions = localOptions;
+        console.warn('found local options', initialOptions);
+      } else {
+        console.warn('using default options', initialOptions);
+      }
+      setOptions(initialOptions);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
     window.addEventListener('popstate', function () {
       history.pushState(null, '', document.URL);
     });
     history.pushState(null, '', document.URL);
-    const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
-    const initialOptions = localOptions || defaultStyleOptions;
-    console.log('setting options', initialOptions);
-    setOptions(localOptions || defaultStyleOptions);
   }, []);
 
   useEffect(() => {
@@ -182,9 +230,15 @@ function App() {
       const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
       const newValue = options[optionKey as keyof OptionsData].toString();
       document.documentElement.style.setProperty(varName, newValue)
-    }
-
+    }    
   }, [options]);
+
+  const saveUserPreference = async (optionKey: string, newValue: string | number) => {
+    console.warn('-- sending options to DB');
+    await set(ref(database, `users/${user?.uid}/preferences/${optionKey}`), newValue);
+    console.warn('-- sent options to DB');
+
+  }
 
   const handleValidWord = (word: string) => {
     let wordValue;
@@ -217,16 +271,11 @@ function App() {
     const snapshot = await get(child(dbRef, `puzzles/`));
     const data: StoredPuzzleData[] = snapshot.val();
     console.warn('got puzzles from Firebase DB:', Object.values(data))
-    // console.warn('args', dimensions, difficulty);
     const wordLimits = difficultyWordAmounts[difficulty];
     const randomPool = Object.values(data).filter(puzzle => {
-      // console.log('list type', puzzle.allWords.length)
       const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
       const notTooFewWords = puzzle.allWords.length >= wordLimits.min;
       const notTooManyWords = puzzle.allWords.length <= wordLimits.max;
-      // sizeMatches && console.log('size match?', sizeMatches);
-      // notTooFewWords && console.log('notTooFewWords?', notTooFewWords);
-      // notTooManyWords && console.log('notTooManyWords?', notTooManyWords, '\n\n');
       return (sizeMatches && notTooFewWords && notTooManyWords);
     });
     if (randomPool.length === 0) {
@@ -285,6 +334,8 @@ function App() {
           height: options.dimensions.height,
         },
         metadata: nextPuzzle.metadata,
+        customizations: nextPuzzle.customizations,
+        filters: nextPuzzle.filters,
         timeLimit: 60,
       }
       console.log('made CurrentGameData nextGameData', nextGameData)
@@ -343,6 +394,9 @@ function App() {
     setOptions(prevOptions => {
       return { ...prevOptions, [optionKey]: newValue };
     });
+    if (isLoggedIn && user) {
+      saveUserPreference(optionKey, newValue);
+    }
   }
 
   const handleConfirmGameExit = () => {
@@ -350,12 +404,11 @@ function App() {
     setPhase('title');
   }
 
-  // const multiplayerGameId = 'public/1'
+  // const multiplayerGameId = 'public/1' // for testing
 
   return (
     <>
       <div className={'screen-container'}>
-        {/* {phase === 'title' && <TitleScreen hidden={false} changePhase={changePhase} />} {phase === 'options' && <OptionsScreen hidden={false} options={options} changeOption={changeOption} />} {phase === 'create' && <CreateScreen hidden={false} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />} {phase === 'select' && <SelectScreen hidden={false} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />} {phase === 'lobby' && <LobbyScreen hidden={false} />} {phase === 'game' && <GameScreen hidden={false} player={player} currentGame={currentGame} options={options} handleValidWord={handleValidWord} uploadPuzzle={uploadPuzzle} />} */}
         <TitleScreen hidden={phase !== 'title'} changePhase={changePhase} showOptions={() => setOptionsShowing(true)} />
         <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
         <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />

@@ -1,10 +1,10 @@
 import styles from './OptionsScreen.module.css'
-import { useEffect, useState } from 'react'
+// import { useEffect, useState } from 'react'
 import { OptionsData } from '../../App'
 import { debounce } from '../../scripts/util'
 import { userOptions } from '../../config.json'
-import PuzzleIcon from '../PuzzleIcon'
-import Modal from '../Modal'
+// import PuzzleIcon from '../PuzzleIcon'
+// import Modal from '../Modal'
 
 interface OptionsScreenProps {
   hidden: boolean;
@@ -47,7 +47,7 @@ const OptionInput = ({ label, name, type, value, defaultValue, onChange, onPoint
 );
 
 function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
-  const [previewShowing, setPreviewShowing] = useState<boolean>(false);
+  // const [previewShowing, setPreviewShowing] = useState<boolean>(false);
 
   const debouncedChangeOption = debounce((name: string, value: string | number) => {
     changeOption(name, value);
@@ -68,7 +68,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
   const sizeOptions: OptionTypeData = userOptions.style.sizes;
   const gameplayOptions: OptionTypeData = userOptions.gameplay.touch;
 
-  const sampleLetterList = ['I', 'T', 'X', 'S', 'H', 'W', 'L', 'A', 'X', 'L', 'Z', 'N', 'B', 'U', 'Y', 'S', 'W', 'N', 'C', 'Q', 'E', 'V', 'J', 'R', 'U'];
+  // const sampleLetterList = ['I', 'T', 'X', 'S', 'H', 'W', 'L', 'A', 'X', 'L', 'Z', 'N', 'B', 'U', 'Y', 'S', 'W', 'N', 'C', 'Q', 'E', 'V', 'J', 'R', 'U'];
 
   const optionsScreenClass = `${styles.OptionsScreen}${hidden ? ' hidden' : ''}`;
   return (

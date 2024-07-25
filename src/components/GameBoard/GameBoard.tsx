@@ -36,21 +36,6 @@ function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPu
   const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const [game, setGame] = useState<CurrentGameData>(currentGame);
 
-  if (gameId) {
-    useEffect(() => {
-      const gameRef = ref(database, `/gameRooms/${gameId}/gameData`);
-      const listener = onValue(gameRef, (snapshot) => {
-        const data = snapshot.val();
-        setGame(data);
-      });
-      console.warn(`STARTED game listener at ${gameId}`)
-      return () => {
-        off(gameRef, 'value', listener);
-        console.warn(`STOPPED game listener at ${gameId}`)
-      };
-    }, [gameId]);
-  }
-
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
@@ -144,6 +129,21 @@ function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPu
     }
   };
 
+  if (gameId) {
+    useEffect(() => {
+      const gameRef = ref(database, `/gameRooms/${gameId}/gameData`);
+      const listener = onValue(gameRef, (snapshot) => {
+        const data = snapshot.val();
+        setGame(data);
+      });
+      console.warn(`STARTED game listener at ${gameId}`)
+      return () => {
+        off(gameRef, 'value', listener);
+        console.warn(`STOPPED game listener at ${gameId}`)
+      };
+    }, [gameId]);
+  }
+
   const handleWordSubmit = () => {
     if (wordValid) {
       onValidWord(currentWord);
@@ -178,6 +178,12 @@ function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPu
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
 
+  let requiredWordList: string[] = [];
+  if (currentGame.customizations?.requiredWords?.wordList) {
+    requiredWordList = currentGame.customizations.requiredWords.wordList
+      .map(word => word.toLowerCase())
+      .sort((a, b) => b.length - a.length);
+  }
   currentGame = game;
 
   return (
@@ -215,11 +221,21 @@ function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPu
       </div>
       {wordListShowing &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
+          {requiredWordList.map(word =>
+            <div style={{
+              color: '#5f5',
+              textTransform: 'uppercase',
+              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
+            }}>
+              {word}
+            </div>
+          )}
           {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               textTransform: 'uppercase',
-              opacity: player.wordsFound.has(word) ? '0.75' : '1',
               textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
+              opacity: player.wordsFound.has(word) ? '0.75' : '1',
+
             }}
               key={word}>
               {word}

@@ -1,4 +1,5 @@
 import styles from './LobbyScreen.module.css'
+import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect } from 'react';
 import { database } from '../../scripts/firebase';
 import { ref, onValue, push, off } from "firebase/database";
@@ -8,7 +9,7 @@ interface LobbyScreenProps {
 }
 
 interface ChatMessageData {
-  author: string;
+  author: string | null;
   message: string;
   date: number;
 }
@@ -18,7 +19,7 @@ interface LobbyData {
 }
 
 function LobbyScreen({ hidden }: LobbyScreenProps) {
-
+  const { user } = useUser();
   const [chatMessages, setChatMessages] = useState<ChatMessageData[]>([]);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -38,10 +39,11 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   const handleSubmitChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     const form = e.target as HTMLFormElement;
     const messageInput = form.querySelector('input[name="chatMessage"]') as HTMLInputElement;
     const newMessage: ChatMessageData = {
-      author: process.env.NODE_ENV === 'development' ? 'Mike' : 'Your Name', // Replace with actual user name
+      author: user.displayName,
       message: messageInput.value,
       date: Date.now(),
     };
@@ -62,11 +64,12 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       <div className={styles.chatWindow}>
         <div ref={chatMessagesRef} className={styles.chatMessages}>
           {chatMessages.map(({ author, message, date }) => {
-            const selfIsAuthor = author === 'Mike';
+            const selfIsAuthor = author === user?.displayName;
             let messageClass = styles.chatMessage;
             if (selfIsAuthor) messageClass += ' ' + styles.self
             return (
               <div className={messageClass} key={date}>
+                <img className='profile-pic' src={user?.photoURL || undefined} />
                 <div className={styles.chatBody}><span className={styles.chatAuthorLabel}>{author}</span>: {message}</div>
                 <div className={styles.chatTimestamp}>{new Date(date).toLocaleString()}</div>
               </div>)

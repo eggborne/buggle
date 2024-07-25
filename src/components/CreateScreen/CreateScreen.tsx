@@ -133,7 +133,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
       if (optionsEnabled['requiredWordsOption']) {
         options.customizations = options.customizations || {};
         options.customizations.requiredWords = {
-          wordList: userWords,
+          wordList: userWords.sort((a, b) => b.length - a.length),
           convertQ: convertQForWordsRef.current !== null && convertQForWordsRef.current.checked
         };
       }
@@ -222,7 +222,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
     }
   }
 
-  const handleAddRequiredWord = (e?: React.FormEvent) => {
+  const handleAddRequiredWord = () => {
     if (requiredWordInputRef.current) {
       const newWord = requiredWordInputRef.current.value;
       const cleanedWord = newWord.trim().replace(/[^a-zA-Z]/g, '').toUpperCase();
@@ -264,12 +264,12 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
         <div className={styles.mainSettings}>
           <label className={styles.selectRow}>
             <span>Letter distribution</span>
-            <select disabled={optionsEnabled['customLettersOption']} id='letterDistribution' name='letterDistribution'>
+            <select disabled={optionsEnabled['customLettersOption'] || optionsEnabled['requiredWordsOption']} id='letterDistribution' name='letterDistribution'>
               <option value='boggle'>Boggle®</option>
               <option value='bigBoggle'>Big Boggle®</option>
               <option value='superBigBoggle'>Super Big Boggle®</option>
               <option value='scrabble'>Scrabble®</option>
-              <option value='modernEnglish'>Standard English</option>
+              <option value='modernEnglish'>Modern English</option>
               <option value='random'>True Random</option>
               <option value='syllableUnits'>Syllables</option>
             </select>

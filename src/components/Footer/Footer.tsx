@@ -1,5 +1,5 @@
 import styles from './Footer.module.css'
-import Logo from './Logo';
+import Logo from '../Logo';
 import backArrow from '/assets/back_arrow.svg';
 import optionsIcon from '/assets/options_icon.svg';
 import closeIcon from '/assets/close_icon.svg';

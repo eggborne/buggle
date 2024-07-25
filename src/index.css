@@ -126,7 +126,7 @@ main {
 }
 
 .button-group {
-  width: 14rem;
+  /* width: 14rem; */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -155,6 +155,13 @@ main {
   align-items: center;
   justify-content: center;
   z-index: 1;
+}
+
+.profile-pic {
+  width: 2.5rem;
+  height: 2.5rem;
+  -webkit-filter: grayscale(100%);
+  filter: grayscale(100%) blur(0.2rem);
 }
 
 /* @media (min-width: 1024px) {

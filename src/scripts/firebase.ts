@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
+import { getAuth } from 'firebase/auth';
 // import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -15,11 +16,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const auth = getAuth(app);
 // const analytics = getAnalytics(app);
 
 console.warn('Firebase initialized.');
 
 export {
+  auth,
   database
 }
 

@@ -3,7 +3,8 @@
 }
 
 .TitleScreen button {
-  padding: 1rem;
+  width: 16rem;
+  padding: 1rem 0;
   font-size: 1.5rem;
 }
 
@@ -15,7 +16,9 @@ button.lobby {
   background-color: var(--lobby-screen-bg-color);
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 button.options {
@@ -27,13 +30,21 @@ button.create {
 }
 
 .buttonMenu {
-  
+  font-size: 1rem;
+  color: #ffffffaa;
+}
+.buttonMenu button {
+  width: 12rem;
+  padding: 0.5rem 1rem !important;
+}
+.buttonMenu ul {
+  margin: 0 !important;
 }
 
-button.lobby > label {
-  
-}
-
-.TitleScreen button > * {
-  outline: 1px solid;
+.loggedInDisplay {
+  width: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
