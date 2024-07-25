@@ -1,7 +1,7 @@
 #root {
-  width: 100%;
-  height: var(--actual-height);
-  max-height: var(--actual-height);
+  /* height: var(--actual-height);
+  max-height: var(--actual-height); */
+  height: 100%;
   max-width: 1280px;
   display: flex;
   flex-direction: column;
@@ -36,8 +36,14 @@ main.hidden {
   position: relative;
   width: 100vw;
   height: 100%;
+  flex-grow: 1;
   display: flex;
   overflow: hidden;
+  opacity: 0;
+  transition: opacity 200ms ease, transform 500ms ease;
+  /* animation: dip 600ms ease;
+  animation-delay: 1100ms; */
+  transition-delay: 600ms;
 }
 
 main {
@@ -46,9 +52,10 @@ main {
   left: 0;
   width: 100%;
   min-width: 100vw;
-  height: 100%;
+  height: var(--actual-height);
+  /* max-height: 100%; */
   overflow-y: auto;
-  transition: opacity 200ms ease;
+  padding-bottom: calc(var(--bottom-margin) + (var(--footer-height) / 2)) !important;
 }
 
 main.hidden {
@@ -58,4 +65,18 @@ main.hidden {
 
 main h1 {
   padding: 0.5rem 0;
+}
+
+@keyframes dip {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }

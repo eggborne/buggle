@@ -1,32 +1,26 @@
-import { off, onValue, ref } from 'firebase/database';
-import { database } from '../../scripts/firebase';
-import { CurrentGameData, PlayerData, OptionsData } from '../../App';
-import { useEffect, useRef, useState } from 'react';
-import BoardCell from '../BoardCell/BoardCell';
-import Modal from '../Modal';
 import styles from './GameBoard.module.css'
-import CurrentWordDisplay from '../CurrentWordDisplay/CurrentWordDisplay';
+import { off, onValue, ref } from 'firebase/database';
+import { database } from 'scripts/firebase';
+import { CellObj, CurrentGameData, PlayerData, OptionsData } from 'types/types';
+import { useEffect, useRef, useState } from 'react';
+import BoardCell from '../BoardCell';
+import Modal from 'components/Modal';
+import CurrentWordDisplay from '../CurrentWordDisplay';
+import { useUser } from 'context/UserContext';
 
 interface GameBoardProps {
   gameId?: string;
   currentGame: CurrentGameData;
-  options: OptionsData;
   player: PlayerData;
   onValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
 
-interface CellObj {
-  letter: string;
-  id: string;
-  row: number;
-  col: number;
-}
-
-function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPuzzle }: GameBoardProps) {
-  console.log('gb currentGame', currentGame)
-  console.log('gb player', player)
-  console.log('gb gameId', gameId)
+function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: GameBoardProps) {
+  // console.log('gb currentGame', currentGame)
+  // console.log('gb player', player)
+  // console.log('gb gameId', gameId)
+  const options = useUser().user?.preferences as OptionsData;
   const gameBoardRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
@@ -129,20 +123,20 @@ function GameBoard({ gameId, currentGame, options, player, onValidWord, uploadPu
     }
   };
 
-  if (gameId) {
-    useEffect(() => {
+  useEffect(() => {
+    if (gameId) {
       const gameRef = ref(database, `/gameRooms/${gameId}/gameData`);
       const listener = onValue(gameRef, (snapshot) => {
         const data = snapshot.val();
         setGame(data);
       });
-      console.warn(`STARTED game listener at ${gameId}`)
+      console.warn(`STARTED game listener`)
       return () => {
         off(gameRef, 'value', listener);
-        console.warn(`STOPPED game listener at ${gameId}`)
+        console.warn(`STOPPED game listener`)
       };
-    }, [gameId]);
-  }
+    }
+  }, [gameId]);
 
   const handleWordSubmit = () => {
     if (wordValid) {

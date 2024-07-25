@@ -12,6 +12,12 @@
   margin: 0.5rem 0;
 }
 
+.CreateScreen button.start:disabled {
+  color: yellow;
+  background-color: #78a86744;
+  border-color: yellow;
+}
+
 h1 {
   text-align: center;
   padding: 0;

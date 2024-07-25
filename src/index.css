@@ -12,9 +12,8 @@
   --actual-height: 100vh;
   --actual-height: 100dvh;
   --main-width: 100vw;
-  --menu-button-size: 2.5rem;
   --current-word-display-height: 12vh;
-
+  
   --main-text-color: #e0e0e0;
   --header-background-color: #4266B2;
   --title-screen-bg-color: #32864A;
@@ -22,9 +21,14 @@
   --lobby-screen-bg-color: #C53929;
   --options-screen-bg-color: #4A4A4A;
   --create-screen-bg-color: #4a6081;
+  --footer-color: #323021;
+  --footer-knob-roundness: 50%;
+  --bottom-margin: 2rem;
+  
   --start-color: #32864A;
   --cancel-color: #847f27;
-
+  --danger-color: #8f0707;
+  
   /* user options */
   --user-cube-color: #aaaaaa;
   --user-cube-gap: 20;
@@ -42,11 +46,34 @@
   --cube-gap: calc(var(--main-width) * (var(--user-cube-gap) / 3000));
   --cube-roundness: calc(var(--user-cube-roundness) * 0.5%);
   --cube-text-color: var(--user-cube-text-color);
-  --footer-height: calc(3.25rem + (var(--user-footer-height) * 0.125rem));
+  --footer-height: calc(3rem + (var(--user-footer-height) * 0.125rem));
   --game-background-color: var(--user-game-background-color);
   --game-board-background-color: var(--user-game-board-background-color);
   --game-board-size: calc(var(--user-game-board-size) * 1dvw);
   --game-board-padding: calc(100% * (var(--user-game-board-padding) / 1000));
+  
+  /* --menu-button-size: 4rem; */
+
+  --text-stroke:
+  0.035em -0.035em #000000,
+  0.035em -0.015em #000000,
+      0.035em 0 #000000,
+      0.035em 0.015em #000000,
+      0.035em 0.035em #000000,
+  
+      0 -0.035em #000000,
+      0 -0.015em #000000,
+      0 0 #000000,
+      0 0.015em #000000,
+      0 0.035em #000000,
+  
+      -0.035em -0.035em #000000,
+      -0.035em -0.015em #000000,
+      -0.035em 0 #000000,
+      -0.035em 0.015em #000000,
+      -0.035em 0.035em #000000,
+      0 0 0.05em black
+    ;
 }
 
 * {
@@ -108,6 +135,10 @@ button.cancel {
   background-color: var(--cancel-color);
 }
 
+button.danger {
+  background-color: var(--danger-color);
+}
+
 button:hover {
   border-color: #646cff;
 }
@@ -126,7 +157,6 @@ main {
 }
 
 .button-group {
-  /* width: 14rem; */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -158,10 +188,8 @@ main {
 }
 
 .profile-pic {
-  width: 2.5rem;
-  height: 2.5rem;
-  -webkit-filter: grayscale(100%);
-  filter: grayscale(100%) blur(0.2rem);
+  width: 2rem;
+  height: 2rem;
 }
 
 /* @media (min-width: 1024px) {

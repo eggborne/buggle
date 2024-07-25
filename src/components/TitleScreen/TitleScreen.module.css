@@ -1,18 +1,32 @@
 .TitleScreen {
+  height: var(--actual-height);
   background-color: var(--title-screen-bg-color);
 }
 
-.TitleScreen button {
-  width: 16rem;
-  padding: 1rem 0;
-  font-size: 1.5rem;
+.TitleScreen .titleButtons {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  gap: 1rem;
 }
 
-button.select {
+.TitleScreen .titleButton {
+  width: 16rem;
+  padding: 1.5rem 0;
+  font-size: 1.5rem;
+  text-shadow: var(--text-stroke);
+  font-weight: bold;
+}
+
+.TitleScreen .titleButton.small {
+  width: 100%;
+  font-size: 1.25rem;
+}
+
+.titleButton.select {
   background-color: var(--select-screen-bg-color);
 }
 
-button.lobby {
+.titleButton.lobby {
   background-color: var(--lobby-screen-bg-color);
   display: flex;
   flex-direction: column;
@@ -21,11 +35,11 @@ button.lobby {
   gap: 1rem;
 }
 
-button.options {
+.titleButton.options {
   background-color: var(--options-screen-bg-color);
 }
 
-button.create {
+.titleButton.create {
   background-color: var(--create-screen-bg-color);
 }
 

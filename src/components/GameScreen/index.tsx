@@ -1,20 +1,26 @@
-import { PlayerData, CurrentGameData, OptionsData } from '../../App';
-import GameBoard from '../GameBoard/GameBoard';
+import { PlayerData, CurrentGameData } from 'types/types';
+import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
-import GameStatusDisplay from '../GameStatusDisplay/GameStatusDisplay';
-import Modal from '../Modal';
+import GameStatusDisplay from '../GameStatusDisplay';
 
 interface GameScreenProps {
   gameId?: string;
   currentGame: CurrentGameData;
-  options: OptionsData;
   player: PlayerData;
   hidden: boolean;
   handleValidWord: (word: string) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ gameId, currentGame, options, player, hidden, handleValidWord, uploadPuzzle }: GameScreenProps) {
+function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, uploadPuzzle }: GameScreenProps) {
+  // const { currentMatch, setGameId } = useFirebase();
+  // useEffect(() => {
+  //   setGameId(gameId);
+
+  //   return () => {
+  //     setGameId(null);
+  //   };
+  // }, [gameId, setGameId]);
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
   return (
@@ -24,11 +30,9 @@ function GameScreen({ gameId, currentGame, options, player, hidden, handleValidW
         gameId={gameId}
         player={player}
         currentGame={currentGame}
-        options={options}
         onValidWord={handleValidWord}
         uploadPuzzle={uploadPuzzle}
       />
-      <Modal isOpen={false} />
     </main>
   )
 }

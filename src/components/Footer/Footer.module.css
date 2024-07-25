@@ -1,40 +1,78 @@
 .Footer {
-  height: var(--footer-height);
-  min-height: var(--footer-height);
-  display: grid;
-  /* justify-content: center; */
-  /* place-items: center; */
-  justify-items: center;
-  align-items: center;
+  /* height: var(--footer-height);
+  min-height: var(--footer-height); */
+  /* display: grid;
+  place-items: center;
+  align-items: end;
   grid-template-columns: calc(var(--menu-button-size) + 2rem) 1fr calc(var(--menu-button-size) + 2rem);
-  grid-template-rows: var(--footer-height);
+  grid-template-rows: var(--footer-height); */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  pointer-events: none;
   z-index: 2;
+  padding: 0.125rem;
 }
 
-.Footer > button {
-  width: var(--menu-button-size);
-  height: var(--menu-button-size);
+.Footer:before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: var(--footer-color);
+  width: inherit;
+  height: var(--bottom-margin);
+  z-index: -1;
+}
+
+.Footer>button {
+  position: relative;
+  width: var(--footer-height);
+  height: var(--footer-height);
   aspect-ratio: 1;
   padding: 0;
-  border-radius: 50%;
-  border: 0;
-  background-color: transparent;
+  border-radius: var(--footer-knob-roundness);
+  pointer-events: all;
 }
 
-.Footer > button > img {
+.Footer>button>img {
   width: 100%;
   height: 100%;
   aspect-ratio: 1;
+  border-radius: var(--footer-knob-roundness);
 }
 
-button.back, button.close {
-  border-radius: 50%;
-  background-color: rgba(255, 0, 0, 0.543);
-  outline: 2px solid #ddd;
+button.back,
+button.x-close {
+  background-color: var(--footer-color)
 }
 
 button.options {
   border-radius: 0;
   background-color: transparent;
   outline: 0 !important;
+}
+
+.footerKnob {
+  position: absolute;
+  width: calc(var(--footer-height) + 1rem);
+  height: calc(var(--footer-height) + 1rem);
+  transform: translate(0, -50%);
+  top: 50%;
+  left: -0.325rem;
+  background: var(--footer-color);
+  border-radius: var(--footer-knob-roundness);
+  /* border-top-right-radius: var(--footer-knob-roundness); */
+  z-index: -1;
+}
+
+.footerKnob:last-of-type {
+  left: unset;
+  right: -0.325rem;
+  /* border-top-right-radius: unset; */
+  /* border-top-left-radius: var(--footer-knob-roundness); */
 }

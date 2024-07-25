@@ -1,7 +1,7 @@
 .PuzzleIcon {
   display: grid;
   position: relative;
-  gap: var(--cube-gap);
+  /* gap: var(--cube-gap); */
   padding: var(--game-board-padding);
   color: var(--cube-text-color);
   background-color: var(--game-board-background-color);

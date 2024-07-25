@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
 import { ref, child, get } from "firebase/database";
-import { database } from '../../scripts/firebase.ts';
-import { Difficulty, SinglePlayerOptions, StoredPuzzleData } from '../../App.tsx';
-import PuzzleIcon from '../PuzzleIcon.tsx'
-import Modal from '../Modal.tsx';
-import StoredPuzzleList from '../StoredPuzzleList.tsx';
-import { pause } from '../../scripts/util.ts';
+import { database } from '../../scripts/firebase';
+import { GameOptions, StoredPuzzleData } from 'types/types';
+import PuzzleIcon from '../PuzzleIcon'
+import Modal from '../Modal';
+import StoredPuzzleList from '../StoredPuzzleList';
 
 interface SelectScreenProps {
   hidden: boolean;
-  startSinglePlayerGame: (options: SinglePlayerOptions) => void;
+  startSinglePlayerGame: (options: GameOptions) => void;
   handleClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
@@ -22,8 +21,7 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
 
   useEffect(() => {
     const getPuzzles = async () => {
-      const dbRef = ref(database);
-      get(child(dbRef, `puzzles/`)).then((snapshot) => {
+      get(child(ref(database), `puzzles/`)).then((snapshot) => {
         if (snapshot.exists()) {
           const nextPuzzleList = snapshot.val();
           setPuzzleList(Object.values(nextPuzzleList));
@@ -40,12 +38,13 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
   const handleStartSinglePlayer = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
-    const options: SinglePlayerOptions = {
+    const options: GameOptions = {
+      difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value,
       dimensions: {
         width: sizeSelected,
         height: sizeSelected
       },
-      difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value as Difficulty
+      timeLimit: parseInt((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
     };
     startSinglePlayerGame(options);
   }
@@ -82,11 +81,18 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
                 }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
               </div>
             </div>
-            <select name='difficulty'>
-              <option value='easy'>Easy</option>
-              <option value='medium'>Medium</option>
-              <option value='hard'>Hard</option>
-            </select>
+            <div className='button-group row'>
+              <select name='difficulty'>
+                <option value='easy'>Easy</option>
+                <option value='medium'>Medium</option>
+                <option value='hard'>Hard</option>
+              </select>
+              <select name='timeLimit'>
+                <option value='60'>1 minute</option>
+                <option value='180'>3 minutes</option>
+                <option value='300'>5 minutes</option>
+              </select>
+            </div>
           </div>
         </form>
         <button onClick={handleSubmitPuzzleOptions} className={styles.start}>Start!</button>
@@ -94,11 +100,10 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
       <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <>
-          <h2>Saved puzzles </h2>
+          <h2>Saved puzzles</h2>
           <StoredPuzzleList list={puzzleList} onClickStoredPuzzle={async (e) => {
-            handleClickStoredPuzzle(e)
+            handleClickStoredPuzzle(e);
             if (listShowing) {
-              await pause(100);
               setListShowing(false);
             }
           }} />

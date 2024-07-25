@@ -1,5 +1,5 @@
 import styles from './StoredPuzzleList.module.css'
-import { StoredPuzzleData } from '../App.tsx';
+import { StoredPuzzleData } from '../types/types.ts';
 import { formatDateAndTime } from '../scripts/util.ts'
 import PuzzleIcon from './PuzzleIcon.tsx';
 

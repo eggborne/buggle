@@ -1,35 +1,18 @@
 import styles from './OptionsScreen.module.css'
 // import { useEffect, useState } from 'react'
-import { OptionsData } from '../../App'
 import { debounce } from '../../scripts/util'
 import { userOptions } from '../../config.json'
+import { OptionInputData, OptionsData, OptionTypeData } from '../../types/types';
+import { useUser } from 'context/UserContext';
 // import PuzzleIcon from '../PuzzleIcon'
 // import Modal from '../Modal'
 
 interface OptionsScreenProps {
   hidden: boolean;
-  options: OptionsData;
   changeOption: (optionKey: string, newValue: string | number) => void;
 }
 
-interface OptionInputData {
-  label: string;
-  name: string;
-  type: string;
-  value?: string | number;
-  defaultValue?: string | number;
-  min?: number;
-  max?: number;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onPointerUp?: (e: React.PointerEvent<HTMLInputElement>) => void;
-}
-
-interface OptionTypeData {
-  label: string;
-  inputDataList: OptionInputData[];
-}
-
-const OptionInput = ({ label, name, type, value, defaultValue, onChange, onPointerUp, min, max }: OptionInputData) => (
+const OptionInput = ({ label, name, type, value, onChange, onPointerUp, min, max }: OptionInputData) => (
   <label className={`${styles.optionInput} ${styles[type + '-label']}`}>
     <span>{label}</span>
     <input
@@ -37,7 +20,6 @@ const OptionInput = ({ label, name, type, value, defaultValue, onChange, onPoint
       name={name}
       type={type}
       value={value}
-      defaultValue={defaultValue}
       onChange={onChange}
       onPointerUp={onPointerUp}
       min={min}
@@ -46,15 +28,16 @@ const OptionInput = ({ label, name, type, value, defaultValue, onChange, onPoint
   </label>
 );
 
-function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
+function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
   // const [previewShowing, setPreviewShowing] = useState<boolean>(false);
 
+  const { user } = useUser();
+  const preferences = user?.preferences as OptionsData;
   const debouncedChangeOption = debounce((name: string, value: string | number) => {
     changeOption(name, value);
-  }, 200);
+  }, 100);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('changing e', e)
     const name = e.target.name as string;
     const value = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
     if (e.target.type === 'range') {
@@ -87,22 +70,21 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
         <div className={`${styles.optionCategorySection} ${styles.color}`}>
           <h2>{colorOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.color}`}>
-            {colorOptions.inputDataList.map(({ name, label, type, defaultValue, min, max }) => {
-              // <OptionInput key={name} label={label} name={name} type={type} value={options[name as keyof OptionsData]} defaultValue={defaultValue} onChange={handleChange} onPointerUp={undefined} min={min} max={max} />
-              return (<label key={name} className={`${styles.optionInput} ${styles[type + '-label']}`}>
+            {colorOptions.inputDataList.map(({ name, label, type, min, max }) => 
+              // <OptionInput key={name} label={label} name={name} type={type} value={preferences[name as keyof OptionsData]} defaultValue={defaultValue} onChange={handleChange} onPointerUp={undefined} min={min} max={max} />
+              <label key={name} className={`${styles.optionInput} ${styles[type + '-label']}`}>
                 <span>{label}</span>
                 <input
                   id={name}
                   name={name}
                   type={type}
-                  value={options[name as keyof OptionsData]}
-                  defaultValue={defaultValue}
+                  value={preferences && preferences[name as keyof OptionsData]}
                   onChange={handleChange}
                   min={min}
                   max={max}
                 />
-              </label>)
-            })}
+              </label>
+            )}
           </div>
         </div>
 
@@ -110,7 +92,18 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
           <h2>{sizeOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.range}`}>
             {sizeOptions.inputDataList.map((input) => (
-              <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
+              <OptionInput
+                key={input.name}
+                label={input.label}
+                name={input.name}
+                type={input.type}
+                value={preferences[input.name as keyof OptionsData]}
+                defaultValue={preferences[input.name as keyof OptionsData]}
+                onChange={handleChange}
+                onPointerUp={undefined}
+                min={input.min}
+                max={input.max}
+              />
             ))}
           </div>
         </div>
@@ -118,7 +111,7 @@ function OptionsScreen({ options, hidden, changeOption }: OptionsScreenProps) {
           <h2>{gameplayOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.range}`}>
             {gameplayOptions.inputDataList.map((input) => (
-              <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} value={options[input.name as keyof OptionsData]} defaultValue={input.defaultValue} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
+              <OptionInput key={input.name} label={input.label} name={input.name} type={input.type} defaultValue={preferences[input.name as keyof OptionsData]} onChange={handleChange} onPointerUp={undefined} min={input.min} max={input.max} />
             ))}
           </div>
         </div>

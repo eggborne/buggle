@@ -1,6 +1,6 @@
 import styles from './CreateScreen.module.css';
 import { useState, useEffect, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData, WordLengthPreference, WordLength, PuzzleDimensions } from '../../App.tsx';
+import { StoredPuzzleData, BoardRequestData, WordLengthPreference, PuzzleDimensions } from 'types/types';
 
 interface CreateScreenProps {
   hidden: boolean;
@@ -11,9 +11,9 @@ interface CreateScreenProps {
 interface WordLengthLimitSelectorProps {
   prefs: WordLengthPreference;
   disabled: boolean;
-  handleRemoveWordLength: (wordLength: WordLength) => void;
-  handleChangeWordLengthAmount: (e: React.ChangeEvent, wordLength: WordLength) => void;
-  handleChangeWordLengthComparison: (e: React.ChangeEvent, wordLength: WordLength) => void;
+  handleRemoveWordLength: (wordLength: number) => void;
+  handleChangeWordLengthAmount: (e: React.ChangeEvent, wordLength: number) => void;
+  handleChangeWordLengthComparison: (e: React.ChangeEvent, wordLength: number) => void;
 }
 
 
@@ -193,13 +193,13 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
     }
   };
 
-  const handleRemoveWordLength = (wordLength: WordLength) => {
+  const handleRemoveWordLength = (wordLength: number) => {
     setWordLengthPrefs((prevPrefs) => {
       return [...prevPrefs].filter(pref => pref.wordLength !== wordLength);
     });
   };
 
-  const handleChangeWordLengthAmount = (e: React.ChangeEvent, wordLength: WordLength) => {
+  const handleChangeWordLengthAmount = (e: React.ChangeEvent, wordLength: number) => {
     const target = e.target as HTMLInputElement;
     const nextPrefs = [...wordLengthPrefs];
     const newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
@@ -207,7 +207,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
     setWordLengthPrefs(nextPrefs);
   };
 
-  const handleChangeWordLengthComparison = (e: React.ChangeEvent, wordLength: WordLength) => {
+  const handleChangeWordLengthComparison = (e: React.ChangeEvent, wordLength: number) => {
     const target = e.target as HTMLInputElement;
     const nextPrefs = [...wordLengthPrefs];
     const newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];

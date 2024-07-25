@@ -1,4 +1,4 @@
-import { PlayerData, CurrentGameData } from '../../App';
+import { PlayerData, CurrentGameData } from 'types/types';
 import styles from './GameStatusDisplay.module.css';
 import NumeralDisplay from '../NumeralDisplay';
 

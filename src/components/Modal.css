@@ -20,6 +20,18 @@
   width: calc(100vw - 2rem);
   height: calc(var(--actual-height) - 2rem);
   overflow-y: auto;
+  animation: zoom 200ms ease forwards;
+}
+
+@keyframes zoom {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .modal h2 {

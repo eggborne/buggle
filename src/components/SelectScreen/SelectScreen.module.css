@@ -1,4 +1,5 @@
 .SelectScreen {
+  height: 100%;
   background-color: var(--select-screen-bg-color);
   gap: 1rem;
 }

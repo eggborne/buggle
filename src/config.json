@@ -66,11 +66,11 @@
             "defaultValue": 10
           },
           {
-            "label": "Footer Height",
+            "label": "Button Size",
             "name": "footerHeight",
             "type": "range",
             "min": 0,
-            "max": 40,
+            "max": 25,
             "defaultValue": 5
           }
         ]

@@ -1,144 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import './App.css'
-import { useUser } from './context/UserContext.tsx';
-import Footer from './components/Footer/Footer.tsx'
-import TitleScreen from './components/TitleScreen/TitleScreen.tsx'
-import LobbyScreen from './components/LobbyScreen/LobbyScreen.tsx'
-import SelectScreen from './components/SelectScreen/SelectScreen.tsx'
-import GameScreen from './components/GameScreen/GameScreen.tsx'
-import OptionsScreen from './components/OptionsScreen/OptionsScreen.tsx'
-import CreateScreen from './components/CreateScreen/CreateScreen.tsx'
+import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, OptionsData, PlayerData, PointValues, StoredPuzzleData, UserData } from './types/types.ts';
+import { useUser } from 'context/UserContext';
+import Footer from 'components/Footer'
+import TitleScreen from 'components/TitleScreen'
+import LobbyScreen from 'components/LobbyScreen'
+import SelectScreen from 'components/SelectScreen'
+import GameScreen from 'components/GameScreen'
+import OptionsScreen from 'components/OptionsScreen'
+import CreateScreen from 'components/CreateScreen'
 import { set, get, ref, child } from 'firebase/database';
-import { database } from './scripts/firebase';
+import { database } from 'scripts/firebase';
 import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util.ts";
-import Modal from './components/Modal.tsx'
-
-export type WordLength = number;
-export type Comparison = string;
-export type Difficulty = 'easy' | 'medium' | 'hard';
-
-export interface PlayerData {
-  score: number;
-  wordsFound: Set<string>;
-}
-
-export interface UserData {
-  currentGame?: CurrentGameData;
-  displayName: string | null,
-  photoURL: string | null,
-  phase: string | null;
-  preferences: OptionsData | null;
-  uid: string | null,
-}
-
-interface PuzzleMetadata {
-  averageWordLength: number;
-  dateCreated: number;
-  percentUncommon: number;
-  key?: Record<string, string>;
-}
-
-export interface PuzzleDimensions {
-  height: number;
-  width: number;
-}
-
-export interface ComparisonFilterData {
-  comparison: Comparison,
-  value: number,
-}
-
-export interface SinglePlayerOptions {
-  difficulty: Difficulty;
-  dimensions: PuzzleDimensions;
-}
-
-export interface StoredPuzzleData {
-  allWords: string[];
-  dimensions: PuzzleDimensions;
-  letterString: string;
-  metadata: PuzzleMetadata;
-}
-
-export type WordLengthPreference = {
-  comparison: Comparison;
-  wordLength: WordLength;
-  value: number;
-};
-
-interface BoardCustomizations {
-  requiredWords?: {
-    wordList: string[],
-    convertQ?: boolean,
-  };
-  customLetters?: {
-    letterList: string[],
-    convertQ?: boolean,
-    shuffle?: boolean;
-  };
-}
-
-interface BoardFilters {
-  averageWordLengthFilter?: ComparisonFilterData;
-  totalWordLimits?: { min?: number, max?: number };
-  uncommonWordLimit?: ComparisonFilterData;
-  wordLengthLimits?: WordLengthPreference[];
-}
-
-export interface BoardRequestData {
-  dimensions: PuzzleDimensions;
-  letterDistribution?: string;
-  maxAttempts: number;
-  returnBest: boolean;
-  customizations?: BoardCustomizations;
-  filters?: BoardFilters;
-}
-
-interface GeneratedBoardData {
-  attempts: number,
-  matrix: string[][];
-  wordList: string[];
-  metadata: PuzzleMetadata;
-  customizations?: BoardCustomizations;
-  filters?: BoardFilters;
-}
-
-export interface CurrentGameData {
-  allWords: Set<string>;
-  dimensions: PuzzleDimensions;
-  letterMatrix: string[][];
-  metadata: {
-    key?: Record<string, string>;
-    percentUncommon: number;
-  };
-  customizations?: BoardCustomizations;
-  filters?: BoardFilters;
-  timeLimit: number;
-}
-
-interface PointValues {
-  [key: number]: number;
-}
-
-export interface OptionsData {
-  cubeColor: string,
-  cubeTextColor: string,
-  footerHeight: number,
-  cubeGap: number;
-  cubeRoundness: number;
-  gameBackgroundColor: string;
-  gameBoardBackgroundColor: string,
-  gameBoardPadding: number;
-  gameBoardSize: number;
-  swipeBuffer: number;
-}
+import Modal from 'components/Modal.tsx'
+import MessageBanner from 'components/MessageBanner/index.tsx';
+import UserMenu from 'components/UserMenu/index.tsx';
+// import { useFirebase } from 'context/FirebaseContext.tsx';
 
 const defaultUserOptions = {
   cubeColor: '#aaaaaa',
   cubeGap: 44,
   cubeTextColor: '#222222',
   cubeRoundness: 32,
-  footerHeight: 16,
+  footerHeight: 6,
   gameBackgroundColor: '#223300',
   gameBoardBackgroundColor: '#2a283e',
   gameBoardPadding: 32,
@@ -146,7 +30,16 @@ const defaultUserOptions = {
   swipeBuffer: 70,
 };
 
-const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = {
+export const defaultUser: UserData = {
+  displayName: 'Guest',
+  photoURL: '',
+  phase: 'title',
+  preferences: defaultUserOptions,
+  uid: 'GuestId'
+};
+
+
+const difficultyWordAmounts: Record<string, { min: number, max: number }> = {
   easy: { min: 200, max: 10000 },
   medium: { min: 150, max: 250 },
   hard: { min: 1, max: 150 }
@@ -154,67 +47,93 @@ const difficultyWordAmounts: Record<Difficulty, { min: number, max: number }> = 
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
-  const { user, isLoggedIn, setUser } = useUser();
-  const [options, setOptions] = useState<OptionsData>(defaultUserOptions);
-  const [phase, setPhase] = useState<string>('title');
+  const { user, isLoggedIn, addUserToPlayerList, changePhase, handleSignOut, setUser } = useUser();
+  // const { playerList } = useFirebase();
+  const phase = user?.phase;
+  const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
+  const [userMenuShowing, setUserMenuShowing] = useState<boolean>(false);
   const [confirmingGameExit, setConfirmingGameExit] = useState<boolean>(false);
+  const [confirmingSignOut, setConfirmingSignOut] = useState<boolean>(false);
+
+  // const [bannerShowing, setBannerShowing] = useState<boolean>(false);
+  // const [bannerOptions, setBannerOptions] = useState<BannerOptions>({
+  //   message: 'cocks cock cock cock',
+  //   duration: 10000,
+  //   style: {
+  //     opacity: "0.5"
+  //   }
+  // });
 
   const [player, setPlayer] = useState<PlayerData>({
     score: 0,
     wordsFound: new Set(),
   });
 
-  const [currentGame, setCurrentGame] = useState<CurrentGameData>({
-    allWords: new Set(),
-    dimensions: {
-      width: 5,
-      height: 5,
-    },
-    letterMatrix: [],
-    metadata: {
-      percentUncommon: 0,
-      key: undefined,
-    },
-    timeLimit: 60,
-  });
+  const [currentGame, setCurrentGame] = useState<CurrentGameData | null>(null);
 
-  useEffect(() => {
+  const getUserFromDatabase = async (uid: string) => {
+    return get(child(ref(database), `users/${uid}`));
+  };
+  const createUserInDatabase = async (userData: UserData) => {
+    console.log('creating user in db', userData);
+    await set(ref(database, `users/${userData.uid}`), userData);
+  };
+
+  useLayoutEffect(() => {
     if (isLoggedIn && user) {
-      console.warn('App.useEffect[isLoggedIn]: USER SIGNED IN!', user);
+      console.warn('>>>>>> App.useEffect[isLoggedIn]: USER SIGNED IN!', user, 'ready?', userReady);
       const getUserData = async () => {
-        const dbRef = ref(database);
-        const snapshot = await get(child(dbRef, `users/${user.uid}`));
+        const snapshot = await getUserFromDatabase(user.uid)
+        let userData: UserData;
         if (snapshot.exists()) {
-          const userData: UserData = snapshot.val();
-          setUser(userData);
-          console.log('set userData', userData);
-          // setOptions(userData.preferences);
-          
+          userData = snapshot.val();
         } else {
-          // create in database
-          const userData: UserData = {
+          // create in database          
+          console.log(`No user data available for uid ${user.uid}. Creating new user in database!`);
+          userData = {
+            ...defaultUser,
             ...user,
-            phase,
-            preferences: options,
           };
-          console.log(`No user data available for uid ${userData.uid}. Creating new user in database!`);
-          console.log('sending user data to db:', userData)
-          await set(ref(database, `users/${userData.uid}`), userData);
+          console.log('sending user data to db:', userData);
+          try {
+            await createUserInDatabase(userData);
+          } catch (error) {
+            console.error('Error setting user data:', error);
+          }
         }
+        setUser(userData);
+        // for (const optionKey in userData.preferences) {
+        //   const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        //   const newValue = userData.preferences[optionKey as keyof OptionsData].toString();
+        //   document.documentElement.style.setProperty(varName, newValue)
+        // }
+        addUserToPlayerList(userData);
       }
       getUserData();
     } else {
+      console.warn('>>>>>> App.useEffect[isLoggedIn]: USER NOT SIGNED IN!');
       // check for local saved options
-      let initialOptions = defaultUserOptions;
       const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
+      const initialOptions = localOptions || defaultUserOptions;
+
       if (localOptions) {
-        initialOptions = localOptions;
-        console.warn('found local options', initialOptions);
+        console.log('found local options', initialOptions);
       } else {
-        console.warn('using default options', initialOptions);
+        console.log('using default options', initialOptions);
       }
-      setOptions(initialOptions);
+
+      const defaultInitialUser: UserData = {
+        ...defaultUser,
+        preferences: initialOptions,
+        ...user,
+      };
+      setUser(defaultInitialUser);
+      for (const optionKey in defaultInitialUser.preferences) {
+        const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        const newValue = defaultInitialUser.preferences[optionKey as keyof OptionsData].toString();
+        document.documentElement.style.setProperty(varName, newValue)
+      }
     }
   }, [isLoggedIn]);
 
@@ -226,18 +145,28 @@ function App() {
   }, []);
 
   useEffect(() => {
-    for (const optionKey in options) {
-      const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-      const newValue = options[optionKey as keyof OptionsData].toString();
-      document.documentElement.style.setProperty(varName, newValue)
-    }    
-  }, [options]);
+    if (user && user.preferences && !userReady) {
+      console.log('setting ready when pref', user, user.preferences);
+      setTimeout(() => {
+        setUserReady(true);
+      }, 600);
+    }
+  }, [user]);
+
+  // useEffect(() => {
+  //   if (playerList) {
+      
+  //   }
+  // }, [playerList])
 
   const saveUserPreference = async (optionKey: string, newValue: string | number) => {
-    console.warn('-- sending options to DB');
-    await set(ref(database, `users/${user?.uid}/preferences/${optionKey}`), newValue);
-    console.warn('-- sent options to DB');
-
+    if (isLoggedIn) {
+      console.warn('-- sending option to DB:', optionKey, newValue);
+      await set(ref(database, `users/${user?.uid}/preferences/${optionKey}`), newValue);
+      console.warn('-- sent option to DB');
+    }
+    const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    document.documentElement.style.setProperty(varName, newValue.toString())
   }
 
   const handleValidWord = (word: string) => {
@@ -254,6 +183,7 @@ function App() {
   };
 
   const uploadPuzzle = async () => {
+    if (!currentGame) return;
     const nextPuzzleData = {
       allWords: Array.from(currentGame.allWords),
       dimensions: currentGame.dimensions,
@@ -266,9 +196,8 @@ function App() {
     console.warn('puzzle uploaded!')
   };
 
-  const fetchRandomPuzzle = async ({ dimensions, difficulty }: SinglePlayerOptions): Promise<CurrentGameData> => {
-    const dbRef = ref(database);
-    const snapshot = await get(child(dbRef, `puzzles/`));
+  const fetchRandomPuzzle = async ({ dimensions, difficulty }: GameOptions): Promise<CurrentGameData> => {
+    const snapshot = await get(child(ref(database), `puzzles/`));
     const data: StoredPuzzleData[] = snapshot.val();
     console.warn('got puzzles from Firebase DB:', Object.values(data))
     const wordLimits = difficultyWordAmounts[difficulty];
@@ -285,7 +214,6 @@ function App() {
     const nextMatrix = stringTo2DArray(randomPuzzle.letterString, dimensions.width, dimensions.height);
     const nextGameData: CurrentGameData = {
       allWords: new Set(randomPuzzle.allWords),
-      timeLimit: 60,
       letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
       metadata: randomPuzzle.metadata,
       dimensions: {
@@ -323,20 +251,19 @@ function App() {
     }
   };
 
-  const createPuzzle = async (options: BoardRequestData): Promise<CurrentGameData | undefined> => {
-    const nextPuzzle = await createSolvedPuzzle(options);
+  const createPuzzle = async (boardOptions: BoardRequestData): Promise<CurrentGameData | undefined> => {
+    const nextPuzzle = await createSolvedPuzzle(boardOptions);
     if (nextPuzzle) {
       const nextGameData: CurrentGameData = {
         allWords: new Set(nextPuzzle.wordList),
         letterMatrix: nextPuzzle.matrix,
         dimensions: {
-          width: options.dimensions.width,
-          height: options.dimensions.height,
+          width: boardOptions.dimensions.width,
+          height: boardOptions.dimensions.height,
         },
         metadata: nextPuzzle.metadata,
         customizations: nextPuzzle.customizations,
         filters: nextPuzzle.filters,
-        timeLimit: 60,
       }
       console.log('made CurrentGameData nextGameData', nextGameData)
       return nextGameData;
@@ -350,7 +277,6 @@ function App() {
     const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
     const nextGameData = {
       allWords: new Set(puzzle.allWords),
-      timeLimit: 60,
       letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
       dimensions: {
         width: puzzle.dimensions.width,
@@ -363,68 +289,119 @@ function App() {
     changePhase('game')
   }
 
-  const changePhase = (newPhase: string) => {
-    if (phase === 'game') {
-      if (currentGame) {
-        setConfirmingGameExit(true);
-        return;
-      }
-    }
-    setPhase(newPhase);
+  // const changePhase = (newPhase: string) => {
+  //   if (!user) return;
+  //   if (currentGame && phase === 'game') {
+  //     console.log('currentGame exists while clicked away from game')
+  //     setConfirmingGameExit(true);
+  //     return;
+  //   }
+  //   setUser((prevUser: UserData | null) => {
+  //     if (prevUser) {
+  //       return {
+  //         ...prevUser,
+  //         phase: newPhase
+  //       };
+  //     } else {
+  //       return defaultUser;
+  //     }
+  //   });
+  // }
+
+  const startSinglePlayerGame = async (gameOptions: GameOptions) => {
+    const randomPuzzle = await fetchRandomPuzzle(gameOptions);
+    setCurrentGame({
+      ...randomPuzzle,
+      timeLimit: gameOptions.timeLimit,
+    });
+    changePhase('game');
   }
 
-  const startSinglePlayerGame = async (options: SinglePlayerOptions) => {
-    const randomPuzzle = await fetchRandomPuzzle(options);
-    setCurrentGame(randomPuzzle);
-    setPhase('game');
-  }
-
-  const startCreatedPuzzlePreview = async (options: BoardRequestData) => {
-    const newPuzzlePreview = await createPuzzle(options);
+  const startCreatedPuzzlePreview = async (boardOptions: BoardRequestData) => {
+    const newPuzzlePreview = await createPuzzle(boardOptions);
     if (newPuzzlePreview) {
       setCurrentGame(newPuzzlePreview)
-      setPhase('game');
+      changePhase('game');
     }
     return;
   }
 
   const changeOption = (optionKey: string, newValue: string | number) => {
-    console.log('changing', optionKey, 'to', newValue);
-    saveToLocalStorage('buggle-options', { ...options, [optionKey]: newValue })
-    setOptions(prevOptions => {
-      return { ...prevOptions, [optionKey]: newValue };
+    saveToLocalStorage('buggle-options', { ...user?.preferences, [optionKey]: newValue })
+    setUser((prevUser: UserData | null): UserData | null => {
+      let nextOptions;
+      if (prevUser) {
+        console.log('prevuser, is user', prevUser)
+        nextOptions = {
+          ...prevUser,
+          preferences: {
+            ...prevUser.preferences,
+            [optionKey]: newValue
+          } as OptionsData
+        };
+        return nextOptions;
+      } else if (user) {
+        console.log('no prevuser, is user', user)
+        nextOptions = {
+          ...user,
+          preferences: {
+            ...user.preferences,
+            [optionKey]: newValue
+          } as OptionsData
+        }
+      } else {
+        nextOptions = null;
+      }
+      console.log('NEXT OPTIONS', nextOptions);
+      return nextOptions;
     });
-    if (isLoggedIn && user) {
+    if (user) {
       saveUserPreference(optionKey, newValue);
     }
   }
 
   const handleConfirmGameExit = () => {
+    changePhase('title');
+    setPlayer({
+      score: 0,
+      wordsFound: new Set(),
+    });
     setConfirmingGameExit(false);
-    setPhase('title');
   }
 
-  // const multiplayerGameId = 'public/1' // for testing
+  const handleConfirmSignOut = () => {
+    setConfirmingSignOut(false);
+    setUserMenuShowing(false);
+    handleSignOut();
+  }
 
   return (
     <>
-      <div className={'screen-container'}>
-        <TitleScreen hidden={phase !== 'title'} changePhase={changePhase} showOptions={() => setOptionsShowing(true)} />
+      <MessageBanner isOpen={false} message={'balls'} />
+      <div
+        className={'screen-container'}
+        style={{
+          opacity: userReady ? 1 : 0,
+          // transform: userReady ? 'scaleX(1)' : 'scaleX(1.1)',
+        }}
+      >
+        <TitleScreen hidden={phase !== 'title'} showOptions={() => setOptionsShowing(true)} />
+        {userReady ?
+          <>
         <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
         <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
         {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
-        {phase === 'game' &&
-          <GameScreen
-            // gameId={multiplayerGameId}
+        {phase === 'game' && currentGame &&
+          < GameScreen
             hidden={phase !== 'game'}
             player={player}
             currentGame={currentGame}
-            options={options}
             handleValidWord={handleValidWord}
             uploadPuzzle={uploadPuzzle}
           />
         }
-        <OptionsScreen hidden={!optionsShowing} options={options} changeOption={changeOption} />
+
+        {userReady && optionsShowing && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />}
 
         <Modal isOpen={confirmingGameExit} noCloseButton style={{
           height: 'auto',
@@ -440,12 +417,36 @@ function App() {
             <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
           </div>
         </Modal>
+        <Modal isOpen={confirmingSignOut} noCloseButton style={{
+          height: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '2rem',
+          padding: '2.5rem',
+        }}>
+          <h3>Really sign out?</h3>
+          <div className={'button-group row'}>
+            <button onClick={handleConfirmSignOut} className={'start'}>OK</button>
+            <button onClick={() => setConfirmingSignOut(false)} className={'cancel'}>No</button>
+          </div>
+        </Modal>
+          </>
+          :
+          <div>loading...</div>
+        }
       </div>
       <Footer
-        phase={phase}
-        changePhase={changePhase}
-        toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
         optionsShowing={optionsShowing}
+        userMenuShowing={userMenuShowing}
+        showSignOutConfirm={() => setConfirmingSignOut(true)}
+        showExitGameConfirm={() => setConfirmingGameExit(true)}
+        toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
+        toggleUserMenuShowing={() => setUserMenuShowing(!userMenuShowing)}
+      />
+      <UserMenu
+        userMenuShowing={userMenuShowing}
+        showSignOutConfirm={() => setConfirmingSignOut(true)}
       />
     </>
   )
