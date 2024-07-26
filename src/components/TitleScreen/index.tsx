@@ -22,12 +22,12 @@ function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
 
   const titleScreenClass = `${styles.TitleScreen}${hidden ? ' hidden' : ''}`;
   const playerAmount = playerList ? playerList.length - (isLoggedIn ? 1 : 0) : 0
-  const playersString = `${playerAmount === 0 ? 'No' : playerAmount} other players here`;
+  const playersString = `${playerAmount === 0 ? 'No' : playerAmount}${isLoggedIn ? ' other' : ''} player${playerAmount !== 1 ? 's' : ''} here`;
   return (
     <main className={titleScreenClass}>
       <div className={`${styles.titleButtons}`}>
         <button className={`${styles.select} ${styles.titleButton}`} onClick={() => changePhase('select')}>Practice</button>
-        <button className={`${styles.lobby} ${styles.titleButton}`} onClick={handleClickMultiplayer}> Multiplayer <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#aaffaa' }}>{playersString}</div> <div className={styles.buttonMenu}> {(isLoggedIn && user) ? <button className={'start'}>Enter lobby</button> : <Login /> } </div> </button>
+        <button className={`${styles.lobby} ${styles.titleButton}`} onClick={handleClickMultiplayer}> Multiplayer <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#fff' }}>{playersString}</div> <div className={styles.buttonMenu}> {(isLoggedIn && user) ? <div role='button' className={styles.enterButton}>Enter lobby</div> : <Login /> } </div> </button>
         <div className={'button-group row'}>
           <button className={`${styles.options} ${styles.titleButton} ${styles.small}`} onClick={showOptions}>Options</button>
           <button className={`${styles.create} ${styles.titleButton} ${styles.small}`} onClick={() => changePhase('create')}>Create</button>

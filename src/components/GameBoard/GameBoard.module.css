@@ -11,7 +11,15 @@
   gap: var(--cube-gap) !important;
   outline: 0.05rem solid #00000066;
   box-shadow: 0 0 0.75rem #00000044;
+  scale: 0.5;
+  opacity: 0;
+  transition: all 600ms ease;
   z-index: 0;
+}
+
+.gameBoard.showing {
+  scale: 1;
+  opacity: 1;
 }
 
 .gameArea {

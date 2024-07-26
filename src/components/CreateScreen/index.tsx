@@ -22,7 +22,7 @@ function WordLengthLimitSelector({ prefs, disabled, handleRemoveWordLength, hand
   return (
     <>
       <label>
-        <input readOnly disabled={disabled} type='number' step={'0.01'} defaultValue={wordLength} min='0' max={'9999'} id={`length${wordLength}Id`} name={`length${wordLength}Id`} />
+        <input readOnly disabled={disabled} type='number' defaultValue={wordLength} min='0' max={'9999'} id={`length${wordLength}Id`} name={`length${wordLength}Id`} />
       </label>
       <label>
         <select onChange={(e) => handleChangeWordLengthComparison(e, wordLength)} disabled={disabled} defaultValue={'moreThan'} id={`length${wordLength}${comparison}Id`} name={`length${wordLength}${comparison}Id`}>
@@ -257,7 +257,7 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
   const createScreenClass = `${styles.CreateScreen}${hidden ? ' hidden' : ''}`;
   return (
     <main className={createScreenClass}>
-      <h1>Create Puzzle</h1>
+      <h1>Create a Puzzle</h1>
       <form className={styles.puzzleOptions} onSubmit={handleStartCreatedPuzzle}>
         <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
 

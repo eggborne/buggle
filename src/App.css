@@ -43,7 +43,7 @@ main.hidden {
   transition: opacity 200ms ease, transform 500ms ease;
   /* animation: dip 600ms ease;
   animation-delay: 1100ms; */
-  transition-delay: 600ms;
+  /* transition-delay: 600ms; */
 }
 
 main {
@@ -56,6 +56,7 @@ main {
   /* max-height: 100%; */
   overflow-y: auto;
   padding-bottom: calc(var(--bottom-margin) + (var(--footer-height) / 2)) !important;
+  transition: all 200ms ease;
 }
 
 main.hidden {

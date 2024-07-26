@@ -29,17 +29,29 @@
   z-index: -1;
 }
 
-.Footer>button {
+.Footer > button {
   position: relative;
   width: var(--footer-height);
   height: var(--footer-height);
   aspect-ratio: 1;
   padding: 0;
   border-radius: var(--footer-knob-roundness);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms ease;  
+}
+
+.Footer > button.showing {
+  opacity: 1;
   pointer-events: all;
 }
 
-.Footer>button>img {
+.Footer > .profileButton {
+  position: absolute;
+  right: .125rem;
+}
+
+.Footer > button > img {
   width: 100%;
   height: 100%;
   aspect-ratio: 1;
@@ -48,7 +60,7 @@
 
 button.back,
 button.x-close {
-  background-color: var(--footer-color)
+  background-color: var(--danger-color);
 }
 
 button.options {
@@ -63,16 +75,16 @@ button.options {
   height: calc(var(--footer-height) + 1rem);
   transform: translate(0, -50%);
   top: 50%;
-  left: -0.325rem;
+  left: -0.35rem;
   background: var(--footer-color);
   border-radius: var(--footer-knob-roundness);
-  /* border-top-right-radius: var(--footer-knob-roundness); */
+  border-bottom-left-radius: 0;
   z-index: -1;
 }
 
 .footerKnob:last-of-type {
   left: unset;
-  right: -0.325rem;
-  /* border-top-right-radius: unset; */
-  /* border-top-left-radius: var(--footer-knob-roundness); */
+  right: -0.35rem;
+  border-bottom-left-radius: 50%;
+  border-bottom-right-radius: 0;
 }

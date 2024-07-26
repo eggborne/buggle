@@ -2,7 +2,7 @@
   background-color: var(--options-screen-bg-color);
   justify-content: flex-start;
   align-items: stretch;
-  gap: 1rem;
+  /* gap: 1rem; */
 }
 
 .OptionsScreen h2 {

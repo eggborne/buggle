@@ -1,18 +1,24 @@
-import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { UserData } from '../types/types';
-import { ref, remove, set, update } from 'firebase/database';
+import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
+import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { UserData, OptionsData } from '../types/types';
+import { ref, remove, set, update, get, child } from 'firebase/database';
 import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
+
+const PRUNE_INTERVAL = 10000;
+const HEARTBEAT_INTERVAL = 5000;
+
 
 interface UserContextProps {
   user: UserData | null;
   isLoggedIn: boolean;
+  isLoading: boolean;
   addUserToPlayerList: (userData: UserData) => void;
   changePhase: (newPhase: string) => void;
   handleSignOut: () => void;
   setUser: Dispatch<SetStateAction<UserData | null>>;
   setIsLoggedIn: Dispatch<SetStateAction<boolean>>;
+  changeOption: (optionKey: string, newValue: string | number) => void;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -28,16 +34,106 @@ export const useUser = () => {
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // store a setInterval as state
+  const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | undefined>(undefined);
+  const lastHeartbeatRef = useRef<number>(0);
 
   useEffect(() => {
-    if (isLoggedIn && user?.uid) {
-      updateUserInPlayerList(`players/${user.uid}/phase`, user.phase || 'error');
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsLoading(true);
+      if (firebaseUser) {
+        console.warn('-- found Firebase user!')
+        const userData = await getUserData(firebaseUser);
+        setUser(userData);
+        setIsLoggedIn(true);
+        addUserToPlayerList({
+          ...userData,
+          heartbeat: Date.now()
+        });
+
+        const sendHeartbeat = async () => {
+          const heartbeatTime = Date.now();
+          await updateUserInPlayerList(`players/${userData.uid}/heartbeat`, heartbeatTime);
+        }
+
+        const startHeartbeat = (duration: number) => {
+          return setInterval(async () => {
+            const now = Date.now();
+            let sinceLast = now - lastHeartbeatRef.current;
+            if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
+              console.warn('sinceLast is', sinceLast, '- skipping this heartbeat');
+              return;
+            } else {
+              console.log('sinceLast is', sinceLast, '- OK')
+            };
+            await sendHeartbeat();
+            await pruneInactivePlayers();
+            lastHeartbeatRef.current = now;
+          }, duration);
+        };
+
+        setHeartbeatInterval(startHeartbeat(HEARTBEAT_INTERVAL));
+
+      } else {
+        console.warn('-- NO Firebase user!')
+        setUser(defaultUser);
+        setIsLoggedIn(false);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+
+      return unsubscribe();
+    };
+  }, []);
+
+  const getUserData = async (firebaseUser: User): Promise<UserData> => {
+    const snapshot = await getUserFromDatabase(firebaseUser.uid);
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      const newUserData: UserData = {
+        displayName: firebaseUser.displayName?.split(' ')[0] || 'Guest',
+        photoURL: firebaseUser.photoURL,
+        uid: firebaseUser.uid,
+        phase: 'title',
+        preferences: defaultUser.preferences,
+      };
+      await createUserInDatabase(newUserData);
+      return newUserData;
     }
-  }, [isLoggedIn, user?.phase]);
+  };
+
+  const pruneInactivePlayers = async () => {
+    const snapshot = await get(child(ref(database), 'players'));
+    const players = snapshot.val();
+
+    if (players) {
+      Object.keys(players).forEach(async (playerUid) => {
+        const player = players[playerUid];
+        const sinceLast = Date.now() - player.heartbeat;
+        if (sinceLast > PRUNE_INTERVAL) {
+          await remove(ref(database, `players/${playerUid}`));
+          console.log(`Removed inactive player: ${playerUid}`);
+        }
+      });
+    }
+  };
+
+  const getUserFromDatabase = async (uid: string) => {
+    return get(child(ref(database), `users/${uid}`));
+  };
+
+  const createUserInDatabase = async (userData: UserData) => {
+    await set(ref(database, `users/${userData.uid}`), userData);
+  };
 
   const addUserToPlayerList = async (userData: UserData) => {
-    await set(ref(database, `players/${user?.uid}`), userData);
-  }
+    await set(ref(database, `players/${userData.uid}`), userData);
+  };
 
   const removeUserFromPlayerList = async (uid: string) => {
     await remove(ref(database, `players/${uid}`));
@@ -47,24 +143,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const updates: Record<string, string | number> = {};
     updates[path] = newValue;
     await update(ref(database), updates);
-  }
+  };
 
   const changePhase = (newPhase: string) => {
-    setUser((prevUser: UserData | null) => {
-      let nextUser;
+    setUser((prevUser) => {
       if (prevUser) {
-        nextUser = {
-          ...prevUser,
-          phase: newPhase
-        };
-      } else {
-        nextUser = {
-          ...defaultUser,
-          phase: newPhase
-        }
+        return { ...prevUser, phase: newPhase };
       }
-      return nextUser;
+      return prevUser;
     });
+    updateUserInPlayerList(`players/${user?.uid}/phase`, newPhase);
   };
 
   const handleSignOut = async () => {
@@ -73,6 +161,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       await signOut(auth);
       console.log("User signed out successfully");
+      clearInterval(heartbeatInterval);
       await removeUserFromPlayerList(user.uid);
       setUser({
         ...defaultUser,
@@ -85,40 +174,42 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  useEffect(() => {
-    console.warn('>>>>>> UserContext useEffect[] running!')
-    const auth = getAuth();
+  const changeOption = async (optionKey: string, newValue: string | number) => {
+    if (!user) return;
 
-    // returns a function to unsubscribe to itself (?!?)
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const convertedName = user.displayName ? user.displayName.split(' ')[0] : 'Guest';
-        const userData: UserData = {
-          displayName: convertedName,
-          photoURL: user.photoURL,
-          uid: user.uid,
-          phase: 'title'
-        };
-        setUser(userData);
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-        console.error('no user in UserContext useEffect[]');
-      }
+    const updatedPreferences: OptionsData = {
+      ...user.preferences as OptionsData,
+      [optionKey]: newValue,
+    };
+
+    const updatedUser: UserData = {
+      ...user,
+      preferences: updatedPreferences,
+    };
+
+    setUser(updatedUser);
+
+    // Update in database
+    await update(ref(database, `users/${user.uid}/preferences`), {
+      [optionKey]: newValue,
     });
 
-    return () => unsubscribe();
-  }, []);
+    // Update CSS variable
+    const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    document.documentElement.style.setProperty(varName, newValue.toString());
+  };
 
   return (
     <UserContext.Provider value={{
       user,
       isLoggedIn,
+      isLoading,
       addUserToPlayerList,
       changePhase,
+      handleSignOut,
       setUser,
       setIsLoggedIn,
-      handleSignOut
+      changeOption,
     }}>
       {children}
     </UserContext.Provider>

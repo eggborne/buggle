@@ -17,11 +17,7 @@ interface GameBoardProps {
 }
 
 function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: GameBoardProps) {
-  // console.log('gb currentGame', currentGame)
-  // console.log('gb player', player)
-  // console.log('gb gameId', gameId)
   const options = useUser().user?.preferences as OptionsData;
-  const gameBoardRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
@@ -29,6 +25,15 @@ function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: G
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const [game, setGame] = useState<CurrentGameData>(currentGame);
+  const gameBoardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (gameBoardRef.current) {
+        gameBoardRef.current.classList.add(styles.showing)
+      }
+    })
+  }, [])
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {

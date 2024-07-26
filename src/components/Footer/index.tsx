@@ -31,13 +31,13 @@ function Footer({ optionsShowing, userMenuShowing, showExitGameConfirm, toggleOp
     <footer className={styles.Footer}>
       <div className={styles.footerKnob}></div>
       <button
-        className={styles.back}
+        className={`${styles.back} ${optionsShowing || phase !== 'title' ? styles.showing : ''}`}
         onClick={optionsShowing ? toggleOptionsShowing : handleClickBackButton}
-        style={{
-          visibility: (phase === 'title' && !optionsShowing) ? 'hidden' : 'visible',
-          // opacity: 0.1,
-          // pointerEvents: 'none',
-        }}
+        // style={{
+        //   visibility: (phase === 'title' && !optionsShowing) ? 'hidden' : 'visible',
+        //   opacity: 0.1,
+        //   pointerEvents: 'none',
+        // }}
       >
         <img src={backArrow} />
       </button>
@@ -45,18 +45,19 @@ function Footer({ optionsShowing, userMenuShowing, showExitGameConfirm, toggleOp
       <Logo />
       {/* <button className={optionsShowing ? styles.close : styles.options} onClick={toggleOptionsShowing} style={{ visibility: (phase !== 'game' && !optionsShowing) ? 'hidden' : 'visible' }} ><img src={optionsShowing ? closeIcon : optionsIcon} /></button> */}
       {isLoggedIn ?
-        userMenuShowing ?
+        <>
           <button
             onClick={toggleUserMenuShowing}
-            className={'x-close'}>
+            className={`${userMenuShowing ? styles.showing : ''} x-close`}>
             <img src={closeIcon} />
           </button>
-          :
+          
           <button
             onClick={toggleUserMenuShowing}
-            className={styles.profileButton}>
-            <img src={user?.photoURL || ''} />
+            className={`${styles.profileButton} ${!userMenuShowing ? styles.showing : ''}`}>
+            <img className={'profile-pic'} src={user?.photoURL || ''} />
           </button>
+        </>
         :
         <button
         className={styles.options}

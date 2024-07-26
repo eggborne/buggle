@@ -18,12 +18,12 @@
   --header-background-color: #4266B2;
   --title-screen-bg-color: #32864A;
   --select-screen-bg-color: #D69604;
-  --lobby-screen-bg-color: #C53929;
+  --lobby-screen-bg-color: #8d7c46;
   --options-screen-bg-color: #4A4A4A;
   --create-screen-bg-color: #4a6081;
   --footer-color: #323021;
   --footer-knob-roundness: 50%;
-  --bottom-margin: 2rem;
+  --bottom-margin: 1.8rem;
   
   --start-color: #32864A;
   --cancel-color: #847f27;
@@ -109,8 +109,13 @@ input {
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   margin: 0;
+  text-shadow: var(--text-stroke);
+}
+
+h2 {
+  text-shadow: var(--text-stroke);
 }
 
 button {
@@ -189,7 +194,23 @@ main {
 
 .profile-pic {
   width: 2rem;
+  min-width: 2rem;
   height: 2rem;
+  aspect-ratio: 1 !important;
+  opacity: 0;
+  animation: fade-in 300ms ease forwards;
+  animation-delay: 150ms;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
 }
 
 /* @media (min-width: 1024px) {

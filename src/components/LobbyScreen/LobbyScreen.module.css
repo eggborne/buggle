@@ -1,6 +1,19 @@
 .LobbyScreen {
   background-color: var(--lobby-screen-bg-color);
   align-items: stretch;
+  opacity: 0.1;
+  scale: 0.9;
+  transition: all 200ms ease;
+}
+
+.LobbyScreen.showing {
+  opacity: 1;
+  scale: 1;
+}
+
+.LobbyScreen.hidden {
+  opacity: 0;
+  scale: 0.9;
 }
 
 .chatWindow {
@@ -96,33 +109,64 @@
   gap: 0.5rem;
 }
 
-.playerList {
+.playerList, .challengeList {
   width: 100%;
   border-radius: 0.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto;;
 }
 
-.playerListItem {
+.playerListItem, .challengeListItem {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr 4rem auto;
-  grid-template-rows: 4rem;
-  gap: 1rem;
+  grid-template-columns: 3rem 1fr 4rem 1fr;
+  grid-template-rows: 3rem;
+  gap: 0 1rem;
   padding: 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
 }
 
-.playerListItem img {
+.challengeListItem {
+  grid-template-columns: 4rem 1fr 4rem auto auto;
+  grid-template-rows: 4rem 3rem;
+  outline: 0.1rem solid rgb(251, 182, 182);
+}
+
+.challengingLabel {
+  position: absolute;
+  bottom: 0.25rem;
+  /* translate: -50% 0; */
+  left: 4.5rem;
+  font-weight: bold;
+  color: #ffaaaa;
+  z-index: 5;
+}
+
+.challengeListItem > .challengeButtons {
+  grid-column-start: 2;
+  grid-column-end: 6;
+  grid-row-start: 2;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.playerListItem img,
+.challengeListItem img {
   width: 100%;
   height: 100%;
 }
 
-.playerListItem button {
-  height: 4rem;
+.playerListItem button, 
+.challengeListItem button {
   font-size: 0.8rem;
   padding: 0 0.5rem;
+  width: 100%;
+}
+
+.challengeListItem button {
+  font-size: 0.8rem;
+  padding: 0 2rem;
 }
 
 .puzzleOptions {
@@ -149,7 +193,7 @@
 @keyframes birth-from-left {
   0% {
     opacity: 0;
-    translate: -30% 0;
+    translate: -20% 0;
   }
 
   100% {
@@ -161,7 +205,7 @@
 @keyframes birth-from-right {
   0% {
     opacity: 0;
-    translate: 30% 0;
+    translate: 20% 0;
   }
 
   100% {

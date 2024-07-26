@@ -12,12 +12,13 @@ export interface PlayerData {
 }
 
 export interface UserData {
-  currentGame?: CurrentGameData;
   displayName: string | null,
   photoURL: string | null,
   phase: string | null;
-  preferences?: OptionsData | null;
   uid: string,
+  currentGame?: CurrentGameData;
+  preferences?: OptionsData | null;
+  heartbeat?: number;
 }
 
 // puzzle
@@ -143,6 +144,7 @@ export interface ChallengeData {
     height: number;
   };
   timeLimit: number;
+  uid?: string | null;
 }
 
 // options

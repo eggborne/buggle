@@ -35,6 +35,14 @@
   gap: 1rem;
 }
 
+.enterButton {
+  border: 0.1rem solid #ddd;
+  background-color: var(--start-color);
+  padding: 1rem 3rem;
+  border-radius: 0.5rem;
+  color: #ddd;
+}
+
 .titleButton.options {
   background-color: var(--options-screen-bg-color);
 }

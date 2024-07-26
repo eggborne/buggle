@@ -15,9 +15,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 1.325rem;
+  height: 1.325rem;
   aspect-ratio: 1;
   font-weight: bold;
   color: var(--cube-text-color);
   border-radius: var(--cube-roundness);
-  outline: 0.25rem solid var(--footer-color);
+  outline: 0.2rem solid var(--footer-color);
 }

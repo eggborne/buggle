@@ -1,15 +1,15 @@
 import styles from './OptionsScreen.module.css'
-// import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { debounce } from '../../scripts/util'
 import { userOptions } from '../../config.json'
 import { OptionInputData, OptionsData, OptionTypeData } from '../../types/types';
 import { useUser } from '../../context/UserContext';
-// import PuzzleIcon from '../PuzzleIcon'
-// import Modal from '../Modal'
+import PuzzleIcon from '../PuzzleIcon'
+import Modal from '../Modal'
 
 interface OptionsScreenProps {
   hidden: boolean;
-  changeOption: (optionKey: string, newValue: string | number) => void;
+  changeOption: (optionKey: keyof OptionsData, newValue: string | number) => void;
 }
 
 const OptionInput = ({ label, name, type, value, onChange, onPointerUp, min, max }: OptionInputData) => (
@@ -29,16 +29,31 @@ const OptionInput = ({ label, name, type, value, onChange, onPointerUp, min, max
 );
 
 function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
-  // const [previewShowing, setPreviewShowing] = useState<boolean>(false);
 
+  const [previewShowing, setPreviewShowing] = useState<boolean>(false);
   const { user } = useUser();
   const preferences = user?.preferences as OptionsData;
-  const debouncedChangeOption = debounce((name: string, value: string | number) => {
+  useEffect(() => {
+    // Set up a listener that will call setPreviewWShowing(true) when the user touchdowns or mouses down on an input, and calls setPreviewShowing(false) when they list the mouse or touch (or otherwise are ddone editing)
+    // window.addEventListener('mousedown', () => setPreviewShowing(true));
+    // window.addEventListener('touchstart', () => setPreviewShowing(true));
+    // window.addEventListener('mouseup', () => setPreviewShowing(false));
+    // window.addEventListener('touchend', () => setPreviewShowing(false));
+    // window.addEventListener('touchcancel', () => setPreviewShowing(false));
+    // return () => {
+    //   window.removeEventListener('mousedown', () => setPreviewShowing(true));
+    //   window.removeEventListener('touchstart', () => setPreviewShowing(true));
+    //   window.removeEventListener('mouseup', () => setPreviewShowing(false));
+    //   window.removeEventListener('touchend', () => setPreviewShowing(false));
+    //   window.removeEventListener('touchcancel', () => setPreviewShowing(false));
+    // };
+  }, []);
+  const debouncedChangeOption = debounce((name: keyof OptionsData, value: string | number) => {
     changeOption(name, value);
   }, 100);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.name as string;
+    const name = e.target.name as keyof OptionsData;
     const value = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
     if (e.target.type === 'range') {
       changeOption(name, value);
@@ -51,22 +66,13 @@ function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
   const sizeOptions: OptionTypeData = userOptions.style.sizes;
   const gameplayOptions: OptionTypeData = userOptions.gameplay.touch;
 
-  // const sampleLetterList = ['I', 'T', 'X', 'S', 'H', 'W', 'L', 'A', 'X', 'L', 'Z', 'N', 'B', 'U', 'Y', 'S', 'W', 'N', 'C', 'Q', 'E', 'V', 'J', 'R', 'U'];
+  const sampleLetterList = ['I', 'T', 'X', 'S', 'H', 'W', 'L', 'A', 'X', 'L', 'Z', 'N', 'B', 'U', 'Y', 'S', 'W', 'N', 'C', 'Q', 'E', 'V', 'J', 'R', 'U'];
 
   const optionsScreenClass = `${styles.OptionsScreen}${hidden ? ' hidden' : ''}`;
   return (
     <>
       <main className={optionsScreenClass}>
         <h1>Options</h1>
-        {/* <div className={styles.appearancePreview}>
-          <PuzzleIcon
-            contents={sampleLetterList}
-            iconSize={{
-              width: `var(--game-board-size)`,
-            }}
-            puzzleDimensions={{ width: 5, height: 5 }}
-          />
-        </div> */}
         <div className={`${styles.optionCategorySection} ${styles.color}`}>
           <h2>{colorOptions.label}</h2>
           <div className={`${styles.optionsList} ${styles.color}`}>
@@ -117,10 +123,11 @@ function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
         </div>
 
       </main>
-      {/* <Modal style={{
+      <Modal style={{
         padding: 0,
         width: '100%',
         background: 'transparent',
+        transition: 'unset'
       }} isOpen={previewShowing} noCloseButton={true} onClose={() => setPreviewShowing(false)}>
         <div className={styles.puzzlePreview}>
           <PuzzleIcon
@@ -133,7 +140,7 @@ function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
           />
         </div>
         
-      </Modal> */}
+      </Modal>
     </>
   )
 }

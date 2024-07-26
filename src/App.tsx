@@ -1,21 +1,32 @@
-import { useState, useEffect, useLayoutEffect } from 'react'
-import './App.css'
-import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, OptionsData, PlayerData, PointValues, StoredPuzzleData, UserData } from './types/types';
+import { useState, useEffect } from 'react';
 import { useUser } from './context/UserContext';
-import Footer from './components/Footer'
-import TitleScreen from './components/TitleScreen'
-import LobbyScreen from './components/LobbyScreen'
-import SelectScreen from './components/SelectScreen'
-import GameScreen from './components/GameScreen'
-import OptionsScreen from './components/OptionsScreen'
-import CreateScreen from './components/CreateScreen'
-import { set, get, ref, child } from 'firebase/database';
+// import { useFirebase } from './context/FirebaseContext';
+import './App.css'
+import {
+  BoardRequestData,
+  CurrentGameData,
+  GameOptions,
+  GeneratedBoardData,
+  PlayerData,
+  PointValues,
+  StoredPuzzleData,
+  UserData,
+} from './types/types';
+import LoadingDisplay from './components/LoadingDisplay';
+import Footer from './components/Footer';
+import TitleScreen from './components/TitleScreen';
+import LobbyScreen from './components/LobbyScreen';
+import SelectScreen from './components/SelectScreen';
+import GameScreen from './components/GameScreen';
+import OptionsScreen from './components/OptionsScreen';
+import CreateScreen from './components/CreateScreen';
+import { set, get, ref, child, remove } from 'firebase/database';
 import { database } from './scripts/firebase';
-import { stringTo2DArray, randomInt, saveToLocalStorage, getFromLocalStorage, decodeMatrix, encodeMatrix } from "./scripts/util";
-import Modal from './components/Modal'
+import { stringTo2DArray, randomInt, decodeMatrix, encodeMatrix } from "./scripts/util";
+import Modal from './components/Modal';
 import MessageBanner from './components/MessageBanner/';
 import UserMenu from './components/UserMenu/';
-// import { useFirebase } from 'context/FirebaseContext.tsx';
+import { useFirebase } from './context/FirebaseContext';
 
 const defaultUserOptions = {
   cubeColor: '#aaaaaa',
@@ -47,8 +58,16 @@ const difficultyWordAmounts: Record<string, { min: number, max: number }> = {
 const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
-  const { user, isLoggedIn, addUserToPlayerList, changePhase, handleSignOut, setUser } = useUser();
-  // const { playerList } = useFirebase();
+  const {
+    user,
+    isLoading,
+    isLoggedIn,
+    changeOption,
+    changePhase,
+    handleSignOut,
+
+  } = useUser();
+  const { revokeOutgoingChallenges } = useFirebase();
   const phase = user?.phase;
   const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
@@ -72,102 +91,26 @@ function App() {
 
   const [currentGame, setCurrentGame] = useState<CurrentGameData | null>(null);
 
-  const getUserFromDatabase = async (uid: string) => {
-    return get(child(ref(database), `users/${uid}`));
-  };
-  const createUserInDatabase = async (userData: UserData) => {
-    console.log('creating user in db', userData);
-    await set(ref(database, `users/${userData.uid}`), userData);
-  };
+  useEffect(() => {
+    if (!isLoading && !userReady) {
+      console.log('setting userReady');      
+      requestAnimationFrame(() => {
+        setUserReady(true);
+      })
+    }
+  }, [isLoading]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (isLoggedIn && user) {
-      console.warn('>>>>>> App.useEffect[isLoggedIn]: USER SIGNED IN!', user, 'ready?', userReady);
-      const getUserData = async () => {
-        const snapshot = await getUserFromDatabase(user.uid)
-        let userData: UserData;
-        if (snapshot.exists()) {
-          userData = snapshot.val();
-        } else {
-          // create in database          
-          console.log(`No user data available for uid ${user.uid}. Creating new user in database!`);
-          userData = {
-            ...defaultUser,
-            ...user,
-          };
-          console.log('sending user data to db:', userData);
-          try {
-            await createUserInDatabase(userData);
-          } catch (error) {
-            console.error('Error setting user data:', error);
-          }
-        }
-        setUser(userData);
-        // for (const optionKey in userData.preferences) {
-        //   const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-        //   const newValue = userData.preferences[optionKey as keyof OptionsData].toString();
-        //   document.documentElement.style.setProperty(varName, newValue)
-        // }
-        addUserToPlayerList(userData);
-      }
-      getUserData();
-    } else {
-      console.warn('>>>>>> App.useEffect[isLoggedIn]: USER NOT SIGNED IN!');
-      // check for local saved options
-      const localOptions = getFromLocalStorage('buggle-options') as OptionsData;
-      const initialOptions = localOptions || defaultUserOptions;
-
-      if (localOptions) {
-        console.log('found local options', initialOptions);
-      } else {
-        console.log('using default options', initialOptions);
-      }
-
-      const defaultInitialUser: UserData = {
-        ...defaultUser,
-        preferences: initialOptions,
-        ...user,
-      };
-      setUser(defaultInitialUser);
-      for (const optionKey in defaultInitialUser.preferences) {
-        const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-        const newValue = defaultInitialUser.preferences[optionKey as keyof OptionsData].toString();
-        document.documentElement.style.setProperty(varName, newValue)
-      }
+      console.warn('revokinng old outgoing challenges')
+      revokeOutgoingChallenges(user.uid || '');
     }
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    window.addEventListener('popstate', function () {
-      history.pushState(null, '', document.URL);
-    });
-    history.pushState(null, '', document.URL);
-  }, []);
-
-  useEffect(() => {
-    if (user && user.preferences && !userReady) {
-      console.log('setting ready when pref', user, user.preferences);
-      setTimeout(() => {
-        setUserReady(true);
-      }, 600);
-    }
-  }, [user]);
-
   // useEffect(() => {
-  //   if (playerList) {
-      
-  //   }
-  // }, [playerList])
-
-  const saveUserPreference = async (optionKey: string, newValue: string | number) => {
-    if (isLoggedIn) {
-      console.warn('-- sending option to DB:', optionKey, newValue);
-      await set(ref(database, `users/${user?.uid}/preferences/${optionKey}`), newValue);
-      console.warn('-- sent option to DB');
-    }
-    const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    document.documentElement.style.setProperty(varName, newValue.toString())
-  }
+  //   if (!playerList) return;
+  //   console.log('players length is now', playerList.length);
+  // }, [playerList, playerList?.length]);
 
   const handleValidWord = (word: string) => {
     let wordValue;
@@ -289,25 +232,6 @@ function App() {
     changePhase('game')
   }
 
-  // const changePhase = (newPhase: string) => {
-  //   if (!user) return;
-  //   if (currentGame && phase === 'game') {
-  //     console.log('currentGame exists while clicked away from game')
-  //     setConfirmingGameExit(true);
-  //     return;
-  //   }
-  //   setUser((prevUser: UserData | null) => {
-  //     if (prevUser) {
-  //       return {
-  //         ...prevUser,
-  //         phase: newPhase
-  //       };
-  //     } else {
-  //       return defaultUser;
-  //     }
-  //   });
-  // }
-
   const startSinglePlayerGame = async (gameOptions: GameOptions) => {
     const randomPuzzle = await fetchRandomPuzzle(gameOptions);
     setCurrentGame({
@@ -326,40 +250,6 @@ function App() {
     return;
   }
 
-  const changeOption = (optionKey: string, newValue: string | number) => {
-    saveToLocalStorage('buggle-options', { ...user?.preferences, [optionKey]: newValue })
-    setUser((prevUser: UserData | null): UserData | null => {
-      let nextOptions;
-      if (prevUser) {
-        console.log('prevuser, is user', prevUser)
-        nextOptions = {
-          ...prevUser,
-          preferences: {
-            ...prevUser.preferences,
-            [optionKey]: newValue
-          } as OptionsData
-        };
-        return nextOptions;
-      } else if (user) {
-        console.log('no prevuser, is user', user)
-        nextOptions = {
-          ...user,
-          preferences: {
-            ...user.preferences,
-            [optionKey]: newValue
-          } as OptionsData
-        }
-      } else {
-        nextOptions = null;
-      }
-      console.log('NEXT OPTIONS', nextOptions);
-      return nextOptions;
-    });
-    if (user) {
-      saveUserPreference(optionKey, newValue);
-    }
-  }
-
   const handleConfirmGameExit = () => {
     changePhase('title');
     setPlayer({
@@ -369,68 +259,55 @@ function App() {
     setConfirmingGameExit(false);
   }
 
-  const handleConfirmSignOut = () => {
+  const handleConfirmSignOut = async () => {
     setConfirmingSignOut(false);
     setUserMenuShowing(false);
     handleSignOut();
+    revokeOutgoingChallenges(user?.uid || '');
   }
 
   return (
+    isLoading ? <LoadingDisplay /> :
     <>
       <MessageBanner isOpen={false} message={'balls'} />
       <div
         className={'screen-container'}
         style={{
           opacity: userReady ? 1 : 0,
-          // transform: userReady ? 'scaleX(1)' : 'scaleX(1.1)',
         }}
       >
         <TitleScreen hidden={phase !== 'title'} showOptions={() => setOptionsShowing(true)} />
         {userReady ?
           <>
-        <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
-        <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
-        {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
-        {phase === 'game' && currentGame &&
-          < GameScreen
-            hidden={phase !== 'game'}
-            player={player}
-            currentGame={currentGame}
-            handleValidWord={handleValidWord}
-            uploadPuzzle={uploadPuzzle}
-          />
-        }
+            <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
+            <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
+            {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
+            {phase === 'game' && currentGame &&
+              < GameScreen
+                hidden={phase !== 'game'}
+                player={player}
+                currentGame={currentGame}
+                handleValidWord={handleValidWord}
+                uploadPuzzle={uploadPuzzle}
+              />
+            }
 
-        {userReady && optionsShowing && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />}
+            {userReady && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />}
 
-        <Modal isOpen={confirmingGameExit} noCloseButton style={{
-          height: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '2rem',
-          padding: '2.5rem',
-        }}>
-          <h3>Really leave the game?</h3>
-          <div className={'button-group row'}>
-            <button onClick={handleConfirmGameExit} className={'start'}>OK</button>
-            <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
-          </div>
-        </Modal>
-        <Modal isOpen={confirmingSignOut} noCloseButton style={{
-          height: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '2rem',
-          padding: '2.5rem',
-        }}>
-          <h3>Really sign out?</h3>
-          <div className={'button-group row'}>
-            <button onClick={handleConfirmSignOut} className={'start'}>OK</button>
-            <button onClick={() => setConfirmingSignOut(false)} className={'cancel'}>No</button>
-          </div>
-        </Modal>
+            <Modal isOpen={confirmingGameExit} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
+              <h3>Really leave the game?</h3>
+              <div className={'button-group row'}>
+                <button onClick={handleConfirmGameExit} className={'start'}>OK</button>
+                <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
+              </div>
+            </Modal>
+            <Modal isOpen={confirmingSignOut} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
+              <h3>Really sign out?</h3>
+              <div className={'button-group row'}>
+                <button onClick={handleConfirmSignOut} className={'start'}>OK</button>
+                <button onClick={() => setConfirmingSignOut(false)} className={'cancel'}>No</button>
+              </div>
+            </Modal>
           </>
           :
           <div>loading...</div>
