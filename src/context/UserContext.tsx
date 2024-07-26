@@ -61,13 +61,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const startHeartbeat = (duration: number) => {
           return setInterval(async () => {
             const now = Date.now();
-            let sinceLast = now - lastHeartbeatRef.current;
+            const sinceLast = now - lastHeartbeatRef.current;
             if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
               console.warn('sinceLast is', sinceLast, '- skipping this heartbeat');
               return;
             } else {
               console.log('sinceLast is', sinceLast, '- OK')
-            };
+            }
             await sendHeartbeat();
             await pruneInactivePlayers();
             lastHeartbeatRef.current = now;
@@ -85,7 +85,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-
       return unsubscribe();
     };
   }, []);

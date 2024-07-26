@@ -18,7 +18,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessageData[]>([]);
   const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<UserData | null>(null);
   const [sentChallenges, setSentChallenges] = useState<ChallengeData[]>([]);
-  const [receivedChallenges, setReceivedChallenges] = useState<ChallengeData[]>([]);
+  // const [receivedChallenges, setReceivedChallenges] = useState<ChallengeData[]>([]);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const [sizeSelected, setSizeSelected] = useState<number>(5);

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useUser } from './context/UserContext';
-// import { useFirebase } from './context/FirebaseContext';
 import './App.css'
 import {
   BoardRequestData,
@@ -20,7 +19,7 @@ import SelectScreen from './components/SelectScreen';
 import GameScreen from './components/GameScreen';
 import OptionsScreen from './components/OptionsScreen';
 import CreateScreen from './components/CreateScreen';
-import { set, get, ref, child, remove } from 'firebase/database';
+import { set, get, ref, child } from 'firebase/database';
 import { database } from './scripts/firebase';
 import { stringTo2DArray, randomInt, decodeMatrix, encodeMatrix } from "./scripts/util";
 import Modal from './components/Modal';
@@ -106,11 +105,6 @@ function App() {
       revokeOutgoingChallenges(user.uid || '');
     }
   }, [isLoggedIn]);
-
-  // useEffect(() => {
-  //   if (!playerList) return;
-  //   console.log('players length is now', playerList.length);
-  // }, [playerList, playerList?.length]);
 
   const handleValidWord = (word: string) => {
     let wordValue;
