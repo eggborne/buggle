@@ -26,7 +26,7 @@ function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
   return (
     <main className={titleScreenClass}>
       <div className={`${styles.titleButtons}`}>
-        <button className={`${styles.select} ${styles.titleButton}`} onClick={() => changePhase('select')}>Practice</button>
+        <button className={`${styles.select} ${styles.titleButton} ${styles.small}`} onClick={() => changePhase('select')}>Practice</button>
         <button className={`${styles.lobby} ${styles.titleButton}`} onClick={handleClickMultiplayer}> Multiplayer <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#fff' }}>{playersString}</div> <div className={styles.buttonMenu}> {(isLoggedIn && user) ? <div role='button' className={styles.enterButton}>Enter lobby</div> : <Login /> } </div> </button>
         <div className={'button-group row'}>
           <button className={`${styles.options} ${styles.titleButton} ${styles.small}`} onClick={showOptions}>Options</button>

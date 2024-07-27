@@ -38,7 +38,8 @@
   border-radius: var(--footer-knob-roundness);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 100ms ease;  
+  transition: opacity 100ms ease;
+  /* outline: 1rem solid var(--footer-color); */
 }
 
 .Footer > button.showing {
@@ -63,10 +64,15 @@ button.x-close {
   background-color: var(--danger-color);
 }
 
+button.options > img {
+  width: 80%;
+  height: 80%;
+}
 button.options {
   border-radius: 0;
   background-color: transparent;
-  outline: 0 !important;
+  border: 0 !important;  
+  outline: 0 !important;  
 }
 
 .footerKnob {

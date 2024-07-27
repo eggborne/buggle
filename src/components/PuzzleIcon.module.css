@@ -1,8 +1,8 @@
 .PuzzleIcon {
   display: grid;
   position: relative;
-  /* gap: var(--cube-gap); */
-  padding: var(--game-board-padding);
+  gap: 3%;
+  padding: 3%;
   color: var(--cube-text-color);
   background-color: var(--game-board-background-color);
   border-radius: calc(var(--cube-roundness) / 5);

@@ -4,7 +4,6 @@ import { database } from '../../scripts/firebase';
 import { CellObj, CurrentGameData, PlayerData, OptionsData } from '../../types/types';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
-import Modal from '../Modal';
 import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 
@@ -13,17 +12,15 @@ interface GameBoardProps {
   currentGame: CurrentGameData;
   player: PlayerData;
   onValidWord: (word: string) => void;
-  uploadPuzzle: () => void;
 }
 
-function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: GameBoardProps) {
+function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps) {
   const options = useUser().user?.preferences as OptionsData;
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
   const [wordValid, setWordValid] = useState<boolean>(false);
   const [wordStatus, setWordStatus] = useState<string>('invalid');
-  const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const [game, setGame] = useState<CurrentGameData>(currentGame);
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
@@ -177,12 +174,6 @@ function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: G
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
 
-  let requiredWordList: string[] = [];
-  if (currentGame.customizations?.requiredWords?.wordList) {
-    requiredWordList = currentGame.customizations.requiredWords.wordList
-      .map(word => word.toLowerCase())
-      .sort((a, b) => b.length - a.length);
-  }
   currentGame = game;
 
   return (
@@ -213,35 +204,7 @@ function GameBoard({ gameId, currentGame, player, onValidWord, uploadPuzzle }: G
             </div>
           ))
         )}
-      </div>
-      <div className={styles.lowerButtonArea}>
-        {process.env.NODE_ENV === 'development' && <button onClick={uploadPuzzle}>Upload</button>}
-        <button onClick={() => setWordListShowing(true)}>Word List</button>
-      </div>
-      {wordListShowing &&
-        <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
-          {requiredWordList.map(word =>
-            <div style={{
-              color: '#5f5',
-              textTransform: 'uppercase',
-              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
-            }}>
-              {word}
-            </div>
-          )}
-          {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
-            <div style={{
-              textTransform: 'uppercase',
-              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
-              opacity: player.wordsFound.has(word) ? '0.75' : '1',
-
-            }}
-              key={word}>
-              {word}
-            </div>
-          )}
-        </Modal>
-      }
+      </div>      
     </div>
   )
 }

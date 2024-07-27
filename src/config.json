@@ -20,7 +20,7 @@
             "label": "Cube",
             "name": "cubeColor",
             "type": "color",
-            "defaultValue": "#3498db"
+            "defaultValue": "#cccdc1"
           },
           {
             "label": "Cube Text",

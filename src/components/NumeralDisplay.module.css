@@ -4,9 +4,10 @@
   align-items: center;
   justify-content: space-evenly;
   gap: calc(var(--numeral-height) / 8);
-  padding: calc(var(--numeral-height) / 8);
-  border-radius: 0.25rem;
-  transition: scale 300ms ease;
+  border-radius: calc(var(--numeral-height) / 8);
+  padding: 0.25rem 0.5rem;
+  padding-bottom: 0.4rem;
+  background-color: black;
 }
 
 .numeralDigit {

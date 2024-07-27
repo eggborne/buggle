@@ -1,5 +1,6 @@
 .wordInput {
-  align-self: stretch;
+  width: var(--main-width);
+  max-width: var(--main-width);
   height: var(--current-word-display-height);
   display: flex;
   align-items: center;
@@ -11,11 +12,11 @@
 
 .wordLegend {
   display: flex;
-  gap: calc(var(--current-word-display-height) / 48);
+  transition: all 300ms ease;
 }
 
 .wordDisplayLetter {
-  animation: drop-in 40ms ease;
+  animation: drop-in 60ms ease;
 }
 
 .valid {
@@ -33,10 +34,8 @@
 @keyframes drop-in {
   from {
     opacity: 0;
-    scale: 0.75;
   }
   to {
     opacity: 1;
-    scale: 1;
   }
 }

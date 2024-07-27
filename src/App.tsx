@@ -24,7 +24,7 @@ import { database } from './scripts/firebase';
 import { stringTo2DArray, randomInt, decodeMatrix, encodeMatrix } from "./scripts/util";
 import Modal from './components/Modal';
 import MessageBanner from './components/MessageBanner/';
-import UserMenu from './components/UserMenu/';
+import SideMenu from './components/SideMenu';
 import { useFirebase } from './context/FirebaseContext';
 
 const defaultUserOptions = {
@@ -66,11 +66,11 @@ function App() {
     handleSignOut,
 
   } = useUser();
-  const { revokeOutgoingChallenges } = useFirebase();
   const phase = user?.phase;
+  const { revokeOutgoingChallenges } = useFirebase();
   const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
-  const [userMenuShowing, setUserMenuShowing] = useState<boolean>(false);
+  const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
   const [confirmingGameExit, setConfirmingGameExit] = useState<boolean>(false);
   const [confirmingSignOut, setConfirmingSignOut] = useState<boolean>(false);
 
@@ -92,7 +92,7 @@ function App() {
 
   useEffect(() => {
     if (!isLoading && !userReady) {
-      console.log('setting userReady');      
+      console.log('setting userReady');
       requestAnimationFrame(() => {
         setUserReady(true);
       })
@@ -255,71 +255,72 @@ function App() {
 
   const handleConfirmSignOut = async () => {
     setConfirmingSignOut(false);
-    setUserMenuShowing(false);
+    setSideMenuShowing(false);
     handleSignOut();
     revokeOutgoingChallenges(user?.uid || '');
   }
 
   return (
     isLoading ? <LoadingDisplay /> :
-    <>
-      <MessageBanner isOpen={false} message={'balls'} />
-      <div
-        className={'screen-container'}
-        style={{
-          opacity: userReady ? 1 : 0,
-        }}
-      >
-        <TitleScreen hidden={phase !== 'title'} showOptions={() => setOptionsShowing(true)} />
-        {userReady ?
-          <>
-            <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
-            <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
-            {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
-            {phase === 'game' && currentGame &&
-              < GameScreen
-                hidden={phase !== 'game'}
-                player={player}
-                currentGame={currentGame}
-                handleValidWord={handleValidWord}
-                uploadPuzzle={uploadPuzzle}
-              />
-            }
+      <>
+        <MessageBanner isOpen={false} message={'balls'} />
+        <div
+          className={'screen-container'}
+          style={{
+            opacity: userReady ? 1 : 0,
+          }}
+        >
+          <TitleScreen hidden={phase !== 'title'} showOptions={() => setOptionsShowing(true)} />
+          {userReady ?
+            <>
+              <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
+              <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
+              {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
+              {phase === 'game' && currentGame &&
+                < GameScreen
+                  hidden={phase !== 'game'}
+                  player={player}
+                  currentGame={currentGame}
+                  handleValidWord={handleValidWord}
+                  uploadPuzzle={uploadPuzzle}
+                />
+              }
 
-            {userReady && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />}
+              {userReady && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />}
 
-            <Modal isOpen={confirmingGameExit} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
-              <h3>Really leave the game?</h3>
-              <div className={'button-group row'}>
-                <button onClick={handleConfirmGameExit} className={'start'}>OK</button>
-                <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
-              </div>
-            </Modal>
-            <Modal isOpen={confirmingSignOut} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
-              <h3>Really sign out?</h3>
-              <div className={'button-group row'}>
-                <button onClick={handleConfirmSignOut} className={'start'}>OK</button>
-                <button onClick={() => setConfirmingSignOut(false)} className={'cancel'}>No</button>
-              </div>
-            </Modal>
-          </>
-          :
-          <div>loading...</div>
-        }
-      </div>
-      <Footer
-        optionsShowing={optionsShowing}
-        userMenuShowing={userMenuShowing}
-        showSignOutConfirm={() => setConfirmingSignOut(true)}
-        showExitGameConfirm={() => setConfirmingGameExit(true)}
-        toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
-        toggleUserMenuShowing={() => setUserMenuShowing(!userMenuShowing)}
-      />
-      <UserMenu
-        userMenuShowing={userMenuShowing}
-        showSignOutConfirm={() => setConfirmingSignOut(true)}
-      />
-    </>
+              <Modal isOpen={confirmingGameExit} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
+                <h3>Really leave the game?</h3>
+                <div className={'button-group row'}>
+                  <button onClick={handleConfirmGameExit} className={'start'}>OK</button>
+                  <button onClick={() => setConfirmingGameExit(false)} className={'cancel'}>No</button>
+                </div>
+              </Modal>
+              <Modal isOpen={confirmingSignOut} noCloseButton style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem', }}>
+                <h3>Really sign out?</h3>
+                <div className={'button-group row'}>
+                  <button onClick={handleConfirmSignOut} className={'start'}>OK</button>
+                  <button onClick={() => setConfirmingSignOut(false)} className={'cancel'}>No</button>
+                </div>
+              </Modal>
+            </>
+            :
+            <div>loading...</div>
+          }
+        </div>
+        <Footer
+          optionsShowing={optionsShowing}
+          sideMenuShowing={sideMenuShowing}
+          showSignOutConfirm={() => setConfirmingSignOut(true)}
+          showExitGameConfirm={() => setConfirmingGameExit(true)}
+          toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
+          toggleSideMenuShowing={() => setSideMenuShowing(!sideMenuShowing)}
+        />
+        <SideMenu
+          sideMenuShowing={sideMenuShowing}
+          setOptionsShowing={() => { setOptionsShowing(true); setSideMenuShowing(false) }}
+          showSignOutConfirm={() => setConfirmingSignOut(true)}
+        />
+      </>
   )
 }
 

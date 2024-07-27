@@ -1,4 +1,4 @@
-.UserMenu {
+.SideMenu {
   position: fixed;
   bottom: calc(var(--footer-height) + 0.5rem);
   right: 0;
@@ -9,7 +9,11 @@
   z-index: 2;
 }
 
-.UserMenu.hide {
+.SideMenu button {
+  border-radius: inherit;
+}
+
+.SideMenu.hide {
   opacity: 0;
   pointer-events: none;
   transform: translateX(100%);
@@ -22,6 +26,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1rem;
+  padding: 0 0.1rem 0 1.5rem;
   background: var(--footer-color);
 }

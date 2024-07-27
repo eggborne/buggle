@@ -2,7 +2,7 @@
   height: 1.325rem;
   display: grid;
   grid-template-columns: repeat(6, 1.325rem);
-  gap: 0.4rem;
+  gap: 0.25rem;
   flex-grow: 1;
   justify-content: center;
   overflow: visible;

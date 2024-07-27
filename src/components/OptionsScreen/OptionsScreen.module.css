@@ -92,5 +92,5 @@
 }
 
 .puzzlePreview * div {
-  /* font-size: calc(var(--game-board-size) / 12) !important; */
+  font-size: calc(var(--game-board-size) / 12) !important;
 }

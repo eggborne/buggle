@@ -7,14 +7,14 @@ import { useUser } from '../../context/UserContext';
 
 interface FooterProps {
   optionsShowing: boolean;
-  userMenuShowing: boolean;
+  sideMenuShowing: boolean;
   toggleOptionsShowing: () => void;
-  toggleUserMenuShowing: () => void;
+  toggleSideMenuShowing: () => void;
   showExitGameConfirm: () => void
   showSignOutConfirm: () => void
 }
 
-function Footer({ optionsShowing, userMenuShowing, showExitGameConfirm, toggleOptionsShowing, toggleUserMenuShowing }: FooterProps) {
+function Footer({ optionsShowing, sideMenuShowing, showExitGameConfirm, toggleOptionsShowing, toggleSideMenuShowing }: FooterProps) {
   const { user, isLoggedIn, changePhase } = useUser();
   const phase = user?.phase;
 
@@ -31,42 +31,29 @@ function Footer({ optionsShowing, userMenuShowing, showExitGameConfirm, toggleOp
     <footer className={styles.Footer}>
       <div className={styles.footerKnob}></div>
       <button
-        className={`${styles.back} ${optionsShowing || phase !== 'title' ? styles.showing : ''}`}
+        className={`${styles.back} ${optionsShowing || (phase !== 'title') ? styles.showing : ''}`}
         onClick={optionsShowing ? toggleOptionsShowing : handleClickBackButton}
-        // style={{
-        //   visibility: (phase === 'title' && !optionsShowing) ? 'hidden' : 'visible',
-        //   opacity: 0.1,
-        //   pointerEvents: 'none',
-        // }}
       >
         <img src={backArrow} />
       </button>
-        
       <Logo />
-      {/* <button className={optionsShowing ? styles.close : styles.options} onClick={toggleOptionsShowing} style={{ visibility: (phase !== 'game' && !optionsShowing) ? 'hidden' : 'visible' }} ><img src={optionsShowing ? closeIcon : optionsIcon} /></button> */}
-      {isLoggedIn ?
-        <>
-          <button
-            onClick={toggleUserMenuShowing}
-            className={`${userMenuShowing ? styles.showing : ''} x-close`}>
-            <img src={closeIcon} />
-          </button>
-          
-          <button
-            onClick={toggleUserMenuShowing}
-            className={`${styles.profileButton} ${!userMenuShowing ? styles.showing : ''}`}>
+      <button
+        onClick={toggleSideMenuShowing}
+        className={`${(sideMenuShowing) ? styles.showing : ''} x-close`}>
+        <img src={closeIcon} />
+      </button>
+      <button
+        onClick={toggleSideMenuShowing}
+            className={`${styles.profileButton} ${(!sideMenuShowing && phase !== 'game') ? styles.showing : ''}`}>
             <img className={'profile-pic'} src={user?.photoURL || ''} />
           </button>
-        </>
-        :
-        <button
-        className={styles.options}
-        onClick={toggleOptionsShowing}
+      <button
+        className={`${styles.profileButton} ${styles.options} ${styles.showing}`}
+        onClick={toggleSideMenuShowing}
         style={{
           visibility: (phase !== 'game' || optionsShowing) ? 'hidden' : 'visible'
         }}
-        ><img src={optionsIcon} /></button>
-      }
+      ><img className={'profile-pic'} src={optionsIcon} /></button>
       <div className={styles.footerKnob}></div>
     </footer>
   )

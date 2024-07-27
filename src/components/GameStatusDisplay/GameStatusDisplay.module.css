@@ -1,10 +1,10 @@
-.gameStatusDisplay {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  padding: 0.5rem 1rem;
+.gameStatusDisplay {  
+  width: var(--main-width);
+  height: 2.5rem;
+  display: grid;
+  grid-template-columns: var(--header-height) 1fr var(--header-height);
+  grid-template-rows: var(--header-height);
+  background-color: var(--footer-color);
 }
 
 .gameStatsArea, 
@@ -16,10 +16,76 @@
 .labeledCounter {
   display: flex;
   align-items: center;
+  flex-direction: column;
   justify-content: space-between;
   gap: 0.25rem 0.5rem;
 }
 
-.gameStatsArea > .labeledCounter {
-  flex-direction: column;
+.playerArea {
+  position: relative;
+}
+
+.playerArea > img {
+  border-radius: 0 50% 50% 50%; 
+  width: var(--header-height);
+  height: var(--header-height);
+  border: 0.1rem solid #ffffff55;
+  outline: 0.5rem solid var(--footer-color);
+  opacity: 1;
+  animation: slide-in-left 300ms ease forwards;
+}
+
+.playerArea > .userLabel {
+  position: absolute;
+  transform: translate(-50%, 0);
+  left: 50%;
+  bottom: calc(var(--header-height) / -6);
+  font-size: 1.1rem;
+  font-weight: bold;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: var(--text-stroke);
+}
+
+.timeCounter {
+  width: min-content;
+  height: min-content;
+  justify-content: center;
+  justify-self:  center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  background-color: var(--footer-color);
+  padding: calc(var(--header-height) / 12) calc(var(--header-height) / 12);
+  padding-top: 0;
+  gap: 0;
+  border-radius: calc(var(--header-height) / 8);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  transform: translateY(calc(var(--header-height) * -1.2));
+  animation: drop-in 300ms ease forwards;
+  animation-delay: 300ms;
+}
+
+.opponentArea > img {
+  border-radius: 50% 0 50% 50%;
+  animation-name: slide-in-right;
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translate(calc(var(--header-height) * -1), calc(var(--header-height) * -1));
+  }
+  to {
+    transform: translate(0);
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translate(var(--header-height), calc(var(--header-height) * -1));
+  }
+  to {
+    transform: translate(0);
+  }
 }

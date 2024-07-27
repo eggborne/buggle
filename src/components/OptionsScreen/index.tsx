@@ -33,21 +33,21 @@ function OptionsScreen({ hidden, changeOption }: OptionsScreenProps) {
   const [previewShowing, setPreviewShowing] = useState<boolean>(false);
   const { user } = useUser();
   const preferences = user?.preferences as OptionsData;
-  useEffect(() => {
-    // Set up a listener that will call setPreviewWShowing(true) when the user touchdowns or mouses down on an input, and calls setPreviewShowing(false) when they list the mouse or touch (or otherwise are ddone editing)
-    // window.addEventListener('mousedown', () => setPreviewShowing(true));
-    // window.addEventListener('touchstart', () => setPreviewShowing(true));
-    // window.addEventListener('mouseup', () => setPreviewShowing(false));
-    // window.addEventListener('touchend', () => setPreviewShowing(false));
-    // window.addEventListener('touchcancel', () => setPreviewShowing(false));
-    // return () => {
-    //   window.removeEventListener('mousedown', () => setPreviewShowing(true));
-    //   window.removeEventListener('touchstart', () => setPreviewShowing(true));
-    //   window.removeEventListener('mouseup', () => setPreviewShowing(false));
-    //   window.removeEventListener('touchend', () => setPreviewShowing(false));
-    //   window.removeEventListener('touchcancel', () => setPreviewShowing(false));
-    // };
-  }, []);
+  // useEffect(() => {
+  //   // Set up a listener that will call setPreviewWShowing(true) when the user touchdowns or mouses down on an input, and calls setPreviewShowing(false) when they list the mouse or touch (or otherwise are ddone editing)
+  //   window.addEventListener('mousedown', () => setPreviewShowing(true));
+  //   window.addEventListener('touchstart', () => setPreviewShowing(true));
+  //   window.addEventListener('mouseup', () => setPreviewShowing(false));
+  //   window.addEventListener('touchend', () => setPreviewShowing(false));
+  //   window.addEventListener('touchcancel', () => setPreviewShowing(false));
+  //   return () => {
+  //     window.removeEventListener('mousedown', () => setPreviewShowing(true));
+  //     window.removeEventListener('touchstart', () => setPreviewShowing(true));
+  //     window.removeEventListener('mouseup', () => setPreviewShowing(false));
+  //     window.removeEventListener('touchend', () => setPreviewShowing(false));
+  //     window.removeEventListener('touchcancel', () => setPreviewShowing(false));
+  //   };
+  // }, []);
   const debouncedChangeOption = debounce((name: keyof OptionsData, value: string | number) => {
     changeOption(name, value);
   }, 100);

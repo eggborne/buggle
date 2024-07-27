@@ -81,3 +81,23 @@ main h1 {
     transform: scale(1);
   }
 }
+
+@keyframes drop-in {
+  from {
+    transform: translateY(calc(var(--header-height) * -1));
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(calc(var(--header-height) * -1));
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}

@@ -14,7 +14,7 @@ function CurrentWordDisplay({ letters, wordStatus }: CurrentWordDisplayProps) {
   return (
     <div className={inputClass} >
       <div className={styles.wordLegend} style={{
-        transform: letters.length < 8 ? `scale(1)` : 'scale(0.8)'
+        transform: letters.length < 9 ? `scale(1)` : letters.length < 12 ? 'scale(0.8)' : 'scale(0.7)'
       }}>
         {letters.map((letter, l) =>
           <div key={`${letter}${l}`} className={styles.wordDisplayLetter}>{letter}</div>

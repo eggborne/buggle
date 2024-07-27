@@ -8,7 +8,6 @@ import { defaultUser } from '../App';
 const PRUNE_INTERVAL = 10000;
 const HEARTBEAT_INTERVAL = 5000;
 
-
 interface UserContextProps {
   user: UserData | null;
   isLoggedIn: boolean;
@@ -35,7 +34,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // store a setInterval as state
   const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | undefined>(undefined);
   const lastHeartbeatRef = useRef<number>(0);
 
@@ -151,7 +149,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
       return prevUser;
     });
-    updateUserInPlayerList(`players/${user?.uid}/phase`, newPhase);
+    if (isLoggedIn) {
+      updateUserInPlayerList(`players/${user?.uid}/phase`, newPhase);
+    }
   };
 
   const handleSignOut = async () => {

@@ -67,6 +67,8 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     if (!user) return;
     const form = e.target as HTMLFormElement;
     const messageInput = form.querySelector('input[name="chatMessage"]') as HTMLInputElement;
+    const trimmedMessage = messageInput.value.trim();
+    if (!trimmedMessage) return;
     const newMessage: ChatMessageData = {
       author: user,
       message: messageInput.value,
@@ -168,19 +170,20 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                 >
                   <span><img className='profile-pic' src={opponentData?.photoURL || undefined} /></span>
                   <span>{opponentData?.displayName}</span>
-                  <span>{challenge.difficulty}</span>
-                  <span>{challenge.timeLimit === 60 ? '1 minute' : challenge.timeLimit === 180 ? '3 minutes' : '5 minutes'}</span>
-                  <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '3rem', height: '3rem' }} /></span>
+                  <div className={styles.difficultyLabel}>
+                    <span>{`${challenge.timeLimit / 60}:00`}</span>
+                    <span>{challenge.difficulty}</span>
+                  </div>
+                  <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
                   <div className={`button-group row ${styles.challengeButtons}`}>
-                    <button className={'cancel'} onClick={() => null}>Decline</button>
-                    <button className={'start'} onClick={() => null}>Accept</button>
+                    <button className={`cancel ${styles.declineButton}`} onClick={() => null}>Decline</button>
+                    <button className={`start ${styles.acceptButton}`} onClick={() => null}>Accept</button>
                   </div>
                 </div>
               );
             }) : <div style={{ textAlign: 'center' }}>{`No challenges :(`}</div>}
         </div>
       </div>
-
       <div className={styles.playerListArea}>
         <h2>Players</h2>
         <div className={styles.playerList}>
@@ -218,7 +221,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                     <button style={{ visibility: playerData.uid === user?.uid ? 'hidden' : 'visible' }} onClick={() => handleClickChallengePlayer(playerData)}>Challenge</button>
                   }
                 </div>
-                {alreadyChallenged &&<div className={styles.challengingLabel}>CHALLENGING</div>}
+                {alreadyChallenged && <div className={styles.challengingLabel}>CHALLENGING</div>}
               </div>)
             })}
         </div>
