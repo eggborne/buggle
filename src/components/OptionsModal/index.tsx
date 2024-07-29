@@ -11,27 +11,29 @@ interface OptionsModalProps {
 
 const sampleLetterMatrices = [
   [
-    ['M', 'R', 'T', 'G'],
-    ['X', 'W', 'P', 'K'],
-    ['V', 'Y', 'O', 'Z'],
-    ['H', 'U', 'C', 'J']
+    ['B', 'U', 'G', 'G'],
+    ['L', 'E', 'T', 'I'],
+    ['M', 'E', 'F', 'U'],
+    ['N', 'O', 'W', 'T']
   ],
   [
-    ['M', 'R', 'T', 'G', 'N'],
-    ['X', 'W', 'P', 'K', 'L'],
-    ['V', 'Y', 'O', 'Z', 'F'],
-    ['H', 'U', 'C', 'J', 'D'],
-    ['B', 'M', 'E', 'N', 'R']
+    ['B', 'U', 'G', 'G', 'L'],
+    ['L', 'E', 'T', 'I', 'M'],
+    ['M', 'E', 'F', 'U', 'N'],
+    ['N', 'O', 'W', 'L', 'O'],
+    ['O', 'O', 'K', 'F', 'W']
   ],
   [
-    ['M', 'R', 'T', 'G', 'N', 'E'],
-    ['X', 'W', 'P', 'K', 'L', 'S'],
-    ['V', 'Y', 'O', 'Z', 'F', 'I'],
-    ['H', 'U', 'C', 'J', 'D', 'A'],
-    ['B', 'M', 'E', 'N', 'R', 'T'],
-    ['X', 'W', 'P', 'K', 'L', 'S']
-  ],
+    ['B', 'U', 'G', 'G', 'L', 'E'],
+    ['L', 'E', 'T', 'I', 'M', 'E'],
+    ['M', 'E', 'F', 'U', 'N', 'F'],
+    ['N', 'O', 'W', 'L', 'O', 'O'],
+    ['O', 'O', 'K', 'F', 'O', 'R'],
+    ['W', 'O', 'R', 'D', 'S', 'F']
+  ]
 ];
+
+
 
 const OptionInput = ({ label, name, type, value, onChange, onPointerUp, min, max }: OptionInputData) => (
   <label className={`${styles.optionInput} ${styles[type + '-label']}`}>
@@ -56,7 +58,7 @@ const gameplayOptions: OptionTypeData = userOptions.gameplay.touch;
 const OptionsModal = ({ hidden }: OptionsModalProps) => {
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const [editMode, setEditMode] = useState<string>('colors');
-  const { user, changeOption, saveOptions } = useUser();
+  const { user, isLoggedIn, changeOption, saveOptions } = useUser();
   const preferences = user?.preferences as OptionsData;
   const optionsList = editMode === 'colors' ? colorOptions : editMode === 'range' ? sizeOptions : gameplayOptions;
   const [tentativeOptions, setTentativeOptions] = useState<OptionsData>(preferences);
@@ -119,9 +121,9 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
       </div>
 
       <div className={`button-group row ${styles.saveArea}`}>
-        <button onClick={async () => {
-          saveOptions(preferences);          
-        }} className={'start'}>Save</button>
+        {isLoggedIn && <button onClick={async () => {
+          saveOptions(preferences);
+        }} className={'start'}>Save</button>}
       </div>
 
     </div>

@@ -218,7 +218,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const saveOptions = async (newOptions: OptionsData) => {
-    if (!user) return;
+    if (!user || !isLoggedIn) return;
     await update(ref(database, `users/${user.uid}`), {
       preferences: newOptions,
     });

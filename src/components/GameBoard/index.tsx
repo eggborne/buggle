@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
+import SmoothPathOverlay from './PathOverlay';
 
 interface GameBoardProps {
   currentGame: CurrentGameData;
@@ -155,7 +156,6 @@ function GameBoard({ currentGame, player, noAnimation, gameId, onValidWord }: Ga
     setTouchedCells([]);
     setWordValid(false);
     setWordStatus('invalid');
-    clearPath();
   };
 
   const handleCellTouchStart = (cell: CellObj) => {
@@ -166,7 +166,6 @@ function GameBoard({ currentGame, player, noAnimation, gameId, onValidWord }: Ga
     const nextCurrentWord = (currentWord + cell.letter);
     setTouchedCells((prevTouchedCells) => {
       const newTouchedCells = [...prevTouchedCells, cell];
-      updatePath(newTouchedCells);
       return newTouchedCells;
     });
     setCurrentWord(nextCurrentWord);
@@ -184,47 +183,6 @@ function GameBoard({ currentGame, player, noAnimation, gameId, onValidWord }: Ga
     const rowDiff = Math.abs(cell1.row - cell2.row);
     const colDiff = Math.abs(cell1.col - cell2.col);
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
-  };
-
-  const updatePath = (cells: CellObj[]) => {
-    if (!svgRef.current) return;
-
-    const cellSize = boardRect!.width / currentGame.dimensions.width;
-    const svgContainer = svgRef.current;
-
-    // Remove any existing animated segment
-    const existingAnimatedSegment = svgContainer.querySelector(`.${styles.animatedSegment}`);
-    if (existingAnimatedSegment) {
-      existingAnimatedSegment.classList.remove(styles.animatedSegment);
-    }
-
-    // If there's a new segment to draw
-    if (cells.length > 1) {
-      const prevCell = cells[cells.length - 2];
-      const currentCell = cells[cells.length - 1];
-
-      const x1 = (prevCell.col + 0.5) * cellSize;
-      const y1 = (prevCell.row + 0.5) * cellSize;
-      const x2 = (currentCell.col + 0.5) * cellSize;
-      const y2 = (currentCell.row + 0.5) * cellSize;
-
-      const newSegment = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      newSegment.setAttribute('x1', x1.toString());
-      newSegment.setAttribute('y1', y1.toString());
-      newSegment.setAttribute('x2', x2.toString());
-      newSegment.setAttribute('y2', y2.toString());
-      newSegment.classList.add(styles.pathSegment, styles.animatedSegment);
-
-      svgContainer.appendChild(newSegment);
-    }
-  };
-
-  const clearPath = () => {
-    if (!svgRef.current) return;
-    while (svgRef.current.firstChild) {
-      svgRef.current.removeChild(svgRef.current.firstChild);
-    }
-    console.log('Path cleared');
   };
 
   return (
@@ -257,10 +215,11 @@ function GameBoard({ currentGame, player, noAnimation, gameId, onValidWord }: Ga
             </div>
           ))
         )}
-        <svg
-          ref={svgRef}
-          className={`${styles.pathOverlay} ${styles[wordStatus]}`}
-          
+        <SmoothPathOverlay
+          isSelecting={touchedCells.length > 0}
+          cells={touchedCells}
+          dimensions={game.dimensions}
+          wordStatus={wordStatus}
         />
       </div>
     </div>

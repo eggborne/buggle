@@ -33,14 +33,14 @@ import ConfirmModal from './components/ConfirmModal';
 
 const defaultUserPreferences = {
   style: {
-    cubeColor: '#aaaaaa',
-    cubeTextColor: '#222222',
-    gameBackgroundColor: '#223300',
-    gameBoardBackgroundColor: '#2a283e',
-    footerHeight: 5,
-    gameBoardSize: 15,
-    cubeRoundness: 32,
-    cubeScale: 80,
+    cubeColor: "#ddddca",
+    cubeRoundness: 39,
+    cubeScale: 62,
+    cubeTextColor: "#2b2b2b",
+    footerHeight: 3,
+    gameBackgroundColor: "#837693",
+    gameBoardBackgroundColor: "#a19191",
+    gameBoardSize: 1,
   },
   gameplay: {
     swipeBuffer: 70,
@@ -68,7 +68,6 @@ function App() {
     user,
     isLoading,
     isLoggedIn,
-    changeOption,
     changePhase,
     handleSignOut,
 
@@ -76,7 +75,7 @@ function App() {
   const phase = user?.phase;
   const { revokeOutgoingChallenges } = useFirebase();
   const [userReady, setUserReady] = useState<boolean>(false);
-  const [optionsShowing, setOptionsShowing] = useState<boolean>(true);
+  const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
   const [confirmShowing, setConfirmShowing] = useState<ConfirmData | null>(null);
 
@@ -92,7 +91,7 @@ function App() {
       console.log('setting userReady');
       isLoggedIn && revokeOutgoingChallenges(user?.uid || '');
       requestAnimationFrame(() => {
-        setUserReady(true);        
+        setUserReady(true);
       })
     }
   }, [isLoading]);
@@ -247,7 +246,7 @@ function App() {
       setConfirmShowing({
         ...confirmData,
         typeOpen: ''
-      });      
+      });
       return;
     }
     setConfirmShowing(confirmData);
@@ -264,7 +263,7 @@ function App() {
   const handleConfirmSignOut = async () => {
     setSideMenuShowing(false);
     handleSignOut();
-    revokeOutgoingChallenges(user?.uid || '');    
+    revokeOutgoingChallenges(user?.uid || '');
   }
 
   return (
@@ -278,41 +277,35 @@ function App() {
           }}
         >
           <TitleScreen hidden={phase !== 'title'} showOptions={() => setOptionsShowing(true)} />
-          {userReady ?
-            <>
-              <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
-              <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
-              {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
-              {phase === 'game' && currentGame &&
-                <GameScreen
-                  hidden={phase !== 'game'}
-                  player={player}
-                  currentGame={currentGame}
-                  handleValidWord={handleValidWord}
-                  showConfirmModal={showConfirmModal}
-                  uploadPuzzle={uploadPuzzle}
-                />
-              }
-              {/* {userReady && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />} */}
-              {<OptionsModal hidden={!optionsShowing} />}
-              <ConfirmModal
-                // isOpen={!!(confirmShowing && confirmShowing.typeOpen)}
-                isOpen={confirmShowing ? confirmShowing.typeOpen !== '' : false}
-                message={confirmShowing?.message || ''}
-                style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem' }}
-                onConfirm={() => {
-                  confirmShowing?.typeOpen === 'leaveGame' ? handleConfirmGameExit() : handleConfirmSignOut();
-                  changePhase(confirmShowing?.targetPhase || '');
-                  showConfirmModal(confirmShowing, true);
-                }}
-                onCancel={() => {                  
-                  showConfirmModal(confirmShowing, true);
-                }}
-              />
-            </>
-            :
-            <div>loading...</div>
+          <CreateScreen hidden={phase !== 'create'} handleClickStoredPuzzle={startStoredPuzzle} startCreatedPuzzlePreview={startCreatedPuzzlePreview} />
+          <SelectScreen hidden={phase !== 'select'} handleClickStoredPuzzle={startStoredPuzzle} startSinglePlayerGame={startSinglePlayerGame} />
+          {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
+          {phase === 'game' && currentGame &&
+            <GameScreen
+              hidden={phase !== 'game'}
+              player={player}
+              currentGame={currentGame}
+              handleValidWord={handleValidWord}
+              showConfirmModal={showConfirmModal}
+              uploadPuzzle={uploadPuzzle}
+            />
           }
+          {/* {userReady && <OptionsScreen hidden={!optionsShowing} changeOption={changeOption} />} */}
+          {<OptionsModal hidden={!optionsShowing} />}
+          <ConfirmModal
+            // isOpen={!!(confirmShowing && confirmShowing.typeOpen)}
+            isOpen={confirmShowing ? confirmShowing.typeOpen !== '' : false}
+            message={confirmShowing?.message || ''}
+            style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem' }}
+            onConfirm={() => {
+              confirmShowing?.typeOpen === 'leaveGame' ? handleConfirmGameExit() : handleConfirmSignOut();
+              changePhase(confirmShowing?.targetPhase || '');
+              showConfirmModal(confirmShowing, true);
+            }}
+            onCancel={() => {
+              showConfirmModal(confirmShowing, true);
+            }}
+          />
         </div>
         <Footer
           optionsShowing={optionsShowing}

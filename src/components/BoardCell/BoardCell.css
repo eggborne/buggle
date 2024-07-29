@@ -37,29 +37,31 @@
 }
 
 .board-cell.touched {
-  outline-color: var(--invalid-color);
+  /* outline-color: var(--invalid-color); */
   opacity: 1;
+  transform: scale(0.9)
 }
 
 .board-cell.touched.valid {
   outline-color: var(--valid-color);
+    transform: scale(1)
 }
 
 .board-cell.touched.duplicate {
-  outline-color: var(--duplicate-color);
+  /* outline-color: var(--duplicate-color); */
 }
-/* 
+
 .board-cell.touched::before {
-  background-color: rgba(142, 102, 102, 0.407);
+  background-color: rgba(142, 102, 102, 0.2);
 }
 
 .board-cell.touched.valid::before {
-  background-color: rgba(99, 236, 99, 0.6);
+  background-color: rgba(99, 236, 99, 0.2);
 }
 
 .board-cell.touched.duplicate::before {
-  background-color: rgba(186, 187, 137, 0.6);
-} */
+  background-color: rgba(186, 187, 137, 0.2);
+}
 
 @media (hover: hover) {
   .board-cell:hover::before {
