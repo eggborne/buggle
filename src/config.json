@@ -7,26 +7,22 @@
           {
             "label": "Game Background",
             "name": "gameBackgroundColor",
-            "type": "color",
-            "defaultValue": "#ffffff"
+            "type": "color"
           },
           {
             "label": "Board Background",
             "name": "gameBoardBackgroundColor",
-            "type": "color",
-            "defaultValue": "#eeeeee"
+            "type": "color"
           },
           {
             "label": "Cube",
             "name": "cubeColor",
-            "type": "color",
-            "defaultValue": "#cccdc1"
+            "type": "color"
           },
           {
             "label": "Cube Text",
             "name": "cubeTextColor",
-            "type": "color",
-            "defaultValue": "#ffffff"
+            "type": "color"
           }
         ]
       },
@@ -37,41 +33,29 @@
             "label": "Board size",
             "name": "gameBoardSize",
             "type": "range",
-            "min": 80,
-            "max": 100,
-            "defaultValue": 90
+            "min": 0,
+            "max": 30
           },
           {
-            "label": "Board padding",
-            "name": "gameBoardPadding",
+            "label": "Cube size",
+            "name": "cubeScale",
             "type": "range",
             "min": 0,
-            "max": 100,
-            "defaultValue": 10
-          },
-          {
-            "label": "Cube gap",
-            "name": "cubeGap",
-            "type": "range",
-            "min": 0,
-            "max": 100,
-            "defaultValue": 5
+            "max": 100
           },
           {
             "label": "Cube Roundness",
             "name": "cubeRoundness",
             "type": "range",
             "min": 0,
-            "max": 100,
-            "defaultValue": 10
+            "max": 100
           },
           {
             "label": "Button Size",
             "name": "footerHeight",
             "type": "range",
             "min": 0,
-            "max": 25,
-            "defaultValue": 5
+            "max": 25
           }
         ]
       }
@@ -85,8 +69,7 @@
             "name": "swipeBuffer",
             "type": "range",
             "min": 0,
-            "max": 100,
-            "defaultValue": 20
+            "max": 100
           }
         ]
       }

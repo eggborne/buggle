@@ -1,16 +1,25 @@
-import { PlayerData, CurrentGameData } from '../../types/types';
+import { PlayerData, CurrentGameData, ConfirmData } from '../../types/types';
 import styles from './GameStatusDisplay.module.css';
 import NumeralDisplay from '../NumeralDisplay';
 import { useUser } from '../../context/UserContext';
+import { useFirebase } from '../../context/FirebaseContext';
 
 
 interface GameStatusDisplayProps {
   player: PlayerData;
   currentGame: CurrentGameData;
+  showConfirmModal: (confirmData: ConfirmData) => void;
 }
 
-function GameStatusDisplay({ player, currentGame }: GameStatusDisplayProps) {
-  const { user, isLoggedIn } = useUser();
+function GameStatusDisplay({ player, currentGame, showConfirmModal }: GameStatusDisplayProps) {
+  const { user, isLoggedIn, changePhase } = useUser();
+  const { currentMatch } = useFirebase();
+
+  const confirmToLobby = () => showConfirmModal({
+    typeOpen: 'leaveGame',
+    message: 'Are you sure you want to leave this game?',
+    targetPhase: 'lobby',
+  });
 
   return (
     <div className={styles.gameStatusDisplay}>
@@ -30,26 +39,41 @@ function GameStatusDisplay({ player, currentGame }: GameStatusDisplayProps) {
         </div>
       </div> */}
 
-      <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
-        <div>Time</div>
-        <NumeralDisplay digits={currentGame.timeLimit || 0} length={3} height={'calc(var(--header-height) / 2)'} />
-      </div>
-
-      {/* <div className={styles.timeScoreArea}>
+      <div className={styles.scoreArea}>
         <div className={styles.labeledCounter}>
           <div>Score</div>
-          <NumeralDisplay digits={player.score} />
+          <NumeralDisplay digits={player.score} height={'1.5rem'} length={3} />
         </div>
-      </div> */}
+      </div>
+
+      <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
+        <div>Time</div>
+        <NumeralDisplay digits={currentGame.timeLimit || 0} length={3} height={'2.5rem'} />
+      </div>
+
+
+      <div className={styles.scoreArea}>
+        <div className={styles.labeledCounter} style={{ visibility: currentMatch ? 'visible' : 'hidden' }} >
+          <div>Score</div>
+          <NumeralDisplay digits={player.score} height={'1.5rem'} length={3} />
+        </div>
+      </div>
 
       <div className={`${styles.playerArea} ${styles.opponentArea}`}>
         {isLoggedIn ?
-          <>
-            <img className={'profile-pic'} src={''} />
-            <div className={styles.userLabel} style={{ fontSize: `${1 - ((user?.displayName?.length || 0) / 20)}rem` }}>{'Opponent'}</div>
-          </>
+          !currentMatch ?
+            <button onClick={confirmToLobby} className={'tiny start'}>Find a match</button>
+            :
+            <>
+              <img className={'profile-pic'} src={''} />
+              <div className={styles.userLabel} style={{ fontSize: `${1 - ((user?.displayName?.length || 0) / 20)}rem` }}>{'Opponent'}</div>
+            </>
           :
-          <div style={{ width: 'max-content'}}>Log in</div>
+          <button onClick={() => showConfirmModal({
+            typeOpen: 'leaveGame',
+            message: 'Are you sure you want to leave this game?',
+            targetPhase: 'title',
+          })} className={'tiny start'}>Log in to challenge others</button>
         }
       </div>
     </div>

@@ -8,13 +8,14 @@ import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 
 interface GameBoardProps {
-  gameId?: string;
   currentGame: CurrentGameData;
   player: PlayerData;
+  gameId?: string;
+  noAnimation?: boolean;
   onValidWord: (word: string) => void;
 }
 
-function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps) {
+function GameBoard({ currentGame, player, noAnimation, gameId, onValidWord }: GameBoardProps) {
   const options = useUser().user?.preferences as OptionsData;
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
@@ -22,7 +23,9 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
   const [wordValid, setWordValid] = useState<boolean>(false);
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const [game, setGame] = useState<CurrentGameData>(currentGame);
+  const [swapping, setSwapping] = useState<boolean>(false);
   const gameBoardRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -31,6 +34,10 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
       }
     })
   }, [])
+
+  useEffect(() => {
+    setGame(currentGame);
+  }, [currentGame])
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -94,7 +101,7 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
   const boardRect = gameBoardRef.current?.getBoundingClientRect();
   const handleCellHover = (clientX: number, clientY: number) => {
     if (!boardRect) return;
-    const cellBuffer = options.swipeBuffer / 50;
+    const cellBuffer = options.gameplay.swipeBuffer / 50;
     const cellSize = boardRect.width / currentGame.dimensions.width;
     const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 8) : 0;
 
@@ -148,6 +155,7 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
     setTouchedCells([]);
     setWordValid(false);
     setWordStatus('invalid');
+    clearPath();
   };
 
   const handleCellTouchStart = (cell: CellObj) => {
@@ -156,7 +164,11 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
     if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
 
     const nextCurrentWord = (currentWord + cell.letter);
-    setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
+    setTouchedCells((prevTouchedCells) => {
+      const newTouchedCells = [...prevTouchedCells, cell];
+      updatePath(newTouchedCells);
+      return newTouchedCells;
+    });
     setCurrentWord(nextCurrentWord);
     const alreadyFound = player.wordsFound.has(nextCurrentWord);
     const wordExistsInPuzzle = new Set(currentGame.allWords).has(nextCurrentWord);
@@ -165,7 +177,7 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
   };
 
   const handleCellTouchEnd = () => {
-    //
+    // No action needed here
   };
 
   const isValidNeighbor = (cell1: CellObj, cell2: CellObj): boolean => {
@@ -174,23 +186,64 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
 
-  currentGame = game;
+  const updatePath = (cells: CellObj[]) => {
+    if (!svgRef.current) return;
+
+    const cellSize = boardRect!.width / currentGame.dimensions.width;
+    const svgContainer = svgRef.current;
+
+    // Remove any existing animated segment
+    const existingAnimatedSegment = svgContainer.querySelector(`.${styles.animatedSegment}`);
+    if (existingAnimatedSegment) {
+      existingAnimatedSegment.classList.remove(styles.animatedSegment);
+    }
+
+    // If there's a new segment to draw
+    if (cells.length > 1) {
+      const prevCell = cells[cells.length - 2];
+      const currentCell = cells[cells.length - 1];
+
+      const x1 = (prevCell.col + 0.5) * cellSize;
+      const y1 = (prevCell.row + 0.5) * cellSize;
+      const x2 = (currentCell.col + 0.5) * cellSize;
+      const y2 = (currentCell.row + 0.5) * cellSize;
+
+      const newSegment = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      newSegment.setAttribute('x1', x1.toString());
+      newSegment.setAttribute('y1', y1.toString());
+      newSegment.setAttribute('x2', x2.toString());
+      newSegment.setAttribute('y2', y2.toString());
+      newSegment.classList.add(styles.pathSegment, styles.animatedSegment);
+
+      svgContainer.appendChild(newSegment);
+    }
+  };
+
+  const clearPath = () => {
+    if (!svgRef.current) return;
+    while (svgRef.current.firstChild) {
+      svgRef.current.removeChild(svgRef.current.firstChild);
+    }
+    console.log('Path cleared');
+  };
 
   return (
     <div className={styles.gameArea}>
-      <CurrentWordDisplay letters={currentWord.split('')} wordStatus={wordStatus} />
+      {!noAnimation && <CurrentWordDisplay letters={currentWord.split('')} wordStatus={wordStatus} />}
       <div
         ref={gameBoardRef}
         id='game-board'
         className={styles.gameBoard}
         style={{
-          gridTemplateColumns: `repeat(${currentGame.dimensions.width}, 1fr)`,
-          gridTemplateRows: `repeat(${currentGame.dimensions.height}, 1fr)`,
-          fontSize: `calc((var(--game-board-size) * 0.5) / ${currentGame.dimensions.width})`,
-          minWidth: `calc((var(--game-board-size) * 0.5) / ${currentGame.dimensions.width})`,
-          padding: `calc(1rem / (${currentGame.dimensions.height} * ${currentGame.dimensions.height}) / 6)`,
-          borderRadius: `calc(var(--cube-roundness) / ${currentGame.dimensions.height})`,
-          gap: `calc(var(--cube-gap) / ${currentGame.dimensions.width} * ${currentGame.dimensions.height} / 2)`,
+          gridTemplateColumns: `repeat(${game.dimensions.width}, 1fr)`,
+          gridTemplateRows: `repeat(${game.dimensions.height}, 1fr)`,
+          fontSize: `calc((var(--game-board-size) * 0.5) / ${game.dimensions.width})`,
+          minWidth: `calc((var(--game-board-size) * 0.5) / ${game.dimensions.width})`,
+          transition: noAnimation ? 'opacity 600ms ease' : 'scale 600ms ease, opacity 600ms ease',
+          transitionDelay: noAnimation ? '0ms' : '300ms',
+          zIndex: '0'
+          // borderRadius: `calc(var(--cube-roundness) / ${game.dimensions.height})`,
+          // position: 'relative',
         }}
       >
         {currentGame.letterMatrix.map((row, r) =>
@@ -204,7 +257,12 @@ function GameBoard({ gameId, currentGame, player, onValidWord }: GameBoardProps)
             </div>
           ))
         )}
-      </div>      
+        <svg
+          ref={svgRef}
+          className={`${styles.pathOverlay} ${styles[wordStatus]}`}
+          
+        />
+      </div>
     </div>
   )
 }

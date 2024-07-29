@@ -13,11 +13,15 @@
   --main-width: 100vw;
 
   --header-height: 4rem;
-  --current-word-display-height: 5rem;
+  --current-word-display-height: 7rem;
     
   --start-color: #32864A;
   --cancel-color: #847f27;
   --danger-color: #8f0707;
+
+  --invalid-color: #b9d1a6;
+  --valid-color: #64ff64;
+  --duplicate-color: #b2c078;
 
   --main-text-color: #e0e0e0;
   --header-background-color: #4266B2;
@@ -32,28 +36,26 @@
 
   /* user options */
   --user-cube-color: #aaaaaa;
-  --user-cube-gap: 20;
-  --user-cube-text-color: #222222;
   --user-cube-roundness: 40;
+  --user-cube-scale: 10;
+  --user-cube-text-color: #222222;
   --user-footer-height: 5;
   --user-game-background-color: #5b007777;
   --user-game-board-background-color: #515142;
   --user-game-board-size: 95;
-  --user-game-board-padding: 20;
   
   /* vars made with user options */
   --cube-color: var(--user-cube-color);
-  --cube-gap: calc(var(--main-width) * (var(--user-cube-gap) / 2000));
   --cube-roundness: calc(var(--user-cube-roundness) * 0.5%);
+  --cube-scale: calc((74 + (var(--user-cube-scale) / 4)) * 1%);
   --cube-text-color: var(--user-cube-text-color);
-  --footer-height: calc(3rem + (var(--user-footer-height) * 0.125rem));
+  --footer-height: calc(3.5rem + (var(--user-footer-height) * 0.125rem));
   --game-background-color: var(--user-game-background-color);
   --game-board-background-color: var(--user-game-board-background-color);
-  --game-board-size: calc(var(--user-game-board-size) * 1dvw);
-  --game-board-padding: calc(var(--main-width) * (var(--user-game-board-padding) / 1000));
+  --game-board-size: calc((70 + var(--user-game-board-size))  * 0.01 * var(--main-width));
+  /* --game-board-size: 100vw !important; */
+  /* --game-board-size: 80dvw; */
   
-  /* --menu-button-size: 4rem; */
-
   --text-stroke:
   0.035em -0.035em #000000,
   0.035em -0.015em #000000,
@@ -130,6 +132,10 @@ button {
   border: 0.1rem solid #ffffff77;
   transition: border-color 0.25s;
   color: inherit;
+}
+
+button.tiny {
+  font-size: 0.75rem;
 }
 
 button.start {

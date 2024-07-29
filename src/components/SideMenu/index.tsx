@@ -1,12 +1,13 @@
+import { ConfirmData } from '../../types/types';
 import styles from './SideMenu.module.css';
 
 interface SideMenuProps {
   sideMenuShowing: boolean;
-  showSignOutConfirm: () => void;
+  showConfirmModal: (confirmData: ConfirmData) => void;
   setOptionsShowing: () => void;
 }
 
-const SideMenu = ({ sideMenuShowing, setOptionsShowing, showSignOutConfirm }: SideMenuProps) => {
+const SideMenu = ({ sideMenuShowing, setOptionsShowing, showConfirmModal }: SideMenuProps) => {
 
   return (
     <div className={`${styles.SideMenu} ${sideMenuShowing ? styles.show : styles.hide}`}>
@@ -14,7 +15,11 @@ const SideMenu = ({ sideMenuShowing, setOptionsShowing, showSignOutConfirm }: Si
         <button className={'cancel'} onClick={setOptionsShowing}>Options</button>
       </div>
       <div className={styles.menuKnob}>
-        <button className={'danger'} onClick={showSignOutConfirm}>Sign out</button>
+        <button className={'danger'} onClick={() => showConfirmModal({
+          typeOpen: 'signOut',
+          message: 'Are you sure you want to sign out?',
+          targetPhase: 'title',
+        })}>Sign out</button>
       </div>
     </div>
   );

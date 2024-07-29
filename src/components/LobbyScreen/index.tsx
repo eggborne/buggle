@@ -7,6 +7,7 @@ import Modal from '../../components/Modal';
 import PuzzleIcon from '../../components/PuzzleIcon';
 import { ChallengeData, ChatMessageData, LobbyData, UserData } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
+import { triggerShowMessage } from '../../hooks/useMessageBanner';
 
 interface LobbyScreenProps {
   hidden: boolean;
@@ -34,6 +35,18 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     if (!challenges) return;
     const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === user?.uid && challenges[key].respondent === opponentUid);
     await remove(ref(database, `challenges/${idToRemove}`));
+    triggerShowMessage(`Challenge cancelled!`);
+
+    setSentChallenges(prevSentChallenges => {
+      return prevSentChallenges.filter(challenge => challenge.uid !== idToRemove);
+    })
+  }
+  const handleDeclineChallenge = async (opponentUid: string) => {
+    if (!challenges) return;
+    const idToRemove = Object.keys(challenges).find(key => challenges[key].respondent === user?.uid && challenges[key].instigator === opponentUid);
+    await remove(ref(database, `challenges/${idToRemove}`));
+    triggerShowMessage(`Challenge declined!`);
+
     setSentChallenges(prevSentChallenges => {
       return prevSentChallenges.filter(challenge => challenge.uid !== idToRemove);
     })
@@ -59,8 +72,19 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       console.log(`<---------------- STOPPED LobbyScreen /messages listener`)
     };
 
-
   }, []);
+
+  useEffect(() => {
+    let newSentChallenges = [ ...sentChallenges ];
+    if (challenges && sentChallenges.length > 0) {
+      console.log('chal', challenges)
+      console.log('sentChal', sentChallenges)
+      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenges[challenge.uid || '']);
+      console.log('newSentChal', newSentChallenges)
+    }
+    setSentChallenges(newSentChallenges);    
+
+  }, [challenges])
 
   const handleSubmitChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +108,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       console.warn(sentChallenges)
       if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondent === pendingOutgoingChallenge.uid)) {
         console.warn('already challenging');
+        triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.displayName}!`);
         return;
       }
       const challengesRef = ref(database, 'challenges/');
@@ -98,6 +123,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         },
       }
       const newChallengUid = await push(challengesRef, newChallenge).key;
+      triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
       console.log('new c', newChallengUid);
       setSentChallenges(prevSentChallenges => {
         const nextSentChallenges = [...prevSentChallenges];
@@ -137,7 +163,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                 key={date}
                 className={messageClass}
                 style={{
-                  backgroundColor: authorData ? authorData.preferences?.gameBackgroundColor : 'transparent'
+                  backgroundColor: authorData ? authorData.preferences?.style?.gameBackgroundColor : 'transparent'
                 }}
               >
                 <img className='profile-pic' src={authorData.photoURL || undefined} />
@@ -165,7 +191,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                   key={challenge.instigator}
                   className={styles.challengeListItem}
                   style={{
-                    backgroundColor: opponentData?.preferences?.gameBackgroundColor
+                    backgroundColor: opponentData?.preferences?.style?.gameBackgroundColor
                   }}
                 >
                   <span><img className='profile-pic' src={opponentData?.photoURL || undefined} /></span>
@@ -176,7 +202,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                   </div>
                   <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
                   <div className={`button-group row ${styles.challengeButtons}`}>
-                    <button className={`cancel ${styles.declineButton}`} onClick={() => null}>Decline</button>
+                    <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigator)}>Decline</button>
                     <button className={`start ${styles.acceptButton}`} onClick={() => null}>Accept</button>
                   </div>
                 </div>
@@ -190,7 +216,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           <div
             className={styles.playerListItem}
             style={{
-              backgroundColor: user?.preferences?.gameBackgroundColor
+              backgroundColor: user?.preferences?.style?.gameBackgroundColor
             }}
           >
             <span><img className='profile-pic' src={user?.photoURL || undefined} /></span>
@@ -207,7 +233,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                 key={playerData.uid}
                 className={styles.playerListItem}
                 style={{
-                  backgroundColor: playerData.preferences?.gameBackgroundColor,
+                  backgroundColor: playerData.preferences?.style?.gameBackgroundColor,
                   outline: alreadyChallenged ? '0.1rem solid red' : 'none',
                 }}
               >

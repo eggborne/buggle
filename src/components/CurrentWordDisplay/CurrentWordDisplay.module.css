@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--current-word-display-height) / 2);
+  font-size: calc(var(--current-word-display-height) / 3);
   font-weight: bold;
   text-transform: uppercase;
 }
@@ -19,16 +19,16 @@
   animation: drop-in 60ms ease;
 }
 
-.valid {
-  color: #81fe81;
+.valid {  
+  color: var(--valid-color);
 }
 
 .duplicate {
-  color: #acc05e;
+  color: var(--duplicate-color);
 }
 
-.invalid {
-  color: #ffffffdd;
+.invalid {  
+  color: var(--invalid-color);
 }
 
 @keyframes drop-in {

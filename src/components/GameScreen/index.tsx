@@ -1,4 +1,4 @@
-import { PlayerData, CurrentGameData } from '../../types/types';
+import { PlayerData, CurrentGameData, ConfirmData } from '../../types/types';
 import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
 import GameStatusDisplay from '../GameStatusDisplay';
@@ -12,10 +12,11 @@ interface GameScreenProps {
   player: PlayerData;
   hidden: boolean;
   handleValidWord: (word: string) => void;
+  showConfirmModal: (confirmData: ConfirmData) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, uploadPuzzle }: GameScreenProps) {
+function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, showConfirmModal, uploadPuzzle }: GameScreenProps) {
   const { isLoggedIn } = useUser();
   const [wordListShowing, setWordListShowing] = useState<boolean>(false);
 
@@ -38,7 +39,7 @@ function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, uplo
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
   return (
     <main className={gameScreenClass} >
-      <GameStatusDisplay player={player} currentGame={currentGame} />
+      <GameStatusDisplay player={player} currentGame={currentGame} showConfirmModal={showConfirmModal} />
       <GameBoard
         gameId={gameId}
         player={player}

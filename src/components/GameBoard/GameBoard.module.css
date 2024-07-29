@@ -1,21 +1,25 @@
 .gameBoard {
+  position: relative;
   width: var(--game-board-size);
   height: min-content;
   min-height: var(--game-board-size);
   border-radius: 0.25rem;
   display: grid;
-  place-items: stretch;
-  place-content: center;
+  /* place-items: stretch; */
+  /* place-content: center; */
   background-color: var(--game-board-background-color);
-  padding: var(--game-board-padding) !important;
-  /* gap: var(--cube-gap) !important; */
-  outline: 0.05rem solid #00000066;
-  box-shadow: 0 0 0.75rem #00000044;
+  outline: clamp(
+      1rem, 
+      calc(((var(--main-width) - var(--game-board-size)) / 2) - 1rem), 
+      (calc(var(--main-width) - var(--game-board-size)) / 8)
+    ) solid var(--game-board-background-color)
+  ;
+  box-shadow: 0 0 0.75rem 0.75rem #000000aa;
   scale: 0.5;
   opacity: 0;
-  transition: all 600ms ease;
+  transition: scale 600ms ease, opacity 600ms ease;
   transition-delay: 200ms;
-  z-index: 0;
+  position: relative;
 }
 
 .gameBoard.showing {
@@ -28,9 +32,62 @@
   grid-template-rows: auto 1fr auto;
   place-items: center;
   justify-content: center;
-  /* flex-grow: 1; */
 }
 
 .boardContainer {
   flex-grow: 1;
+}
+
+.pathOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  stroke: var(--invalid-color);
+  stroke-width: 0.5rem;
+  stroke-linecap: round;
+  pointer-events: none;
+  /* transition: stroke 100ms ease; */
+  filter: drop-shadow(0 0 0.1rem black);
+  z-index: 10;
+}
+
+.pathOverlay.valid {
+  stroke: var(--valid-color);
+}
+
+.pathOverlay.duplicate {
+  stroke: #a1bd04;
+}
+
+.pathSegment {
+  transform-origin: center;
+  position: 'absolute';
+  fill: none;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* .animatedSegment {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: drawSegment 120ms ease-out forwards;
+} */
+
+@keyframes drawSegment {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

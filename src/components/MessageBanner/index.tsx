@@ -1,15 +1,22 @@
 import styles from './MessageBanner.module.css';
+import { useEffect, useRef } from 'react';
+import { useMessageBanner } from '../../hooks/useMessageBanner';
 
-interface MessageBannerProps {
-  message: string;
-  isOpen: boolean;
-  style?: Record<string, string | number>;
-}
+const MessageBanner = () => {
+  const { message, isVisible, hideMessage } = useMessageBanner();
+  useEffect(() => {
+    if (isVisible) {
+      setTimeout(() => {
+        console.warn('hiding now')
+        hideMessage();
+      }, 2000);
+    }
+  }, [isVisible]);
 
-const MessageBanner = ({ isOpen, message, style }: MessageBannerProps) => {
-  if (!isOpen) return null;
   return (
-    <div className={styles.MessageBanner} style={style}>
+    <div
+      className={`${styles.MessageBanner} ${isVisible ? styles.showing : styles.hidden}`}
+    >
       {message}
     </div>
   );

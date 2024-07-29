@@ -4,24 +4,28 @@ import backArrow from '/assets/back_arrow.svg';
 import optionsIcon from '/assets/options_icon.svg';
 import closeIcon from '/assets/close_icon.svg';
 import { useUser } from '../../context/UserContext';
+import { ConfirmData } from '../../types/types';
 
 interface FooterProps {
   optionsShowing: boolean;
   sideMenuShowing: boolean;
   toggleOptionsShowing: () => void;
   toggleSideMenuShowing: () => void;
-  showExitGameConfirm: () => void
-  showSignOutConfirm: () => void
+  showConfirmModal: (confirmData: ConfirmData) => void;
 }
 
-function Footer({ optionsShowing, sideMenuShowing, showExitGameConfirm, toggleOptionsShowing, toggleSideMenuShowing }: FooterProps) {
-  const { user, isLoggedIn, changePhase } = useUser();
+function Footer({ optionsShowing, sideMenuShowing, showConfirmModal, toggleOptionsShowing, toggleSideMenuShowing }: FooterProps) {
+  const { isLoggedIn, user, changePhase } = useUser();
   const phase = user?.phase;
 
   const handleClickBackButton = () => {
     if (!user) return;
     if (phase === 'game') {
-      showExitGameConfirm();
+      showConfirmModal({
+        typeOpen: 'leaveGame',
+        message: 'Are you sure you want to leave the game?',
+        targetPhase: 'title',
+      });
       return;
     }
     changePhase('title');
@@ -43,10 +47,9 @@ function Footer({ optionsShowing, sideMenuShowing, showExitGameConfirm, toggleOp
         <img src={closeIcon} />
       </button>
       <button
-        onClick={toggleSideMenuShowing}
-            className={`${styles.profileButton} ${(!sideMenuShowing && phase !== 'game') ? styles.showing : ''}`}>
-            <img className={'profile-pic'} src={user?.photoURL || ''} />
-          </button>
+        onClick={isLoggedIn ? toggleSideMenuShowing : () => null } className={`${styles.profileButton} ${(!sideMenuShowing && phase !== 'game') ? styles.showing : ''}`}>
+        <img className={'profile-pic'} src={user?.photoURL || ''} />
+      </button>
       <button
         className={`${styles.profileButton} ${styles.options} ${styles.showing}`}
         onClick={toggleSideMenuShowing}

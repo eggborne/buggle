@@ -4,6 +4,12 @@ export interface BannerOptions {
   style?: Record<string, string>;
 }
 
+export interface ConfirmData {
+  typeOpen: string;
+  message: string;
+  targetPhase: string;
+}
+
 // players
 
 export interface PlayerData {
@@ -149,17 +155,24 @@ export interface ChallengeData {
 
 // options
 
-export interface OptionsData {
-  cubeColor: string,
-  cubeTextColor: string,
-  footerHeight: number,
-  cubeGap: number;
+export interface StylePreferencesData {
+  cubeColor: string;
+  cubeTextColor: string;
+  footerHeight: number;
+  cubeScale: number;
   cubeRoundness: number;
   gameBackgroundColor: string;
-  gameBoardBackgroundColor: string,
-  gameBoardPadding: number;
+  gameBoardBackgroundColor: string;
   gameBoardSize: number;
+}
+
+export interface GameplayPreferencesData {
   swipeBuffer: number;
+}
+
+export interface OptionsData {
+  style: StylePreferencesData;
+  gameplay: GameplayPreferencesData;
 }
 
 export interface OptionInputData {

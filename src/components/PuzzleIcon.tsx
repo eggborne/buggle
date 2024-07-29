@@ -33,13 +33,6 @@ function PuzzleIcon({ puzzleDimensions, contents, iconSize }: PuzzleIconProps) {
       }}
     >
       {contents.map((item, i) =>
-        // <div key={`${item}${i}`}
-        //   style={{
-        //     fontSize: `calc((${iconSize.width} / ${width * 1.5}) - (${width - 2} * 4 * var(--cube-gap)) - (8 * var(--game-board-padding)) )`,
-        //     // fontSize: `calc(${iconSize.width} - (var(--cube-gap) * ${width - 2}) - (var(--game-board-padding) * 2))`,
-
-        //   }}
-        // >{item}</div>
         <BoardCell key={`${item}${i}`} letter={item} touched={false} wordStatus={''} />
       )}
     </div>

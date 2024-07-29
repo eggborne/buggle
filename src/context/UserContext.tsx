@@ -1,9 +1,10 @@
 import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
 import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { UserData, OptionsData } from '../types/types';
+import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData } from '../types/types';
 import { ref, remove, set, update, get, child } from 'firebase/database';
 import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
+import { triggerShowMessage } from '../hooks/useMessageBanner';
 
 const PRUNE_INTERVAL = 10000;
 const HEARTBEAT_INTERVAL = 5000;
@@ -17,7 +18,8 @@ interface UserContextProps {
   handleSignOut: () => void;
   setUser: Dispatch<SetStateAction<UserData | null>>;
   setIsLoggedIn: Dispatch<SetStateAction<boolean>>;
-  changeOption: (optionKey: string, newValue: string | number) => void;
+  changeOption: (optionKey: keyof OptionsData['style'] | keyof OptionsData['gameplay'], newValue: string | number) => void;
+  saveOptions: (newOptions: OptionsData) => void;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -41,15 +43,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
-      if (firebaseUser) {
+      let userData = defaultUser;
+      if (firebaseUser) {        
         console.warn('-- found Firebase user!')
-        const userData = await getUserData(firebaseUser);
-        setUser(userData);
-        setIsLoggedIn(true);
+        userData = await getUserData(firebaseUser);
         addUserToPlayerList({
           ...userData,
           heartbeat: Date.now()
         });
+        setIsLoggedIn(true);
 
         const sendHeartbeat = async () => {
           const heartbeatTime = Date.now();
@@ -63,8 +65,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
               console.warn('sinceLast is', sinceLast, '- skipping this heartbeat');
               return;
-            } else {
-              console.log('sinceLast is', sinceLast, '- OK')
             }
             await sendHeartbeat();
             await pruneInactivePlayers();
@@ -75,9 +75,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setHeartbeatInterval(startHeartbeat(HEARTBEAT_INTERVAL));
 
       } else {
-        console.warn('-- NO Firebase user!')
-        setUser(defaultUser);
+        console.warn('-- NO Firebase user!');
         setIsLoggedIn(false);
+      }
+      setUser(userData);
+      console.log('userData is', userData)
+      for (const type in userData.preferences) {
+        const prefsSection = userData.preferences[type as keyof OptionsData];
+        for (const optionKey in prefsSection) {
+          const newValue = userData.preferences[type as keyof OptionsData][optionKey as keyof OptionsData[keyof OptionsData]] as string | number;
+          const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+          document.documentElement.style.setProperty(varName, newValue.toString());
+        }
       }
       setIsLoading(false);
     });
@@ -163,40 +172,58 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       clearInterval(heartbeatInterval);
       await removeUserFromPlayerList(user.uid);
       setUser({
-        ...defaultUser,
         ...user,
+        ...defaultUser,
         phase: 'title'
       });
       setIsLoggedIn(false);
+      triggerShowMessage(`${user?.displayName} logged out :(`);
     } catch (error) {
       console.error("Error signing out: ", error);
     }
   };
 
-  const changeOption = async (optionKey: string, newValue: string | number) => {
-    if (!user) return;
+  const changeOption = async (optionKey: keyof OptionsData['style'] | keyof OptionsData['gameplay'], newValue: string | number) => {
+    if (!user || !user.preferences) return;
+    let preferenceKey: 'style' | 'gameplay';
 
-    const updatedPreferences: OptionsData = {
-      ...user.preferences as OptionsData,
-      [optionKey]: newValue,
-    };
+    // Dynamically determine the preferenceKey based on the presence of the key in style or gameplay
+    preferenceKey = user.preferences.style.hasOwnProperty(optionKey) ? 'style' : 'gameplay';
 
-    const updatedUser: UserData = {
+    // Update the specific preference data using type assertion
+    const updatedPreferences = {
+      ...user.preferences[preferenceKey],
+      [optionKey]: newValue
+    } as StylePreferencesData | GameplayPreferencesData;
+
+    // Update the user object with the new preferences
+    const updatedUser = {
       ...user,
-      preferences: updatedPreferences,
+      preferences: {
+        ...user.preferences,
+        [preferenceKey]: updatedPreferences
+      }
     };
 
     setUser(updatedUser);
 
     // Update in database
-    await update(ref(database, `users/${user.uid}/preferences`), {
-      [optionKey]: newValue,
-    });
+    // await update(ref(database, `users/${user.uid}/preferences/${preferenceKey}`), {
+    //   [optionKey]: newValue,
+    // });
 
     // Update CSS variable
     const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
     document.documentElement.style.setProperty(varName, newValue.toString());
   };
+
+  const saveOptions = async (newOptions: OptionsData) => {
+    if (!user) return;
+    await update(ref(database, `users/${user.uid}`), {
+      preferences: newOptions,
+    });
+    triggerShowMessage('Options saved!');
+  }
 
   return (
     <UserContext.Provider value={{
@@ -209,6 +236,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setUser,
       setIsLoggedIn,
       changeOption,
+      saveOptions,
     }}>
       {children}
     </UserContext.Provider>

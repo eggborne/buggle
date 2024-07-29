@@ -2,13 +2,13 @@
   width: var(--main-width);
   height: 2.5rem;
   display: grid;
-  grid-template-columns: var(--header-height) 1fr var(--header-height);
+  grid-template-columns: var(--header-height) auto 1fr auto var(--header-height);
   grid-template-rows: var(--header-height);
-  background-color: var(--footer-color);
+  place-items: center;
+  /* background-color: var(--footer-color); */
 }
 
-.gameStatsArea, 
-.timeScoreArea {
+.gameStatsArea {
   display: flex;
   flex-direction: column;
 }
@@ -30,7 +30,7 @@
   width: var(--header-height);
   height: var(--header-height);
   border: 0.1rem solid #ffffff55;
-  outline: 0.5rem solid var(--footer-color);
+  /* outline: 0.5rem solid var(--footer-color); */
   opacity: 1;
   animation: slide-in-left 300ms ease forwards;
 }
@@ -49,16 +49,14 @@
   text-shadow: var(--text-stroke);
 }
 
-.timeCounter {
+.timeCounter, .scoreArea {
   width: min-content;
   height: min-content;
   justify-content: center;
-  justify-self:  center;
+  align-self:  start;
   font-size: 0.8rem;
   font-weight: bold;
-  background-color: var(--footer-color);
-  padding: calc(var(--header-height) / 12) calc(var(--header-height) / 12);
-  padding-top: 0;
+  /* background-color: var(--footer-color); */
   gap: 0;
   border-radius: calc(var(--header-height) / 8);
   border-top-left-radius: 0;
@@ -66,11 +64,43 @@
   transform: translateY(calc(var(--header-height) * -1.2));
   animation: drop-in 300ms ease forwards;
   animation-delay: 300ms;
+  z-index: 1;
+}
+
+.scoreArea {
+  animation-delay: 0ms;
+}
+
+.gameStatusDisplay button {
+  display: flex;
+  grid-column-start: 5;
+  width: min-content;
+  margin-right: 0.5rem;
+  /* width: 5rem; */
+  
+}
+
+.scoreArea > .labeledCounter {
+  gap: 0;
+}
+
+.opponentArea {
+  justify-self: end;
 }
 
 .opponentArea > img {
   border-radius: 50% 0 50% 50%;
   animation-name: slide-in-right;
+}
+
+@keyframes drop-in {
+  from {
+    transform: translateY(calc(var(--header-height) * -1));
+  }
+
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes slide-in-left {
