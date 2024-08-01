@@ -53,10 +53,9 @@ main {
   width: 100%;
   min-width: 100vw;
   height: var(--actual-height);
-  /* max-height: 100%; */
   overflow-y: auto;
   padding-bottom: calc(var(--bottom-margin) + (var(--footer-height) / 2)) !important;
-  transition: all 200ms ease;
+  transition: opacity 300ms ease;
 }
 
 main.hidden {

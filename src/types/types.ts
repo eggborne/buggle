@@ -99,6 +99,7 @@ export interface GeneratedBoardData {
   attempts: number,
   matrix: string[][];
   wordList: string[];
+  specialWords?: string[];
   metadata: PuzzleMetadata;
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
@@ -106,17 +107,32 @@ export interface GeneratedBoardData {
 
 //game
 
+export interface PlayerMatchData {
+  uid: string;
+  score: number;
+  foundWords: string[];
+}
+
 export interface CurrentGameData {
-  allWords: Set<string>;
+  allWords: Set<string> | string[];
   dimensions: PuzzleDimensions;
   letterMatrix: string[][];
   metadata: {
     key?: Record<string, string>;
     percentUncommon: number;
   };
+  playerProgress: Record<string, PlayerMatchData>;
+
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
+  specialWords?: Set<string> | string[] | null;
   timeLimit?: number;
+  
+  id?: string;
+  instigator?: PlayerMatchData;
+  respondent?: PlayerMatchData;
+  startTime?: number;
+  endTime?: number;
 }
 
 export interface GameOptions {
@@ -150,8 +166,10 @@ export interface ChallengeData {
     height: number;
   };
   timeLimit: number;
-  uid?: string | null;
+  accepted: boolean;
+  id?: string | null;
 }
+
 
 // options
 

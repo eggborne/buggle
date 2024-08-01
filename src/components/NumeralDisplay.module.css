@@ -5,15 +5,10 @@
   justify-content: space-evenly;
   gap: calc(var(--numeral-height) / 8);
   border-radius: 0.25rem;
-  /* padding: calc(var(--numeral-height) / 10) calc(var(--numeral-height) / 6); */
-  /* padding-bottom: calc(var(--numeral-height) / 6); */
-  border: calc(var(--numeral-height) / 8) solid black;
-  background-color: black;
 }
 
 .numeralDigit {
-  box-sizing: content-box;
-  background-image: url('/assets/slimnumerals.png');
+  background-image: url('/assets/numerals.svg');
   background-repeat: no-repeat;
   background-size: 100% auto;
   background-position-x: center;
@@ -21,11 +16,14 @@
   translate: 0 calc(var(--numeral-height) / -16);
   width: calc(var(--numeral-height) / 2);
   height: var(--numeral-height);
-  filter: invert();
   transition: background-position-y 300ms ease-out;
   z-index: 2;
 }
 
-.scoreNumber.black {
-  filter: none;
+.numeralDigit.white {
+  filter: invert();
+}
+
+.numeralDigit.green {
+  filter: invert(1) sepia(1) saturate(8) hue-rotate(40deg);
 }

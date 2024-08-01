@@ -1,56 +1,65 @@
-import { PlayerData, CurrentGameData, ConfirmData } from '../../types/types';
+import { PlayerData, ConfirmData, UserData } from '../../types/types';
 import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
 import GameStatusDisplay from '../GameStatusDisplay';
-import { useState } from 'react';
-import Modal from '../Modal';
+import { useEffect, useState } from 'react';
+// import Modal from '../Modal';
+import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
+import { get, child, ref } from 'firebase/database';
+import { database } from '../../scripts/firebase';
 
 interface GameScreenProps {
-  gameId?: string;
-  currentGame: CurrentGameData;
-  player: PlayerData;
   hidden: boolean;
-  handleValidWord: (word: string) => void;
+  handleSubmitValidWord: (word: string) => void;
   showConfirmModal: (confirmData: ConfirmData) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, showConfirmModal, uploadPuzzle }: GameScreenProps) {
-  const { isLoggedIn } = useUser();
-  const [wordListShowing, setWordListShowing] = useState<boolean>(false);
+function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuzzle }: GameScreenProps) {
+  // const [wordListShowing, setWordListShowing] = useState<boolean>(false);
+  const { isLoggedIn, user } = useUser();
+  const { currentMatch } = useFirebase();
+  if (!currentMatch || !user) return;
+  const [opponentData, setOpponentData] = useState<UserData | null>(null);
+  const isMultiplayer = !!(isLoggedIn && currentMatch.id && currentMatch.respondent && currentMatch.instigator);
 
-  // const { currentMatch, setGameId } = useFirebase();
-  // useEffect(() => {
-  //   setGameId(gameId);
-
-  //   return () => {
-  //     setGameId(null);
-  //   };
-  // }, [gameId, setGameId]);
+  useEffect(() => {
+    if (currentMatch && isMultiplayer && !opponentData) {
+      const getOpponentData = async (opponentUid: string) => {
+        const snapshot = await get(child(ref(database), `players/${opponentUid}`));
+        if (snapshot.exists()) {
+          const opponentData = snapshot.val();
+          setOpponentData(opponentData);
+        }
+      }
+      const initialOpponentUid = (isMultiplayer && currentMatch.instigator?.uid === user.uid) ? currentMatch.respondent?.uid : currentMatch.instigator?.uid;
+      if (!initialOpponentUid) return;
+      getOpponentData(initialOpponentUid);
+    }
+  }, [currentMatch]);
 
   let requiredWordList: string[] = [];
-  if (currentGame.customizations?.requiredWords?.wordList) {
-    requiredWordList = currentGame.customizations.requiredWords.wordList
+  if (currentMatch.customizations?.requiredWords?.wordList) {
+    requiredWordList = currentMatch.customizations.requiredWords.wordList
       .map(word => word.toLowerCase())
       .sort((a, b) => b.length - a.length);
   }
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
+
   return (
     <main className={gameScreenClass} >
-      <GameStatusDisplay player={player} currentGame={currentGame} showConfirmModal={showConfirmModal} />
+      <GameStatusDisplay isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
       <GameBoard
-        gameId={gameId}
-        player={player}
-        currentGame={currentGame}
-        onValidWord={handleValidWord}
+        onSubmitValidWord={handleSubmitValidWord}
       />
-      <div className={styles.lowerButtonArea}>
-        {process.env.NODE_ENV === 'development' && <button onClick={uploadPuzzle}>Upload</button>}
-        <button onClick={() => setWordListShowing(true)}>Word List</button>
+      <div className={`lower-button-area ${styles.gameButtons}`}>
+        <button className={`knob`}></button>
+        <button className={`knob`}></button>
+        <button className={`knob`}></button>
       </div>
-      {wordListShowing &&
+      {/* {wordListShowing &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
           {requiredWordList.map(word =>
             <div style={{
@@ -61,19 +70,22 @@ function GameScreen({ gameId, currentGame, player, hidden, handleValidWord, show
               {word}
             </div>
           )}
-          {Array.from(currentGame.allWords).sort((a, b) => b.length - a.length).map(word =>
+          {Array.from(currentMatch.allWords).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               textTransform: 'uppercase',
               textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
               opacity: player.wordsFound.has(word) ? '0.75' : '1',
-
             }}
               key={word}>
               {word}
             </div>
           )}
         </Modal>
-      }
+      } */}
+      {process.env.NODE_ENV === 'development' && <div className={`dev-window`}>
+        {<button onClick={uploadPuzzle}>Upload</button>}
+        {/* <button onClick={() => setWordListShowing(true)}>Word List</button> */}
+      </div>}
     </main>
   )
 }

@@ -1,11 +1,11 @@
 import styles from './LobbyScreen.module.css'
 import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect } from 'react';
-import { database } from '../../scripts/firebase';
-import { ref, onValue, push, off, remove } from "firebase/database";
+import { database, fetchRandomPuzzle } from '../../scripts/firebase';
+import { ref, onValue, push, off, remove, update } from "firebase/database";
 import Modal from '../../components/Modal';
 import PuzzleIcon from '../../components/PuzzleIcon';
-import { ChallengeData, ChatMessageData, LobbyData, UserData } from '../../types/types';
+import { ChallengeData, ChatMessageData, CurrentGameData, LobbyData, UserData } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';
 
@@ -14,8 +14,8 @@ interface LobbyScreenProps {
 }
 
 function LobbyScreen({ hidden }: LobbyScreenProps) {
-  const { user } = useUser();
-  const { challenges, playerList } = useFirebase();
+  const { user, changePhase } = useUser();
+  const { challenges, playerList, startNewGame, setGameId } = useFirebase();
   const [chatMessages, setChatMessages] = useState<ChatMessageData[]>([]);
   const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<UserData | null>(null);
   const [sentChallenges, setSentChallenges] = useState<ChallengeData[]>([]);
@@ -26,31 +26,6 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const difficultyInputRef = useRef<HTMLSelectElement>(null);
   const timeLimitInputRef = useRef<HTMLSelectElement>(null);
   const lobbyScreenRef = useRef<HTMLSelectElement>(null);
-
-  const handleClickChallengePlayer = (opponentData: UserData) => {
-    setPendingOutgoingChallenge(opponentData);
-  }
-
-  const handleCancelChallengingPlayer = async (opponentUid: string) => {
-    if (!challenges) return;
-    const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === user?.uid && challenges[key].respondent === opponentUid);
-    await remove(ref(database, `challenges/${idToRemove}`));
-    triggerShowMessage(`Challenge cancelled!`);
-
-    setSentChallenges(prevSentChallenges => {
-      return prevSentChallenges.filter(challenge => challenge.uid !== idToRemove);
-    })
-  }
-  const handleDeclineChallenge = async (opponentUid: string) => {
-    if (!challenges) return;
-    const idToRemove = Object.keys(challenges).find(key => challenges[key].respondent === user?.uid && challenges[key].instigator === opponentUid);
-    await remove(ref(database, `challenges/${idToRemove}`));
-    triggerShowMessage(`Challenge declined!`);
-
-    setSentChallenges(prevSentChallenges => {
-      return prevSentChallenges.filter(challenge => challenge.uid !== idToRemove);
-    })
-  }
 
   useEffect(() => {
     const lobbyRef = ref(database, 'lobby/messages/');
@@ -71,18 +46,17 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       off(lobbyRef, 'value', messageListener);
       console.log(`<---------------- STOPPED LobbyScreen /messages listener`)
     };
-
   }, []);
 
   useEffect(() => {
-    let newSentChallenges = [ ...sentChallenges ];
+    let newSentChallenges = [...sentChallenges];
     if (challenges && sentChallenges.length > 0) {
       console.log('chal', challenges)
       console.log('sentChal', sentChallenges)
-      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenges[challenge.uid || '']);
+      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenges[challenge.id || '']);
       console.log('newSentChal', newSentChallenges)
     }
-    setSentChallenges(newSentChallenges);    
+    setSentChallenges(newSentChallenges);
 
   }, [challenges])
 
@@ -121,17 +95,94 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           width: sizeSelected,
           height: sizeSelected
         },
+        accepted: false,
       }
       const newChallengUid = await push(challengesRef, newChallenge).key;
       triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
       console.log('new c', newChallengUid);
       setSentChallenges(prevSentChallenges => {
         const nextSentChallenges = [...prevSentChallenges];
-        const newChallengeData = { ...newChallenge, uid: newChallengUid };
+        const newChallengeData = { ...newChallenge, id: newChallengUid };
         nextSentChallenges.push(newChallengeData);
         return nextSentChallenges;
       });
+      await update(ref(database, `challenges/${newChallengUid}`), { id: newChallengUid });
       setPendingOutgoingChallenge(null);
+    }
+  };
+
+  const handleClickChallengePlayer = (opponentData: UserData) => {
+    setPendingOutgoingChallenge(opponentData);
+  }
+
+  const handleCancelChallengingPlayer = async (opponentUid: string) => {
+    if (!challenges || !playerList) return;
+    const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === user?.uid && challenges[key].respondent === opponentUid);
+    await remove(ref(database, `challenges/${idToRemove}`));
+    const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
+    triggerShowMessage(`Challenge to ${opponentName} cancelled!`);
+
+    setSentChallenges(prevSentChallenges => {
+      return prevSentChallenges.filter(challenge => challenge.id !== idToRemove);
+    })
+  };
+
+  const handleDeclineChallenge = async (opponentUid: string) => {
+    if (!challenges || !playerList || !user) return;
+    const idToRemove = Object.keys(challenges).find(key => challenges[key].respondent === user.uid && challenges[key].instigator === opponentUid);
+    await remove(ref(database, `challenges/${idToRemove}`));
+    const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
+    triggerShowMessage(`Challenge from ${opponentName} declined!`);
+
+    setSentChallenges(prevSentChallenges => {
+      return prevSentChallenges.filter(challenge => challenge.id !== idToRemove);
+    })
+  };
+
+  const handleAcceptChallenge = async (challenge: ChallengeData) => {
+    if (!challenges || !playerList || !user) return;
+    const { dimensions, difficulty, id: challengeId, instigator: instigatorId, respondent: respondentId, timeLimit } = challenge;
+    console.log('idToRemove', challengeId);
+    await remove(ref(database, `challenges/${challengeId}`));
+    const opponentName = playerList.filter(p => p.uid === instigatorId)[0].displayName;
+    triggerShowMessage(`Challenge from ${opponentName} accepted!`);
+    const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
+    console.log('testPuzzle', randomPuzzle);
+    if (challengeId) {
+      const newGameData: CurrentGameData = {
+        ...randomPuzzle,
+        allWords: Array.from(randomPuzzle.allWords),
+        endTime: 0,
+        id: challengeId,
+        instigator: {
+          uid: instigatorId,
+          score: 0,
+          foundWords: [],
+        },
+        playerProgress: {
+          [instigatorId]: {
+            uid: instigatorId,
+            score: 0,
+            foundWords: [],
+          },
+          [respondentId]: {
+            uid: respondentId,
+            score: 0,
+            foundWords: [],
+          },
+        },
+        respondent: {
+          uid: respondentId,
+          score: 0,
+          foundWords: [],
+        },
+        startTime: 0,
+      }
+      await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
+      setSentChallenges(prevSentChallenges => {
+        return prevSentChallenges.filter(challenge => challenge.id !== challengeId);
+      });
+      changePhase('game');
     }
   };
 
@@ -203,7 +254,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
                   <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
                   <div className={`button-group row ${styles.challengeButtons}`}>
                     <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigator)}>Decline</button>
-                    <button className={`start ${styles.acceptButton}`} onClick={() => null}>Accept</button>
+                    <button className={`start ${styles.acceptButton}`} onClick={() => handleAcceptChallenge(challenge)}>Accept</button>
                   </div>
                 </div>
               );

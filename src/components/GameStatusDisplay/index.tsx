@@ -1,4 +1,4 @@
-import { PlayerData, CurrentGameData, ConfirmData } from '../../types/types';
+import { ConfirmData, UserData } from '../../types/types';
 import styles from './GameStatusDisplay.module.css';
 import NumeralDisplay from '../NumeralDisplay';
 import { useUser } from '../../context/UserContext';
@@ -6,14 +6,16 @@ import { useFirebase } from '../../context/FirebaseContext';
 
 
 interface GameStatusDisplayProps {
-  player: PlayerData;
-  currentGame: CurrentGameData;
+  isMultiplayer: boolean;
+  opponentData: UserData | null;
   showConfirmModal: (confirmData: ConfirmData) => void;
 }
 
-function GameStatusDisplay({ player, currentGame, showConfirmModal }: GameStatusDisplayProps) {
-  const { user, isLoggedIn, changePhase } = useUser();
+function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: GameStatusDisplayProps) {
+  const { user, isLoggedIn } = useUser();
   const { currentMatch } = useFirebase();
+  if (!currentMatch || !user) return;
+  const { playerProgress, timeLimit } = currentMatch;
 
   const confirmToLobby = () => showConfirmModal({
     typeOpen: 'leaveGame',
@@ -21,11 +23,13 @@ function GameStatusDisplay({ player, currentGame, showConfirmModal }: GameStatus
     targetPhase: 'lobby',
   });
 
+  // console.log('isMultiplayer, opponentData,', isMultiplayer, opponentData)
+
   return (
     <div className={styles.gameStatusDisplay}>
       <div className={styles.playerArea}>
-        <img className={'profile-pic'} src={user?.photoURL || ''} />
-        <div className={styles.userLabel} style={{ fontSize: `${1 - ((user?.displayName?.length || 0) / 100)}rem` }}>{user?.displayName || 'Guest'}</div>
+        <img className={'profile-pic'} src={user.photoURL || ''} />
+        <div className={styles.userLabel} style={{ fontSize: `${1 - ((user.displayName?.length || 0) / 100)}rem` }}>{user.displayName || 'Guest'}</div>
       </div>
 
       {/* <div className={styles.gameStatsArea}>
@@ -42,31 +46,31 @@ function GameStatusDisplay({ player, currentGame, showConfirmModal }: GameStatus
       <div className={styles.scoreArea}>
         <div className={styles.labeledCounter}>
           <div>Score</div>
-          <NumeralDisplay digits={player.score} height={'1.5rem'} length={3} />
+          <NumeralDisplay digits={playerProgress[user.uid].score} height={'calc(var(--header-height) / 3.2)'} length={3} />
         </div>
       </div>
 
       <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
-        <div>Time</div>
-        <NumeralDisplay digits={currentGame.timeLimit || 0} length={3} height={'2.5rem'} />
+        {/* <div>Time</div> */}
+        <NumeralDisplay digits={timeLimit || 0} length={3} color={'green'} height={'clamp(1rem, calc(var(--header-height) * 0.5), 3rem)'} />
       </div>
 
 
       <div className={styles.scoreArea}>
-        <div className={styles.labeledCounter} style={{ visibility: currentMatch ? 'visible' : 'hidden' }} >
+        <div className={styles.labeledCounter} style={{ visibility: isMultiplayer ? 'visible' : 'hidden' }} >
           <div>Score</div>
-          <NumeralDisplay digits={player.score} height={'1.5rem'} length={3} />
+          <NumeralDisplay digits={opponentData ? playerProgress[opponentData.uid].score : 0 } height={'calc(var(--header-height) / 3.2)'} length={3} />
         </div>
       </div>
 
       <div className={`${styles.playerArea} ${styles.opponentArea}`}>
         {isLoggedIn ?
-          !currentMatch ?
+          !isMultiplayer ?
             <button onClick={confirmToLobby} className={'tiny start'}>Find a match</button>
             :
             <>
-              <img className={'profile-pic'} src={''} />
-              <div className={styles.userLabel} style={{ fontSize: `${1 - ((user?.displayName?.length || 0) / 20)}rem` }}>{'Opponent'}</div>
+              <img className={'profile-pic'} src={opponentData?.photoURL || ''} />
+              <div className={styles.userLabel} style={{ fontSize: `${1 - ((opponentData?.displayName?.length || 0) / 20)}rem` }}>{opponentData?.displayName}</div>
             </>
           :
           <button onClick={() => showConfirmModal({

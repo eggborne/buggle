@@ -6,8 +6,8 @@ import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 
-const PRUNE_INTERVAL = 10000;
 const HEARTBEAT_INTERVAL = 5000;
+const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
 
 interface UserContextProps {
   user: UserData | null;
@@ -54,21 +54,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedIn(true);
 
         const sendHeartbeat = async () => {
-          const heartbeatTime = Date.now();
-          await updateUserInPlayerList(`players/${userData.uid}/heartbeat`, heartbeatTime);
+          await updateUserInPlayerList(`players/${userData.uid}/heartbeat`, Date.now());
         }
 
         const startHeartbeat = (duration: number) => {
           return setInterval(async () => {
             const now = Date.now();
             const sinceLast = now - lastHeartbeatRef.current;
-            if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
+            if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 4))) {
               console.warn('sinceLast is', sinceLast, '- skipping this heartbeat');
-              return;
+              // return;
             }
             await sendHeartbeat();
-            await pruneInactivePlayers();
             lastHeartbeatRef.current = now;
+            // await pruneInactivePlayers();
           }, duration);
         };
 
@@ -92,6 +91,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
+      clearInterval(heartbeatInterval);
       return unsubscribe();
     };
   }, []);
@@ -119,11 +119,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     if (players) {
       Object.keys(players).forEach(async (playerUid) => {
+        console.log('playerUid', playerUid)
+        console.log('user.uid', user?.uid)
         const player = players[playerUid];
         const sinceLast = Date.now() - player.heartbeat;
+
         if (sinceLast > PRUNE_INTERVAL) {
+          console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
           await remove(ref(database, `players/${playerUid}`));
           console.log(`Removed inactive player: ${playerUid}`);
+        } else {
+          console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
         }
       });
     }
@@ -169,7 +175,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       await signOut(auth);
       console.log("User signed out successfully");
-      clearInterval(heartbeatInterval);
       await removeUserFromPlayerList(user.uid);
       setUser({
         ...user,
@@ -177,7 +182,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         phase: 'title'
       });
       setIsLoggedIn(false);
-      triggerShowMessage(`${user?.displayName} logged out :(`);
+      clearInterval(heartbeatInterval);
+      // triggerShowMessage(`${user?.displayName} logged out :(`);
     } catch (error) {
       console.error("Error signing out: ", error);
     }
@@ -185,10 +191,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const changeOption = async (optionKey: keyof OptionsData['style'] | keyof OptionsData['gameplay'], newValue: string | number) => {
     if (!user || !user.preferences) return;
-    let preferenceKey: 'style' | 'gameplay';
 
     // Dynamically determine the preferenceKey based on the presence of the key in style or gameplay
-    preferenceKey = user.preferences.style.hasOwnProperty(optionKey) ? 'style' : 'gameplay';
+    const preferenceKey = Object.prototype.hasOwnProperty.call(user.preferences.style, optionKey) ? 'style' : 'gameplay';
 
     // Update the specific preference data using type assertion
     const updatedPreferences = {
@@ -206,11 +211,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
 
     setUser(updatedUser);
-
-    // Update in database
-    // await update(ref(database, `users/${user.uid}/preferences/${preferenceKey}`), {
-    //   [optionKey]: newValue,
-    // });
 
     // Update CSS variable
     const varName = '--user-' + optionKey.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();

@@ -1,13 +1,13 @@
 .wordInput {
-  width: var(--main-width);
-  max-width: var(--main-width);
+  width: 100vw;
   height: var(--current-word-display-height);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--current-word-display-height) / 3);
+  font-size: calc(var(--current-word-display-height) / 2);
   font-weight: bold;
   text-transform: uppercase;
+  /* background: salmon; */
 }
 
 .wordLegend {

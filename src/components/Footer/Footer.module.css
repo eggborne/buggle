@@ -1,11 +1,4 @@
 .Footer {
-  /* height: var(--footer-height);
-  min-height: var(--footer-height); */
-  /* display: grid;
-  place-items: center;
-  align-items: end;
-  grid-template-columns: calc(var(--menu-button-size) + 2rem) 1fr calc(var(--menu-button-size) + 2rem);
-  grid-template-rows: var(--footer-height); */
   position: fixed;
   bottom: 0;
   left: 0;
@@ -14,7 +7,7 @@
   align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
-  z-index: 2;
+  z-index: 100;
   padding: 0.125rem;
 }
 
@@ -23,23 +16,15 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  background-color: var(--footer-color);
   width: inherit;
   height: var(--bottom-margin);
   z-index: -1;
 }
 
 .Footer > button {
-  position: relative;
-  width: var(--footer-height);
-  height: var(--footer-height);
-  aspect-ratio: 1;
-  padding: 0;
-  border-radius: var(--footer-knob-roundness);
   opacity: 0;
   pointer-events: none;
   transition: opacity 100ms ease;
-  /* outline: 1rem solid var(--footer-color); */
 }
 
 .Footer > button.showing {
@@ -52,11 +37,21 @@
   right: .125rem;
 }
 
-.Footer > button > img {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--footer-knob-roundness);
+.Footer > .profileButton > .notificationBubble {
+  position: absolute;
+  top: -15%;
+  left: -15%;
+  width: calc(var(--footer-height) / 2.5);
+  height: calc(var(--footer-height) / 2.5);
+  border-radius: 50%;
+  background-color: red;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+
 }
 
 button.back,
@@ -68,29 +63,7 @@ button.options > img {
   width: 80%;
   height: 80%;
 }
+
 button.options {
-  border-radius: 0;
-  background-color: transparent;
-  border: 0 !important;  
-  outline: 0 !important;  
-}
-
-.footerKnob {
-  position: absolute;
-  width: calc(var(--footer-height) + 1rem);
-  height: calc(var(--footer-height) + 1rem);
-  transform: translate(0, -50%);
-  top: 50%;
-  left: -0.35rem;
-  background: var(--footer-color);
-  border-radius: var(--footer-knob-roundness);
-  border-bottom-left-radius: 0;
-  z-index: -1;
-}
-
-.footerKnob:last-of-type {
-  left: unset;
-  right: -0.35rem;
-  border-bottom-left-radius: 50%;
-  border-bottom-right-radius: 0;
+  background-color: #333;
 }

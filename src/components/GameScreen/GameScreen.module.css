@@ -1,24 +1,28 @@
 .GameScreen {
-  /* justify-content: flex-start;
-  gap: 0; */
   display: grid !important;
   grid-template-rows: var(--header-height) auto 1fr;
-  align-items: start;
+  justify-items: center;
   background-color: var(--game-background-color);
   z-index: 0;
-  padding-bottom: var(--bottom-margin) !important;
+  padding-bottom: 0 !important;
+}
+
+.GameScreen > .gameButtons {
+  align-self: start;
+  align-items: end;
+  justify-content: center;
+  gap: 0.1rem;
+  margin-top: var(--board-outline-width)
+}
+
+.gameButtons > button:nth-child(2) {
+  width: calc(var(--footer-height) * 1.2);
+  height: calc(var(--footer-height) * 1.2);
+  margin-bottom: calc(var(--footer-height) / 8);
 }
 
 form {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.lowerButtonArea {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  height: 100%;
 }

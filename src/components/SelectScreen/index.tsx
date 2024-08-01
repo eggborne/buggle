@@ -1,19 +1,23 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
 import { ref, child, get } from "firebase/database";
-import { database } from '../../scripts/firebase';
-import { GameOptions, StoredPuzzleData } from '../../types/types';
+import { database, fetchRandomPuzzle } from '../../scripts/firebase';
+import { CurrentGameData, GameOptions, StoredPuzzleData } from '../../types/types';
 import PuzzleIcon from '../PuzzleIcon'
 import Modal from '../Modal';
 import StoredPuzzleList from '../StoredPuzzleList';
+import { useFirebase } from '../../context/FirebaseContext';
+import { useUser } from '../../context/UserContext';
+import { stringTo2DArray, decodeMatrix } from '../../scripts/util';
 
 interface SelectScreenProps {
   hidden: boolean;
-  startSinglePlayerGame: (options: GameOptions) => void;
-  handleClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }: SelectScreenProps) {
+function SelectScreen({ hidden }: SelectScreenProps) {
+  const { user, changePhase } = useUser();
+  const { startNewGame } = useFirebase();
+  if (!user) return;
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
   const [listShowing, setListShowing] = useState<boolean>(false);
@@ -35,10 +39,51 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
     getPuzzles();
   }, []);
 
-  const handleStartSinglePlayer = async (e: React.FormEvent<HTMLFormElement>) => {
+  // const handleStartSinglePlayer = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   const target = e.currentTarget as HTMLFormElement;
+  //   const newGameOptions: GameOptions = {
+  //     difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value,
+  //     dimensions: {
+  //       width: sizeSelected,
+  //       height: sizeSelected
+  //     },
+  //     timeLimit: parseInt((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
+  //   };
+  //   const fetchedPuzzle = await fetchRandomPuzzle(newGameOptions);
+  //   const newGameData: CurrentGameData = {
+  //     ...newGameOptions,
+  //     ...fetchedPuzzle,
+  //     allWords: Array.from(fetchedPuzzle.allWords),
+  //     endTime: 0,
+  //     instigator: {
+  //       score: 0,
+  //       foundWords: [],
+  //     },
+  //     respondent: {
+  //       score: 0,
+  //       foundWords: [],
+  //     },
+  //     startTime: 0,
+  //   }
+  //   await startNewGame(newGameData);
+  //   changePhase('game');
+  // };
+
+  const getRandomPuzzleWithOptions = async (newGameOptions: GameOptions): Promise<CurrentGameData> => {
+    const fetchedPuzzle = await fetchRandomPuzzle(newGameOptions);
+    const newGameData: CurrentGameData = {
+      ...newGameOptions,
+      ...fetchedPuzzle,
+      allWords: Array.from(fetchedPuzzle.allWords),
+    }
+    return newGameData;
+  };
+
+  const handleClickStartRandomGame = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const target = e.currentTarget as HTMLFormElement;
-    const options: GameOptions = {
+    const newGameOptions: GameOptions = {
       difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value,
       dimensions: {
         width: sizeSelected,
@@ -46,7 +91,38 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
       },
       timeLimit: parseInt((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
     };
-    startSinglePlayerGame(options);
+    const newGameData = await getRandomPuzzleWithOptions(newGameOptions);
+    newGameData.playerProgress = {
+      [user.uid]: {
+        uid: user.uid,
+        score: 0,
+        foundWords: [],
+      },
+    };
+    await startNewGame(newGameData);
+    changePhase('game');
+  }
+
+  const handleClickStoredPuzzle = async (puzzle: StoredPuzzleData) => {
+    const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
+    const newGameData = {
+      allWords: new Set(puzzle.allWords),
+      letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
+      dimensions: {
+        width: puzzle.dimensions.width,
+        height: puzzle.dimensions.height,
+      },
+      metadata: puzzle.metadata,
+      playerProgress: {
+        [user.uid]: {
+          uid: user.uid,
+          score: 0,
+          foundWords: [],
+        },
+      }
+    }
+    await startNewGame(newGameData);
+    changePhase('game');
   }
 
   const handleSubmitPuzzleOptions = () => {
@@ -62,7 +138,7 @@ function SelectScreen({ hidden, startSinglePlayerGame, handleClickStoredPuzzle }
   return (
     <main className={selectScreenClass}>
       <div className='button-group'>
-        <form ref={formRef} onSubmit={handleStartSinglePlayer}>
+        <form ref={formRef} onSubmit={handleClickStartRandomGame}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
             <div className={styles.sizeSelect}>

@@ -1,5 +1,5 @@
 import styles from './MessageBanner.module.css';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useMessageBanner } from '../../hooks/useMessageBanner';
 
 const MessageBanner = () => {
@@ -7,7 +7,6 @@ const MessageBanner = () => {
   useEffect(() => {
     if (isVisible) {
       setTimeout(() => {
-        console.warn('hiding now')
         hideMessage();
       }, 2000);
     }

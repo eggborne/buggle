@@ -8,10 +8,10 @@ import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   // <React.StrictMode>
-  <FirebaseProvider>
-    <UserProvider>
+  <UserProvider>
+    <FirebaseProvider>
       <App />
-    </UserProvider>
-  </FirebaseProvider>
+    </FirebaseProvider>
+  </UserProvider>
   // </React.StrictMode>
 )

@@ -10,13 +10,14 @@
   justify-content: center;
   font-weight: bold;
   color: var(--cube-text-color, #333);
-  outline: 0.2rem solid transparent;
-  opacity: 0.9;
+  outline: 0.1rem solid #00000055;
+  border: 0.1rem solid transparent;
+  opacity: 0.8;
   box-shadow:
-  0 0 0.25rem 0.1rem #000000aa,
   inset -0.2rem -0.2rem 0.5rem rgba(0, 0, 0, 0.2),
   inset 0.2rem 0.2rem 0.5rem rgba(255, 255, 255, 0.2);
-  transition: all 200ms ease;
+  transition: transform 200ms ease;
+  box-sizing: padding-box;
 }
 
 .board-cell::before {
@@ -24,49 +25,31 @@
   position: absolute;
   width: var(--face-size);
   height: var(--face-size);
-  background-color: var(--cube-color, #f5e5d5);
+  background-color: var(--cube-color);
   border-radius: 50%;
   box-shadow:
-    0 0 0.25rem rgba(0, 0, 0, 0.1);
+  0 0 0.25rem rgba(0, 0, 0, 0.1);
 }
 
 .board-cell p {
-  position: relative;
   z-index: 2;
   text-transform: capitalize;
 }
 
 .board-cell.touched {
-  /* outline-color: var(--invalid-color); */
+  transform: scale(95%);
   opacity: 1;
-  transform: scale(0.9)
 }
 
 .board-cell.touched.valid {
-  outline-color: var(--valid-color);
-    transform: scale(1)
-}
-
-.board-cell.touched.duplicate {
-  /* outline-color: var(--duplicate-color); */
-}
-
-.board-cell.touched::before {
-  background-color: rgba(142, 102, 102, 0.2);
+  border-color: var(--valid-color);
+  /* background-color: #64ff6433; */
 }
 
 .board-cell.touched.valid::before {
-  background-color: rgba(99, 236, 99, 0.2);
+  background-color: #64ff6433;
 }
 
-.board-cell.touched.duplicate::before {
-  background-color: rgba(186, 187, 137, 0.2);
-}
-
-@media (hover: hover) {
-  .board-cell:hover::before {
-    box-shadow:
-      inset 0 0 0.5rem rgba(0, 0, 0, 0.1),
-      0 0 0.5rem rgba(0, 0, 0, 0.2);
-  }
+.board-cell.touched.duplicate {
+  border-color: var(--duplicate-color);
 }

@@ -1,11 +1,12 @@
 import styles from './CreateScreen.module.css';
 import { useState, useEffect, useRef } from 'react';
-import { StoredPuzzleData, BoardRequestData, WordLengthPreference, PuzzleDimensions } from '../../types/types';
+import { BoardRequestData, WordLengthPreference, PuzzleDimensions } from '../../types/types';
+import { useFirebase } from '../../context/FirebaseContext';
+import { createSolvedPuzzle } from '../../scripts/firebase';
+import { useUser } from '../../context/UserContext';
 
 interface CreateScreenProps {
   hidden: boolean;
-  handleClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
-  startCreatedPuzzlePreview: (options: BoardRequestData) => Promise<void>;
 }
 
 interface WordLengthLimitSelectorProps {
@@ -57,7 +58,10 @@ const defaultValues: BoardRequestData = {
   returnBest: true,
 }
 
-function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) {
+function CreateScreen({ hidden }: CreateScreenProps) {
+  const { user, changePhase } = useUser();
+  const { startNewGame } = useFirebase();
+  if (!user) return;
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
     customLettersOption: false,
     totalWordsOption: false,
@@ -139,7 +143,26 @@ function CreateScreen({ hidden, startCreatedPuzzlePreview }: CreateScreenProps) 
       }
     }
     setGenerating(true);
-    await startCreatedPuzzlePreview(options);
+    const generatedBoardData = await createSolvedPuzzle(options);
+    if (!generatedBoardData) return;
+    const gameData = {
+      allWords: new Set(generatedBoardData.wordList),
+      dimensions: options.dimensions,
+      letterMatrix: generatedBoardData.matrix,
+      metadata: generatedBoardData.metadata,
+      playerProgress: {
+        [user.uid]: {
+          uid: user.uid,
+          score: 0,
+          foundWords: [],
+        },
+      },
+      customizations: generatedBoardData.customizations,
+      filters: generatedBoardData.filters,
+      specialWords: generatedBoardData.specialWords,
+    }
+    await startNewGame(gameData);
+    changePhase('game');
     setGenerating(false);
   }
 

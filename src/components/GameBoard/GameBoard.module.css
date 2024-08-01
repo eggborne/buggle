@@ -1,37 +1,34 @@
+.gameArea {
+  justify-self: center;
+  display: grid;
+  grid-template-rows: auto auto;
+  place-items: center;
+}
+
 .gameBoard {
   position: relative;
   width: var(--game-board-size);
   height: min-content;
   min-height: var(--game-board-size);
   border-radius: 0.25rem;
+  align-self: start;
   display: grid;
-  /* place-items: stretch; */
-  /* place-content: center; */
   background-color: var(--game-board-background-color);
-  outline: clamp(
-      1rem, 
-      calc(((var(--main-width) - var(--game-board-size)) / 2) - 1rem), 
-      (calc(var(--main-width) - var(--game-board-size)) / 8)
-    ) solid var(--game-board-background-color)
-  ;
-  box-shadow: 0 0 0.75rem 0.75rem #000000aa;
+  outline: var(--board-outline-width) solid var(--game-board-background-color);
+  box-shadow: 0 0 0.75rem var(--board-outline-width) #00000099;
   scale: 0.5;
   opacity: 0;
-  transition: scale 600ms ease, opacity 600ms ease;
+  transform: scale(1);
+  transition: scale 600ms linear, opacity 600ms linear;
   transition-delay: 200ms;
+  animation: bounce-out 300ms 600ms linear, bounce-in 150ms 900ms linear;
   position: relative;
+  margin: var(--board-outline-width) 0;
 }
 
 .gameBoard.showing {
   scale: 1;
   opacity: 1;
-}
-
-.gameArea {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  place-items: center;
-  justify-content: center;
 }
 
 .boardContainer {
@@ -45,12 +42,14 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  filter: drop-shadow(0 0 1px black);
-  z-index: 10;
+  z-index: 1;
   opacity: 0;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: opacity 100ms ease;
+  user-select: none;
+  filter: drop-shadow(0 0 1px black);
+  /* filter: url(#lineShadow); */
+  transition: opacity 200ms ease;
 }
 
 .pathOverlay.visible {
@@ -59,13 +58,17 @@
 
 .pathSegment {
   fill: none;
-  stroke: #ffaaaa;
+  /* transition: stroke 100ms ease; */
 }
 
 .animatedSegment {
-  stroke-dasharray: 100;
+  /* stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: drawLine 600ms ease forwards;
+  animation: drawLine 200ms ease-in-out forwards; */
+}
+
+.pathSegment.outerLine {
+  stroke: #ffaaaa;
 }
 
 @keyframes drawLine {
@@ -74,10 +77,34 @@
   }
 }
 
-.pathOverlay.valid .pathSegment {
+@keyframes bounce-out {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pathOverlay.valid .pathSegment.outerLine {
   stroke: var(--valid-color);
 }
 
-.pathOverlay.duplicate .pathSegment {
+.pathOverlay.duplicate .pathSegment.outerLine {
   stroke: #a1bd04;
 }

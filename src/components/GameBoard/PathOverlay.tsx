@@ -28,7 +28,7 @@ const PathOverlay: React.FC<PathOverlayProps> = ({ cells, dimensions, wordStatus
     });
 
     setPaths(newPaths);
-  }, [cells, dimensions.width]);
+  }, [cells.length, dimensions.width]);
 
   return (
     <svg
@@ -37,15 +37,19 @@ const PathOverlay: React.FC<PathOverlayProps> = ({ cells, dimensions, wordStatus
       viewBox="0 0 100 100"
       preserveAspectRatio="none"
       style={{
-        strokeWidth: `${0.15 + ((6 - dimensions.width) * 0.1)}rem`
+        strokeWidth: `${0.1 + ((6 - dimensions.width) * 0.05)}rem`
       }}
     >
+      <defs>
+        <filter id="lineShadow">
+          <feDropShadow dx="0" dy="0" stdDeviation="0.5" />
+        </filter>
+      </defs>
       {paths.map((path, index) => (
         <path
           key={index}
-          className={`${styles.pathSegment} ${index === paths.length - 1 ? styles.animatedSegment : ''}`}
-          d={path}
-        />
+          className={`${styles.pathSegment} ${index === (paths.length - 1) ? styles.animatedSegment : ''} ${styles.outerLine}`}
+          d={path} />
       ))}
     </svg>
   );

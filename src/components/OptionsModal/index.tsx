@@ -33,8 +33,6 @@ const sampleLetterMatrices = [
   ]
 ];
 
-
-
 const OptionInput = ({ label, name, type, value, onChange, onPointerUp, min, max }: OptionInputData) => (
   <label className={`${styles.optionInput} ${styles[type + '-label']}`}>
     <span>{label}</span>
@@ -61,7 +59,6 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
   const { user, isLoggedIn, changeOption, saveOptions } = useUser();
   const preferences = user?.preferences as OptionsData;
   const optionsList = editMode === 'colors' ? colorOptions : editMode === 'range' ? sizeOptions : gameplayOptions;
-  const [tentativeOptions, setTentativeOptions] = useState<OptionsData>(preferences);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name as keyof OptionsData['style'] | keyof OptionsData['gameplay'];
@@ -74,7 +71,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
     <div className={`${styles.OptionsModal} ${hidden ? styles.hidden : ''}`}>
 
       <div className={styles.puzzlePreview}>
-        <GameBoard
+        {!hidden && <GameBoard
           noAnimation={true}
           currentGame={{
             allWords: new Set(),
@@ -83,10 +80,16 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
             metadata: {
               percentUncommon: 1
             },
+            playerProgress: {
+              'fakeId': {
+                score: 0,
+                foundWords: [],
+                uid: 'fakeId'
+              }
+            },
           }}
-          player={{ score: 0, wordsFound: new Set() }}
-          onValidWord={() => { }}
-        />
+          onSubmitValidWord={() => { }}
+        />}
         <div className={styles.viewSelect}>
           <button className={`${styles.editModeButton} ${(sizeSelected === 4) ? styles.selected : ''}`} onClick={() => setSizeSelected(4)}>4 x 4</button>
           <button className={`${styles.editModeButton} ${(sizeSelected === 5) ? styles.selected : ''}`} onClick={() => setSizeSelected(5)}>5 x 5</button>

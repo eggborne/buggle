@@ -49,14 +49,7 @@
             "type": "range",
             "min": 0,
             "max": 100
-          },
-          {
-            "label": "Button Size",
-            "name": "footerHeight",
-            "type": "range",
-            "min": 0,
-            "max": 25
-          }
+          }          
         ]
       }
     },

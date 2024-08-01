@@ -20,7 +20,7 @@ function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
     }
   }
 
-  const titleScreenClass = `${styles.TitleScreen}${hidden ? ' hidden' : ''}`;
+  const titleScreenClass = `${styles.TitleScreen} ${hidden ? `${styles.hidden}` : ''}`;
   const playerAmount = playerList ? playerList.length - (isLoggedIn ? 1 : 0) : 0
   const playersString = `${playerAmount === 0 ? 'No' : playerAmount}${isLoggedIn ? ' other' : ''} player${playerAmount !== 1 ? 's' : ''} here`;
   return (

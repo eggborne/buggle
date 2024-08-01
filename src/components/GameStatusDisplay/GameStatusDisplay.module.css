@@ -1,11 +1,9 @@
 .gameStatusDisplay {  
-  width: var(--main-width);
-  height: 2.5rem;
+  width: 100vw;
   display: grid;
   grid-template-columns: var(--header-height) auto 1fr auto var(--header-height);
   grid-template-rows: var(--header-height);
   place-items: center;
-  /* background-color: var(--footer-color); */
 }
 
 .gameStatsArea {
@@ -25,6 +23,10 @@
   position: relative;
 }
 
+.opponentArea {
+  justify-self: end;
+}
+
 .playerArea > img {
   border-radius: 0 50% 50% 50%; 
   width: var(--header-height);
@@ -33,6 +35,11 @@
   /* outline: 0.5rem solid var(--footer-color); */
   opacity: 1;
   animation: slide-in-left 300ms ease forwards;
+}
+
+.opponentArea>img {
+  border-radius: 50% 0 50% 50%;
+  animation-name: slide-in-right;
 }
 
 .playerArea > .userLabel {
@@ -50,15 +57,15 @@
 }
 
 .timeCounter, .scoreArea {
+  position: relative;
   width: min-content;
   height: min-content;
   justify-content: center;
   align-self:  start;
   font-size: 0.8rem;
   font-weight: bold;
-  /* background-color: var(--footer-color); */
   gap: 0;
-  border-radius: calc(var(--header-height) / 8);
+  border-radius: calc(var(--header-height) / 16);
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   transform: translateY(calc(var(--header-height) * -1.2));
@@ -67,30 +74,27 @@
   z-index: 1;
 }
 
+.timeCounter {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background: black;
+  padding: 0.325rem 0.5rem;
+}
+
 .scoreArea {
   animation-delay: 0ms;
+  margin: 0 0.5rem;
 }
 
 .gameStatusDisplay button {
   display: flex;
   grid-column-start: 5;
   width: min-content;
-  margin-right: 0.5rem;
-  /* width: 5rem; */
-  
+  margin-right: 0.5rem;  
 }
 
 .scoreArea > .labeledCounter {
   gap: 0;
-}
-
-.opponentArea {
-  justify-self: end;
-}
-
-.opponentArea > img {
-  border-radius: 50% 0 50% 50%;
-  animation-name: slide-in-right;
 }
 
 @keyframes drop-in {

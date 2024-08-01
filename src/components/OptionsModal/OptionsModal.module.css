@@ -3,16 +3,13 @@
   translate: -50% 0;
   left: 50%;
   top: 0;
-  /* display: flex;
-  flex-direction: column;
-  align-items: stretch; */
   display: grid;
-  grid-template-rows: auto 01fr auto;
+  grid-template-rows: auto 1fr clamp(3rem, calc(var(--footer-height) / 1.5), 4rem);
   width: 100vw;
-  height: calc(var(--actual-height) - var(--bottom-margin));
-  padding-bottom: 0.5rem;
-  background-color: rgb(38, 38, 54);
+  height: var(--actual-height);
+  background-color: rgb(71, 71, 94);
   transition: opacity 200ms ease, transform 200ms ease;
+  z-index: 98;
 }
 
 .OptionsModal.showing {
@@ -31,7 +28,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  height: 100vw;
+  height: calc(var(--main-width));
   background-color: var(--game-background-color);
   font-size: calc(var(--game-board-size) / 12) !important;
   z-index: 0;
@@ -40,7 +37,8 @@
 
 .controlArea {
   display: flex;
-  height: 100%;
+  overflow-y: auto;
+  z-index: 1;
 }
 
 .optionArea {
@@ -154,8 +152,8 @@
 
 .OptionsModal>.saveArea {
   position: relative;
-  background-color: inherit;
-  height: clamp(2rem, calc(var(--footer-height) * 0.5), 3rem);
+  height: 100%;
+  padding-bottom: 0.5rem;
 }
 
 .OptionsModal>.saveArea>button {
