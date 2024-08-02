@@ -22,7 +22,6 @@ export interface UserData {
   photoURL: string | null,
   phase: string | null;
   uid: string,
-  currentGame?: CurrentGameData;
   preferences?: OptionsData | null;
   heartbeat?: number;
 }

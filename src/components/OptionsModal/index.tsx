@@ -73,7 +73,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
       <div className={styles.puzzlePreview}>
         {!hidden && <GameBoard
           noAnimation={true}
-          currentGame={{
+          fillerData={{
             allWords: new Set(),
             dimensions: boardDimensions,
             letterMatrix: sampleLetterMatrices[sizeSelected - 4],
@@ -83,11 +83,12 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
             playerProgress: {
               'fakeId': {
                 score: 0,
-                foundWords: [],
+                foundWords: {},
                 uid: 'fakeId'
               }
             },
           }}
+          opponentData={null}
           onSubmitValidWord={() => { }}
         />}
         <div className={styles.viewSelect}>

@@ -8,15 +8,19 @@ import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
 
 interface GameBoardProps {
-  noAnimation?: boolean;
   opponentData: UserData | null;
+  fillerData?: CurrentGameData;
+  noAnimation?: boolean;
   onSubmitValidWord: (word: string) => void;
 }
 
-function GameBoard({ noAnimation, opponentData, onSubmitValidWord }: GameBoardProps) {
+function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }: GameBoardProps) {
   const { user } = useUser();
   const options = user?.preferences;
-  const { currentMatch } = useFirebase();
+  let { currentMatch } = useFirebase();
+  if (fillerData) {
+    currentMatch = fillerData;
+  }
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);

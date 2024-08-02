@@ -8,6 +8,8 @@ interface FirebaseContextProps {
   playerList: UserData[] | null;
   challenges: Record<string, ChallengeData> | null;
   currentMatch: CurrentGameData | null;
+  destroyGame: (gameId: string) => void;
+  endGame: (gameId: string) => void;
   joinNewGame: (newGameId: string | null) => void;
   markChallengeAccepted: (challegeId: string) => void;
   setCurrentMatch: Dispatch<SetStateAction<CurrentGameData | null>>;
@@ -98,7 +100,9 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const startNewGame = async (newGameData: CurrentGameData, newGameId: string | null = null) => {
-    if (newGameId) {
+    if (newGameId && newGameData) {
+      newGameData.startTime = Date.now();
+      newGameData.endTime = Date.now() + ((newGameData.timeLimit || 180) * 1000);
       await set(ref(database, `games/${newGameId}`), newGameData);
       setGameId(newGameId);
     }
@@ -120,6 +124,13 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   };
+  
+  const destroyGame = async (gameId: string) => {
+    if (currentMatch && currentMatch.id) {
+      await remove(ref(database, `games/${gameId}`));
+    }
+    setCurrentMatch(null);
+  }
 
   const updatePlayerFoundWords = async (playerUid: string, newWord: string) => {
     if (!currentMatch) {
@@ -172,11 +183,21 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const endGame = async (gameId: string) => {
+    if (currentMatch && currentMatch.id === gameId) {
+      const updates: Record<string, any> = {};
+      updates[`games/${gameId}/gameOver`] = true;
+      await update(ref(database), updates);
+    }
+  };
+
   return (
     <FirebaseContext.Provider value={{
       challenges,
       currentMatch,
       playerList,
+      destroyGame,
+      endGame,
       joinNewGame,
       markChallengeAccepted,
       setCurrentMatch,

@@ -44,6 +44,8 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       ...newGameOptions,
       ...fetchedPuzzle,
       allWords: Array.from(fetchedPuzzle.allWords),
+      startTime: Date.now(),
+      endTime: Date.now() + newGameOptions.timeLimit * 1000
     }
     return newGameData;
   };
@@ -65,7 +67,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       [user.uid]: {
         uid: user.uid,
         score: 0,
-        foundWords: [],
+        foundWords: {},
       },
     };
     await startNewGame(newGameData);
@@ -87,7 +89,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         [user.uid]: {
           uid: user.uid,
           score: 0,
-          foundWords: [],
+          foundWords: {},
         },
       }
     }

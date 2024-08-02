@@ -123,24 +123,24 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         instigator: {
           uid: instigatorId,
           score: 0,
-          foundWords: [],
+          foundWords: {},
         },
         playerProgress: {
           [instigatorId]: {
             uid: instigatorId,
             score: 0,
-            foundWords: [],
+            foundWords: {},
           },
           [respondentId]: {
             uid: respondentId,
             score: 0,
-            foundWords: [],
+            foundWords: {},
           },
         },
         respondent: {
           uid: respondentId,
           score: 0,
-          foundWords: [],
+          foundWords: {},
         },
         startTime: 0,
       }

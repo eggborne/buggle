@@ -40,13 +40,13 @@ const StartMatchModal = () => {
     revokeOutgoingChallenge(acceptedChallenge.id);
   }
 
-  const handleConfirmAcceptance = () => {
+  const handleConfirmAcceptance = async () => {
     if (acceptedChallenge?.id) {
       const newGameId = acceptedChallenge?.id;
       console.log('confirming acceptance', acceptedChallenge)
       newGameId && joinNewGame(newGameId);
-      revokeOutgoingChallenge(acceptedChallenge?.id);
-      setAcceptedChallenge(null);
+      await revokeOutgoingChallenge(acceptedChallenge?.id);
+      await setAcceptedChallenge(null);
       changePhase('game');
     } else {
       console.error('StartMatchModal found no acceptedChallange.id', acceptedChallenge)

@@ -3,6 +3,7 @@ import styles from './GameStatusDisplay.module.css';
 import NumeralDisplay from '../NumeralDisplay';
 import { useUser } from '../../context/UserContext';
 import { useFirebase } from '../../context/FirebaseContext';
+import GameTimer from '../GameBoard/GameTimer';
 
 
 interface GameStatusDisplayProps {
@@ -29,18 +30,18 @@ function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: Ga
     <div className={styles.gameStatusDisplay}>
       <div className={styles.playerArea}>
         <img className={'profile-pic'} src={user.photoURL || ''} />
-        <div className={styles.userLabel} style={{ fontSize: `${1 - ((user.displayName?.length || 0) / 100)}rem` }}>{user.displayName || 'Guest'}</div>
+        <div className={styles.userLabel} style={{ fontSize: `${1 - ((user.displayName?.length || 0) / 20)}rem` }}>{user.displayName || 'Guest'}</div>
       </div>
 
       {/* <div className={styles.gameStatsArea}>
-        <div className={styles.labeledCounter}>
+        {currentMatch.playerProgress[user.uid].foundWords && <div className={styles.labeledCounter}>
           <div>Words found</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <NumeralDisplay length={3} digits={player.wordsFound.size} />
+          <div className={styles.totalWordTally}>
+            <NumeralDisplay length={3} digits={Object.keys(currentMatch.playerProgress[user.uid].foundWords).length} height={'1rem'}/>
             <span>of</span>
-            <NumeralDisplay length={3} digits={currentGame.allWords.size} />
+            <NumeralDisplay length={3} digits={new Set(currentMatch.allWords).size} height={'1rem'}/>
           </div>
-        </div>
+        </div>}
       </div> */}
 
       <div className={styles.scoreArea}>
@@ -51,8 +52,8 @@ function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: Ga
       </div>
 
       <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
-        {/* <div>Time</div> */}
-        <NumeralDisplay digits={timeLimit || 0} length={3} color={'green'} height={'clamp(1rem, calc(var(--header-height) * 0.5), 3rem)'} />
+        {/* <NumeralDisplay digits={timeLimit || 0} length={3} color={'green'} height={'clamp(1rem, calc(var(--header-height) * 0.5), 2rem)'} /> */}
+        <GameTimer gameId={currentMatch.id || ''} started={true} timeLimit={currentMatch.timeLimit || 200} />
       </div>
 
 

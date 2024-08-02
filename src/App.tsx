@@ -65,7 +65,7 @@ function App() {
 
   } = useUser();
   const phase = user?.phase;
-  const { currentMatch, revokeAllOutgoingChallenges, setCurrentMatch, updatePlayerFoundWords, updatePlayerScore } = useFirebase();
+  const { currentMatch, destroyGame, revokeAllOutgoingChallenges, updatePlayerFoundWords, updatePlayerScore } = useFirebase();
   const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
@@ -127,9 +127,10 @@ function App() {
     setConfirmShowing(confirmData);
   };
 
-  const handleConfirmGameExit = () => {
+  const handleConfirmGameExit = async () => {
+    await destroyGame(currentMatch?.id || '');
     changePhase('title');
-    setCurrentMatch(null);
+    
   }
 
   const handleConfirmSignOut = async () => {

@@ -61,7 +61,7 @@ const defaultValues: BoardRequestData = {
 function CreateScreen({ hidden }: CreateScreenProps) {
   const { user, changePhase } = useUser();
   const { startNewGame } = useFirebase();
-  
+
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
     customLettersOption: false,
     totalWordsOption: false,
@@ -155,9 +155,10 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         [user.uid]: {
           uid: user.uid,
           score: 0,
-          foundWords: [],
+          foundWords: {},
         },
       },
+      timeLimit: 180,
       customizations: generatedBoardData.customizations,
       filters: generatedBoardData.filters,
       specialWords: generatedBoardData.specialWords,
