@@ -108,3 +108,7 @@
 .pathOverlay.duplicate .pathSegment.outerLine {
   stroke: #a1bd04;
 }
+
+.pathOverlay.opponentFound .pathSegment.outerLine {
+  stroke: var(--opponent-found-color);
+}

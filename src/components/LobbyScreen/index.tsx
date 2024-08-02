@@ -2,25 +2,23 @@ import styles from './LobbyScreen.module.css'
 import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect } from 'react';
 import { database, fetchRandomPuzzle } from '../../scripts/firebase';
-import { ref, onValue, push, off, remove, update } from "firebase/database";
+import { ref, push, update } from "firebase/database";
 import Modal from '../../components/Modal';
 import PuzzleIcon from '../../components/PuzzleIcon';
-import { ChallengeData, ChatMessageData, CurrentGameData, LobbyData, UserData } from '../../types/types';
+import { ChallengeData, CurrentGameData, UserData } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';
+import ChallengeListItem from '../ChallengeListItem';
+import ChatWindow from '../ChatWindow';
 
 interface LobbyScreenProps {
   hidden: boolean;
 }
 
 function LobbyScreen({ hidden }: LobbyScreenProps) {
-  const { user, changePhase } = useUser();
-  const { challenges, playerList, startNewGame, setGameId } = useFirebase();
-  const [chatMessages, setChatMessages] = useState<ChatMessageData[]>([]);
+  const { user, sentChallenges, changePhase, setSentChallenges } = useUser();
+  const { challenges, playerList, markChallengeAccepted, revokeOutgoingChallenge, startNewGame } = useFirebase();
   const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<UserData | null>(null);
-  const [sentChallenges, setSentChallenges] = useState<ChallengeData[]>([]);
-  // const [receivedChallenges, setReceivedChallenges] = useState<ChallengeData[]>([]);
-  const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const difficultyInputRef = useRef<HTMLSelectElement>(null);
@@ -28,59 +26,27 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const lobbyScreenRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
-    const lobbyRef = ref(database, 'lobby/messages/');
-    const messageListener = onValue(lobbyRef, (snapshot) => {
-      const data: LobbyData = snapshot.val();
-      const messagesArray = Object.values(data).slice(-10).reverse();
-      setChatMessages(messagesArray);
-    });
-    console.log(`----------------> STARTED LobbyScreen /messages listener`);
-
     requestAnimationFrame(() => {
       if (lobbyScreenRef.current) {
         lobbyScreenRef.current.classList.add(styles.showing);
       }
     });
-
-    return () => {
-      off(lobbyRef, 'value', messageListener);
-      console.log(`<---------------- STOPPED LobbyScreen /messages listener`)
-    };
   }, []);
 
   useEffect(() => {
     let newSentChallenges = [...sentChallenges];
     if (challenges && sentChallenges.length > 0) {
-      console.log('chal', challenges)
-      console.log('sentChal', sentChallenges)
-      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenges[challenge.id || '']);
-      console.log('newSentChal', newSentChallenges)
+      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenge.id ? challenges[challenge.id] : null);
     }
     setSentChallenges(newSentChallenges);
 
-  }, [challenges])
-
-  const handleSubmitChatMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    const form = e.target as HTMLFormElement;
-    const messageInput = form.querySelector('input[name="chatMessage"]') as HTMLInputElement;
-    const trimmedMessage = messageInput.value.trim();
-    if (!trimmedMessage) return;
-    const newMessage: ChatMessageData = {
-      author: user,
-      message: messageInput.value,
-      date: Date.now(),
-    };
-    const lobbyRef = ref(database, 'lobby/messages/');
-    await push(lobbyRef, newMessage);
-    messageInput.value = '';
-  };
+  }, [challenges]);
 
   const sendChallenge = async () => {
     if (user && pendingOutgoingChallenge && difficultyInputRef.current && timeLimitInputRef.current) {
       console.warn(sentChallenges)
       if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondent === pendingOutgoingChallenge.uid)) {
+        // should never be able to occur as there is no button
         console.warn('already challenging');
         triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.displayName}!`);
         return;
@@ -118,7 +84,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const handleCancelChallengingPlayer = async (opponentUid: string) => {
     if (!challenges || !playerList) return;
     const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === user?.uid && challenges[key].respondent === opponentUid);
-    await remove(ref(database, `challenges/${idToRemove}`));
+    idToRemove && revokeOutgoingChallenge(idToRemove);
     const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
     triggerShowMessage(`Challenge to ${opponentName} cancelled!`);
 
@@ -130,7 +96,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const handleDeclineChallenge = async (opponentUid: string) => {
     if (!challenges || !playerList || !user) return;
     const idToRemove = Object.keys(challenges).find(key => challenges[key].respondent === user.uid && challenges[key].instigator === opponentUid);
-    await remove(ref(database, `challenges/${idToRemove}`));
+    idToRemove && revokeOutgoingChallenge(idToRemove);
     const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} declined!`);
 
@@ -142,8 +108,8 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const handleAcceptChallenge = async (challenge: ChallengeData) => {
     if (!challenges || !playerList || !user) return;
     const { dimensions, difficulty, id: challengeId, instigator: instigatorId, respondent: respondentId, timeLimit } = challenge;
-    console.log('idToRemove', challengeId);
-    await remove(ref(database, `challenges/${challengeId}`));
+    // console.log('idToRemove', challengeId);
+    // await remove(ref(database, `challenges/${challengeId}`));
     const opponentName = playerList.filter(p => p.uid === instigatorId)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
     const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
@@ -179,9 +145,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         startTime: 0,
       }
       await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
-      setSentChallenges(prevSentChallenges => {
-        return prevSentChallenges.filter(challenge => challenge.id !== challengeId);
-      });
+      await markChallengeAccepted(challengeId)
       changePhase('game');
     }
   };
@@ -197,40 +161,10 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     return isChallengingUser && instigatorExistsInPlayerList;
   }) : null;
 
-
-
   const lobbyScreenClass = `${styles.LobbyScreen}${hidden ? ' hidden' : ''}`;
   return (
     <main ref={lobbyScreenRef} className={lobbyScreenClass}>
-      <div className={styles.chatWindow}>
-        <div ref={chatMessagesRef} className={styles.chatMessages}>
-          {chatMessages.map(({ author, message, date }) => {
-            const selfIsAuthor = author.uid === user?.uid;
-            let messageClass = styles.chatMessage;
-            if (selfIsAuthor) messageClass += ' ' + styles.self;
-            const authorData = author;
-            return (
-              <div
-                key={date}
-                className={messageClass}
-                style={{
-                  backgroundColor: authorData ? authorData.preferences?.style?.gameBackgroundColor : 'transparent'
-                }}
-              >
-                <img className='profile-pic' src={authorData.photoURL || undefined} />
-                <div className={styles.chatBody}><span className={styles.chatAuthorLabel}>{authorData.displayName}</span>: {message}</div>
-                {/* <div className={styles.chatTimestamp}>{new Date(date).toLocaleString()}</div> */}
-              </div>)
-          })}
-        </div>
-        <form onSubmit={handleSubmitChatMessage}>
-          <div className={styles.chatInputArea}>
-            <input name='chatMessage' type='text' placeholder='Type your message...'></input>
-            <button type='submit'>Send</button>
-          </div>
-        </form>
-      </div>
-
+      <ChatWindow hidden={hidden} />
       <div className={styles.playerListArea}>
         <h2>Challenges</h2>
         <div className={styles.challengeList}>
@@ -238,25 +172,13 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
             challengeList?.map(challenge => {
               const opponentData = playerList?.find(player => player.uid === challenge.instigator);
               return (
-                <div
-                  key={challenge.instigator}
-                  className={styles.challengeListItem}
-                  style={{
-                    backgroundColor: opponentData?.preferences?.style?.gameBackgroundColor
-                  }}
-                >
-                  <span><img className='profile-pic' src={opponentData?.photoURL || undefined} /></span>
-                  <span>{opponentData?.displayName}</span>
-                  <div className={styles.difficultyLabel}>
-                    <span>{`${challenge.timeLimit / 60}:00`}</span>
-                    <span>{challenge.difficulty}</span>
-                  </div>
-                  <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
-                  <div className={`button-group row ${styles.challengeButtons}`}>
-                    <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigator)}>Decline</button>
-                    <button className={`start ${styles.acceptButton}`} onClick={() => handleAcceptChallenge(challenge)}>Accept</button>
-                  </div>
-                </div>
+                <ChallengeListItem
+                  key={challenge.id}
+                  challenge={challenge}
+                  opponentData={opponentData || null}
+                  handleDeclineChallenge={handleDeclineChallenge}
+                  handleAcceptChallenge={handleAcceptChallenge}
+                />
               );
             }) : <div style={{ textAlign: 'center' }}>{`No challenges :(`}</div>}
         </div>

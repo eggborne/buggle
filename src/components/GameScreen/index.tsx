@@ -1,4 +1,4 @@
-import { PlayerData, ConfirmData, UserData } from '../../types/types';
+import { ConfirmData, UserData } from '../../types/types';
 import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
 import GameStatusDisplay from '../GameStatusDisplay';
@@ -20,9 +20,8 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
   // const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const { isLoggedIn, user } = useUser();
   const { currentMatch } = useFirebase();
-  if (!currentMatch || !user) return;
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
-  const isMultiplayer = !!(isLoggedIn && currentMatch.id && currentMatch.respondent && currentMatch.instigator);
+  const isMultiplayer = !!(isLoggedIn && currentMatch && currentMatch.id && currentMatch.respondent && currentMatch.instigator);
 
   useEffect(() => {
     if (currentMatch && isMultiplayer && !opponentData) {
@@ -33,18 +32,18 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
           setOpponentData(opponentData);
         }
       }
-      const initialOpponentUid = (isMultiplayer && currentMatch.instigator?.uid === user.uid) ? currentMatch.respondent?.uid : currentMatch.instigator?.uid;
+      const initialOpponentUid = (isMultiplayer && currentMatch.instigator?.uid === user?.uid) ? currentMatch.respondent?.uid : currentMatch.instigator?.uid;
       if (!initialOpponentUid) return;
       getOpponentData(initialOpponentUid);
     }
   }, [currentMatch]);
 
-  let requiredWordList: string[] = [];
-  if (currentMatch.customizations?.requiredWords?.wordList) {
-    requiredWordList = currentMatch.customizations.requiredWords.wordList
-      .map(word => word.toLowerCase())
-      .sort((a, b) => b.length - a.length);
-  }
+  // let requiredWordList: string[] = [];
+  // if (currentMatch?.customizations?.requiredWords?.wordList) {
+  //   requiredWordList = currentMatch.customizations.requiredWords.wordList
+  //     .map(word => word.toLowerCase())
+  //     .sort((a, b) => b.length - a.length);
+  // }
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
 
@@ -53,6 +52,7 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
       <GameStatusDisplay isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
       <GameBoard
         onSubmitValidWord={handleSubmitValidWord}
+        opponentData={opponentData}
       />
       <div className={`lower-button-area ${styles.gameButtons}`}>
         <button className={`knob`}></button>

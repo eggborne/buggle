@@ -110,7 +110,7 @@ export interface GeneratedBoardData {
 export interface PlayerMatchData {
   uid: string;
   score: number;
-  foundWords: string[];
+  foundWords: Record<string, boolean>;
 }
 
 export interface CurrentGameData {
@@ -158,6 +158,7 @@ export interface LobbyData {
 }
 
 export interface ChallengeData {
+  accepted: boolean;
   difficulty: string;
   instigator: string;
   respondent: string;
@@ -166,7 +167,6 @@ export interface ChallengeData {
     height: number;
   };
   timeLimit: number;
-  accepted: boolean;
   id?: string | null;
 }
 

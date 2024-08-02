@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { triggerShowMessage } from './hooks/useMessageBanner';
 import { useUser } from './context/UserContext';
 import './App.css'
-import { BoardRequestData, ConfirmData, CurrentGameData, GameOptions, GeneratedBoardData, PlayerData, PointValues, StoredPuzzleData, UserData, } from './types/types';
+import { ConfirmData, PointValues, UserData, } from './types/types';
 import LoadingDisplay from './components/LoadingDisplay';
 import Footer from './components/Footer';
 import TitleScreen from './components/TitleScreen';
@@ -11,15 +11,16 @@ import SelectScreen from './components/SelectScreen';
 import GameScreen from './components/GameScreen';
 import OptionsModal from './components/OptionsModal';
 import CreateScreen from './components/CreateScreen';
-import { set, get, ref, child } from 'firebase/database';
-import { database, createSolvedPuzzle, fetchRandomPuzzle } from './scripts/firebase';
-import { stringTo2DArray, randomInt, decodeMatrix, encodeMatrix } from "./scripts/util";
+import { set, ref } from 'firebase/database';
+import { database } from './scripts/firebase';
+import { encodeMatrix } from "./scripts/util";
 import MessageBanner from './components/MessageBanner/';
 import SideMenu from './components/SideMenu';
 import { useFirebase } from './context/FirebaseContext';
 import ConfirmModal from './components/ConfirmModal';
 
 import PlayerAnnouncementEffect from './effects/PlayerAnnouncementEffect';
+import StartMatchModal from './components/StartMatchModal';
 
 
 const defaultUserPreferences = {
@@ -64,7 +65,7 @@ function App() {
 
   } = useUser();
   const phase = user?.phase;
-  const { currentMatch, revokeOutgoingChallenges, setCurrentMatch, updatePlayerFoundWords, updatePlayerScore } = useFirebase();
+  const { currentMatch, revokeAllOutgoingChallenges, setCurrentMatch, updatePlayerFoundWords, updatePlayerScore } = useFirebase();
   const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
@@ -73,7 +74,7 @@ function App() {
   useEffect(() => {
     if (!isLoading && !userReady) {
       console.log('setting userReady');
-      isLoggedIn && revokeOutgoingChallenges(user?.uid || '');
+      isLoggedIn && revokeAllOutgoingChallenges(user?.uid || '');
       requestAnimationFrame(() => {
         setUserReady(true);
       })
@@ -114,73 +115,6 @@ function App() {
     console.warn('puzzle uploaded!')
   };
 
-  const createPuzzle = async (boardOptions: BoardRequestData): Promise<CurrentGameData | undefined> => {
-    if (!user) return;
-    const nextPuzzle = await createSolvedPuzzle(boardOptions);
-    if (nextPuzzle) {
-      const nextGameData: CurrentGameData = {
-        allWords: new Set(nextPuzzle.wordList),
-        letterMatrix: nextPuzzle.matrix,
-        dimensions: {
-          width: boardOptions.dimensions.width,
-          height: boardOptions.dimensions.height,
-        },
-        playerProgress: {},
-        metadata: nextPuzzle.metadata,
-        customizations: nextPuzzle.customizations,
-        filters: nextPuzzle.filters,
-      }
-      nextGameData.playerProgress[user.uid] = {
-        uid: user.uid,
-        score: 0,
-        foundWords: [],
-      }
-      console.log('made CurrentGameData nextGameData', nextGameData)
-      return nextGameData;
-    } else {
-      return undefined;
-    }
-  }
-
-  // const startStoredPuzzle = (puzzle: StoredPuzzleData) => {
-  //   console.log('startStoredPuzzle', puzzle)
-  //   const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
-  //   const nextGameData = {
-  //     allWords: new Set(puzzle.allWords),
-  //     letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
-  //     dimensions: {
-  //       width: puzzle.dimensions.width,
-  //       height: puzzle.dimensions.height,
-  //     },
-  //     metadata: puzzle.metadata
-  //   }
-
-  //   setCurrentGame(nextGameData)
-  //   changePhase('game')
-  // }
-
-  // const startSinglePlayerGame = async (gameOptions: GameOptions) => {
-  //   const randomPuzzle = await fetchRandomPuzzle(gameOptions);
-  //   setCurrentGame({
-  //     ...randomPuzzle,
-  //     timeLimit: gameOptions.timeLimit,
-  //   });
-  //   setCurrentGame({
-  //     ...randomPuzzle,
-  //     timeLimit: gameOptions.timeLimit,
-  //   });
-  //   changePhase('game');
-  // }
-
-  // const startCreatedPuzzlePreview = async (boardOptions: BoardRequestData) => {
-  //   const newPuzzlePreview = await createPuzzle(boardOptions);
-  //   if (newPuzzlePreview) {
-  //     setCurrentGame(newPuzzlePreview)
-  //     changePhase('game');
-  //   }
-  //   return;
-  // }
-
   const showConfirmModal = (confirmData: ConfirmData | null, hide?: boolean) => {
     if (!confirmData) return;
     if (hide) {
@@ -201,7 +135,7 @@ function App() {
   const handleConfirmSignOut = async () => {
     setSideMenuShowing(false);
     handleSignOut();
-    revokeOutgoingChallenges(user?.uid || '');
+    revokeAllOutgoingChallenges(user?.uid || '');
   }
 
   return (
@@ -256,6 +190,7 @@ function App() {
           setOptionsShowing={() => { setOptionsShowing(true); setSideMenuShowing(false) }}
           showConfirmModal={showConfirmModal}
         />
+        {isLoggedIn && <StartMatchModal />}
       </>
   )
 }

@@ -1,23 +1,25 @@
 import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
 import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData } from '../types/types';
+import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData, ChallengeData } from '../types/types';
 import { ref, remove, set, update, get, child } from 'firebase/database';
 import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 
 const HEARTBEAT_INTERVAL = 5000;
-const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
+// const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
 
 interface UserContextProps {
   user: UserData | null;
   isLoggedIn: boolean;
   isLoading: boolean;
+  sentChallenges: ChallengeData[];
   addUserToPlayerList: (userData: UserData) => void;
   changePhase: (newPhase: string) => void;
   handleSignOut: () => void;
   setUser: Dispatch<SetStateAction<UserData | null>>;
   setIsLoggedIn: Dispatch<SetStateAction<boolean>>;
+  setSentChallenges: Dispatch<SetStateAction<ChallengeData[]>>;
   changeOption: (optionKey: keyof OptionsData['style'] | keyof OptionsData['gameplay'], newValue: string | number) => void;
   saveOptions: (newOptions: OptionsData) => void;
 }
@@ -36,6 +38,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [sentChallenges, setSentChallenges] = useState<ChallengeData[]>([]);
   const [heartbeatInterval, setHeartbeatInterval] = useState<NodeJS.Timeout | undefined>(undefined);
   const lastHeartbeatRef = useRef<number>(0);
 
@@ -62,7 +65,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             const now = Date.now();
             const sinceLast = now - lastHeartbeatRef.current;
             if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 4))) {
-              console.warn('sinceLast is', sinceLast, '- skipping this heartbeat');
+              console.warn('sinceLast is', sinceLast, '; skipping this heartbeat');
               // return;
             }
             await sendHeartbeat();
@@ -113,27 +116,27 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const pruneInactivePlayers = async () => {
-    const snapshot = await get(child(ref(database), 'players'));
-    const players = snapshot.val();
+  // const pruneInactivePlayers = async () => {
+  //   const snapshot = await get(child(ref(database), 'players'));
+  //   const players = snapshot.val();
 
-    if (players) {
-      Object.keys(players).forEach(async (playerUid) => {
-        console.log('playerUid', playerUid)
-        console.log('user.uid', user?.uid)
-        const player = players[playerUid];
-        const sinceLast = Date.now() - player.heartbeat;
+  //   if (players) {
+  //     Object.keys(players).forEach(async (playerUid) => {
+  //       console.log('playerUid', playerUid)
+  //       console.log('user.uid', user?.uid)
+  //       const player = players[playerUid];
+  //       const sinceLast = Date.now() - player.heartbeat;
 
-        if (sinceLast > PRUNE_INTERVAL) {
-          console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
-          await remove(ref(database, `players/${playerUid}`));
-          console.log(`Removed inactive player: ${playerUid}`);
-        } else {
-          console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
-        }
-      });
-    }
-  };
+  //       if (sinceLast > PRUNE_INTERVAL) {
+  //         console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
+  //         await remove(ref(database, `players/${playerUid}`));
+  //         console.log(`Removed inactive player: ${playerUid}`);
+  //       } else {
+  //         console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
+  //       }
+  //     });
+  //   }
+  // };
 
   const getUserFromDatabase = async (uid: string) => {
     return get(child(ref(database), `users/${uid}`));
@@ -230,11 +233,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       user,
       isLoggedIn,
       isLoading,
+      sentChallenges,
       addUserToPlayerList,
       changePhase,
       handleSignOut,
       setUser,
       setIsLoggedIn,
+      setSentChallenges,
       changeOption,
       saveOptions,
     }}>

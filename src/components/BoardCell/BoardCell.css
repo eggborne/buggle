@@ -53,3 +53,7 @@
 .board-cell.touched.duplicate {
   border-color: var(--duplicate-color);
 }
+
+.board-cell.touched.opponentFound {
+  border-color: var(--opponent-found-color);
+}

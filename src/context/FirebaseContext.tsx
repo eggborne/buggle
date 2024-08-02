@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction } from 'react';
-import { ref, onValue, remove, off, set, update } from 'firebase/database';
+import { ref, onValue, remove, off, get, set, update, DataSnapshot } from 'firebase/database';
 import { ChallengeData, CurrentGameData, UserData } from '../types/types';
 import { database } from '../scripts/firebase';
 import { useUser } from './UserContext';
@@ -8,9 +8,12 @@ interface FirebaseContextProps {
   playerList: UserData[] | null;
   challenges: Record<string, ChallengeData> | null;
   currentMatch: CurrentGameData | null;
+  joinNewGame: (newGameId: string | null) => void;
+  markChallengeAccepted: (challegeId: string) => void;
   setCurrentMatch: Dispatch<SetStateAction<CurrentGameData | null>>;
   startNewGame: (newGameData: CurrentGameData, newGameId?: string) => void;
-  revokeOutgoingChallenges: (uid: string) => void;
+  revokeAllOutgoingChallenges: (uid: string) => void;
+  revokeOutgoingChallenge: (challengeId: string) => void;
   setGameId: (id: string | null) => void;
   setPlayerList: Dispatch<SetStateAction<UserData[] | null>>;
   updatePlayerFoundWords: (playerUid: string, newWord: string) => void;
@@ -28,7 +31,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const playerListRef = ref(database, '/players');
-    const handlePlayerList = (snapshot: any) => {
+    const handlePlayerList = (snapshot: DataSnapshot) => {
       const data: { [key: string]: UserData } = snapshot.val();
       setPlayerList(Object.values(data || {}));
     };
@@ -44,7 +47,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (isLoggedIn) {
       const challengesRef = ref(database, '/challenges');
-      const handleChallenges = (snapshot: any) => {
+      const handleChallenges = (snapshot: DataSnapshot) => {
         const data: { [key: string]: ChallengeData } = snapshot.val();
         setChallenges(data || {});
       };
@@ -63,7 +66,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (gameId) {
       const gameRef = ref(database, `/games/${gameId}`);
-      const handleGame = (snapshot: any) => {
+      const handleGame = (snapshot: DataSnapshot) => {
         const data: CurrentGameData = snapshot.val();
         setCurrentMatch(data);
       }
@@ -78,13 +81,19 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [gameId]);
 
-  const revokeOutgoingChallenges = async (uid: string) => {
+  const revokeAllOutgoingChallenges = async (uid: string) => {
     if (challenges) {
       const challengesToRemove = Object.values(challenges).filter(challenge => challenge.instigator === uid);
       challengesToRemove.forEach(async (challenge) => {
         const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === uid && challenges[key].respondent === challenge.respondent);
         await remove(ref(database, `challenges/${idToRemove}`));
       });
+    }
+  };
+
+  const revokeOutgoingChallenge = async (challengeId: string) => {
+    if (challenges) {
+      await remove(ref(database, `challenges/${challengeId}`));      
     }
   };
 
@@ -95,6 +104,21 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
     setCurrentMatch(newGameData);
     console.log('set current match to', newGameData);
+  };
+
+  const joinNewGame = async (newGameId: string | null = null) => {
+    if (newGameId) {
+      const snapshot = await get(ref(database, `games/${newGameId}`));
+      if (snapshot.exists()) {
+        const newGameData = snapshot.val();
+        console.log('newGameData', newGameData);
+        setCurrentMatch(newGameData);
+        setGameId(newGameId);
+        console.log('set current match to', newGameData);
+      } else {
+        console.error('NO GAME WITH THAT ID')
+      }
+    }
   };
 
   const updatePlayerFoundWords = async (playerUid: string, newWord: string) => {
@@ -116,7 +140,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     } else {
       console.log('not updating DB');
       const nextCurrentMatch = { ...currentMatch };
-      nextCurrentMatch.playerProgress[playerUid].foundWords.push(newWord);
+      nextCurrentMatch.playerProgress[playerUid].foundWords[newWord] = true;
       console.log('setting next match', nextCurrentMatch);
       setCurrentMatch(nextCurrentMatch);
     }
@@ -139,14 +163,26 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
+  const markChallengeAccepted = async (challegeId: string) => {
+    if (challenges) {
+      const updates: Record<string, boolean> = {};
+      updates[`challenges/${challegeId}/accepted`] = true;
+      await update(ref(database), updates);
+      return;
+    }
+  }
+
   return (
     <FirebaseContext.Provider value={{
       challenges,
       currentMatch,
       playerList,
+      joinNewGame,
+      markChallengeAccepted,
       setCurrentMatch,
       startNewGame,
-      revokeOutgoingChallenges,
+      revokeAllOutgoingChallenges,
+      revokeOutgoingChallenge,
       setPlayerList,
       setGameId,
       updatePlayerFoundWords,

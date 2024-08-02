@@ -1,5 +1,5 @@
 import styles from './GameBoard.module.css'
-import { CellObj, CurrentGameData } from '../../types/types';
+import { CellObj, CurrentGameData, UserData } from '../../types/types';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
@@ -8,19 +8,15 @@ import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
 
 interface GameBoardProps {
-  currentGame?: CurrentGameData;
   noAnimation?: boolean;
+  opponentData: UserData | null;
   onSubmitValidWord: (word: string) => void;
 }
 
-function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
-  // const options = useUser().user?.preferences as OptionsData;
+function GameBoard({ noAnimation, opponentData, onSubmitValidWord }: GameBoardProps) {
   const { user } = useUser();
   const options = user?.preferences;
   const { currentMatch } = useFirebase();
-  if (!user || !options || !currentMatch) return;  
-  const { dimensions } = currentMatch;
-
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
@@ -28,14 +24,13 @@ function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
     requestAnimationFrame(() => {
       if (gameBoardRef.current) {
         gameBoardRef.current.classList.add(styles.showing)
       }
     })
-  }, [])
+  }, []);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -98,7 +93,7 @@ function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
 
   const boardRect = gameBoardRef.current?.getBoundingClientRect();
   const handleCellHover = (clientX: number, clientY: number) => {
-    if (!boardRect) return;
+    if (!boardRect || !currentMatch || !options) return;
     const cellBuffer = options.gameplay.swipeBuffer / 50;
     const cellSize = boardRect.width / currentMatch.dimensions.width;
     const hitboxMargin = touchedCells.length > 0 ? cellSize * (cellBuffer / 8) : 0;
@@ -151,10 +146,26 @@ function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
       return newTouchedCells;
     });
     setCurrentWord(nextCurrentWord);
-    const alreadyFound = (currentMatch.playerProgress[user.uid].foundWords || [])[nextCurrentWord as any];
-    const wordExistsInPuzzle = new Set(currentMatch.allWords).has(nextCurrentWord);
-    setWordStatus(alreadyFound ? 'duplicate' : wordExistsInPuzzle ? 'valid' : 'invalid');
-    setWordValid(!alreadyFound && wordExistsInPuzzle);
+    const foundWords: Record<string, boolean> = currentMatch?.playerProgress[user?.uid ?? '']?.foundWords ?? {};
+    const opponentFoundWords: Record<string, boolean> = currentMatch?.playerProgress[opponentData?.uid ?? '']?.foundWords ?? {};
+    console.log('foundWords:', foundWords, 'opponentFoundWords:', opponentFoundWords)
+    const alreadyFound = foundWords[nextCurrentWord.toLowerCase()]
+    const opponentAlreadyFound = opponentFoundWords[nextCurrentWord.toLowerCase()];
+    // const alreadyFound = Array.from(foundWords).includes(nextCurrentWord);
+    // const opponentAlreadyFound = Array.from(opponentFoundWords).includes(nextCurrentWord);
+    const wordExistsInPuzzle = new Set(currentMatch?.allWords).has(nextCurrentWord);
+    let newStatus;
+    if (alreadyFound) {
+      newStatus = 'duplicate';
+    } else if (opponentAlreadyFound) {
+      newStatus = 'opponentFound';
+    } else if (wordExistsInPuzzle) {
+      newStatus = 'valid';
+    } else {
+      newStatus = 'invalid';
+    }
+    setWordStatus(newStatus);
+    setWordValid(!alreadyFound && !opponentAlreadyFound && wordExistsInPuzzle);
   };
 
   const handleCellTouchEnd = () => {
@@ -175,18 +186,18 @@ function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
         id='game-board'
         className={styles.gameBoard}
         style={{
-          gridTemplateColumns: `repeat(${dimensions.width}, 1fr)`,
-          gridTemplateRows: `repeat(${dimensions.height}, 1fr)`,
-          fontSize: `calc((var(--game-board-size) * 0.5) / ${dimensions.width})`,
-          minWidth: `calc((var(--game-board-size) * 0.5) / ${dimensions.width})`,
+          gridTemplateColumns: `repeat(${currentMatch?.dimensions.width}, 1fr)`,
+          gridTemplateRows: `repeat(${currentMatch?.dimensions.height}, 1fr)`,
+          fontSize: `calc((var(--game-board-size) * 0.5) / ${currentMatch?.dimensions.width})`,
+          minWidth: `calc((var(--game-board-size) * 0.5) / ${currentMatch?.dimensions.width})`,
           transition: noAnimation ? 'none' : 'scale 600ms ease, opacity 600ms ease',
           transitionDelay: noAnimation ? '0ms' : '300ms',
           animationPlayState: noAnimation ? 'paused' : 'running',
           zIndex: '0',
-          borderRadius: `calc(var(--cube-roundness) / ${dimensions.height})`,
+          borderRadius: `calc(var(--cube-roundness) / ${currentMatch?.dimensions.height})`,
         }}
       >
-        {currentMatch.letterMatrix.map((row, r) =>
+        {currentMatch?.letterMatrix.map((row, r) =>
           row.map((letter, l) => (
             <div
               key={`${letter}${r}${l}`}
@@ -199,7 +210,7 @@ function GameBoard({ noAnimation, onSubmitValidWord }: GameBoardProps) {
         <SmoothPathOverlay
           isSelecting={touchedCells.length > 0}
           cells={touchedCells}
-          dimensions={dimensions}
+          dimensions={currentMatch?.dimensions || { width: 5, height: 5}}
           wordStatus={wordStatus}
         />
       </div>

@@ -61,7 +61,7 @@ const defaultValues: BoardRequestData = {
 function CreateScreen({ hidden }: CreateScreenProps) {
   const { user, changePhase } = useUser();
   const { startNewGame } = useFirebase();
-  if (!user) return;
+  
   const [optionsEnabled, setOptionsEnabled] = useState<Record<string, boolean>>({
     customLettersOption: false,
     totalWordsOption: false,
@@ -142,6 +142,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         };
       }
     }
+    if (!user) return;
     setGenerating(true);
     const generatedBoardData = await createSolvedPuzzle(options);
     if (!generatedBoardData) return;

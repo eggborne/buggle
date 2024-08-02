@@ -1,0 +1,84 @@
+.ChatWindow {
+  width: 100vw;
+  height: 35dvh;
+  background-color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.chatMessages {
+  flex-grow: 1;
+  padding: 0.25rem 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.chatMessage,
+.playerListItem {
+  box-shadow: 0 0 0.5rem #00000055;
+  border: 0.1rem solid #00000033;
+}
+
+.chatMessage {
+  padding: 0.5rem 0.5rem;
+  background-color: #ffffff33;
+  border-radius: 0.5rem;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  grid-template-rows: 1fr;
+  gap: 0 0.5rem;
+  margin-right: 2rem;
+  animation: birth-from-left 200ms ease;
+}
+
+.chatMessage>img {
+  margin-right: 0.75rem;
+  grid-row-end: span 2;
+  width: 100%;
+  height: 100%;
+}
+
+.chatMessage.self {
+  animation: birth-from-right 200ms ease;
+  margin-right: unset;
+  margin-left: 2rem;
+  background-color: #ffffff15;
+}
+
+.chatAuthorLabel {
+  font-weight: bold;
+}
+
+.chatTimestamp {
+  font-size: 0.625rem;
+  opacity: 0.65;
+  grid-column-start: 2;
+  justify-self: end;
+}
+
+.chatInputArea {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem;
+}
+
+.chatInputArea>input {
+  flex-grow: 1;
+  height: 3rem;
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+}
+
+.chatInputArea>button {
+  align-self: stretch;
+  border-radius: 0.25rem;
+}

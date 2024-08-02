@@ -27,6 +27,10 @@
   color: var(--duplicate-color);
 }
 
+.opponentFound {
+  color: var(--opponent-found-color);
+}
+
 .invalid {  
   color: var(--invalid-color);
 }
