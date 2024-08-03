@@ -1,21 +1,21 @@
-import './BoardCell.css'
+import styles from './BoardCell.module.css'
 
 interface BoardCellProps {
   letter: string;
+  opponentTouching?: boolean;
   touched: boolean;
   wordStatus: string;
 }
 
-function BoardCell({ letter, touched, wordStatus }: BoardCellProps) {
+function BoardCell({ letter, opponentTouching, touched, wordStatus }: BoardCellProps) {
+  const boardCellClass = `${styles.BoardCell} ${touched && styles.touched} ${opponentTouching && styles.opponentTouching} ${wordStatus}`;
   return (
     <>
       <div
-        className={'board-cell' + (touched ? ' touched' : '') + ` ${wordStatus}`}
+        className={boardCellClass}
         style={{ fontSize: `calc(${100 - ((letter.length-1) * 10)}%)`}}
       >
-        <p>
-          {letter}
-        </p>
+        <p>{letter}</p>
       </div>
       
     </>

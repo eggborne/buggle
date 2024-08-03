@@ -1,4 +1,3 @@
-import styles from './GameBoard.module.css'
 import { useEffect, useState } from 'react';
 import { useFirebase } from '../../context/FirebaseContext';
 import NumeralDisplay from '../NumeralDisplay';
@@ -14,7 +13,6 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
   const { currentMatch, endGame } = useFirebase();
 
   useEffect(() => {
-    console.log('currentmatch at eff is', currentMatch)
     if (started) {
       if (currentMatch && currentMatch.endTime) {
         const timer = setInterval(() => {

@@ -3,7 +3,7 @@ import GameBoard from '../GameBoard';
 import styles from './GameScreen.module.css';
 import GameStatusDisplay from '../GameStatusDisplay';
 import { useEffect, useState } from 'react';
-// import Modal from '../Modal';
+import Modal from '../Modal';
 import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
 import { get, child, ref } from 'firebase/database';
@@ -11,13 +11,12 @@ import { database } from '../../scripts/firebase';
 
 interface GameScreenProps {
   hidden: boolean;
-  handleSubmitValidWord: (word: string) => void;
   showConfirmModal: (confirmData: ConfirmData) => void;
   uploadPuzzle: () => void;
 }
 
-function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuzzle }: GameScreenProps) {
-  // const [wordListShowing, setWordListShowing] = useState<boolean>(false);
+function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps) {
+  const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const { isLoggedIn, user } = useUser();
   const { currentMatch } = useFirebase();
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
@@ -38,12 +37,12 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
     }
   }, [currentMatch]);
 
-  // let requiredWordList: string[] = [];
-  // if (currentMatch?.customizations?.requiredWords?.wordList) {
-  //   requiredWordList = currentMatch.customizations.requiredWords.wordList
-  //     .map(word => word.toLowerCase())
-  //     .sort((a, b) => b.length - a.length);
-  // }
+  let requiredWordList: string[] = [];
+  if (currentMatch?.customizations?.requiredWords?.wordList) {
+    requiredWordList = currentMatch.customizations.requiredWords.wordList
+      .map(word => word.toLowerCase())
+      .sort((a, b) => b.length - a.length);
+  }
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
 
@@ -51,7 +50,6 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
     <main className={gameScreenClass} >
       <GameStatusDisplay isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
       <GameBoard
-        onSubmitValidWord={handleSubmitValidWord}
         opponentData={opponentData}
       />
       <div className={`lower-button-area ${styles.gameButtons}`}>
@@ -59,13 +57,13 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
         <button className={`knob`}></button>
         <button className={`knob`}></button>
       </div>
-      {/* {wordListShowing &&
+      {wordListShowing && currentMatch && user &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
           {requiredWordList.map(word =>
             <div style={{
               color: '#5f5',
               textTransform: 'uppercase',
-              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
+              textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',
             }}>
               {word}
             </div>
@@ -73,18 +71,18 @@ function GameScreen({ hidden, handleSubmitValidWord, showConfirmModal, uploadPuz
           {Array.from(currentMatch.allWords).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               textTransform: 'uppercase',
-              textDecoration: player.wordsFound.has(word) ? 'line-through' : 'none',
-              opacity: player.wordsFound.has(word) ? '0.75' : '1',
+              textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',
+              opacity: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? '0.75' : '1',
             }}
               key={word}>
               {word}
             </div>
           )}
         </Modal>
-      } */}
+      }
       {process.env.NODE_ENV === 'development' && <div className={`dev-window`}>
         {<button onClick={uploadPuzzle}>Upload</button>}
-        {/* <button onClick={() => setWordListShowing(true)}>Word List</button> */}
+        <button onClick={() => setWordListShowing(true)}>Word List</button>
       </div>}
     </main>
   )

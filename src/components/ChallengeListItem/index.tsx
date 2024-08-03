@@ -14,7 +14,7 @@ const ChallengeListItem = ({ challenge, opponentData, handleDeclineChallenge, ha
 
   return (
     <div
-      key={challenge.instigator}
+      key={challenge.id}
       className={styles.ChallengeListItem}
       style={{
         backgroundColor: opponentData?.preferences?.style?.gameBackgroundColor,

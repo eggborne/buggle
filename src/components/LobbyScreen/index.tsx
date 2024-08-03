@@ -44,7 +44,6 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   const sendChallenge = async () => {
     if (user && pendingOutgoingChallenge && difficultyInputRef.current && timeLimitInputRef.current) {
-      console.warn(sentChallenges)
       if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondent === pendingOutgoingChallenge.uid)) {
         // should never be able to occur as there is no button
         console.warn('already challenging');
@@ -65,7 +64,6 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       }
       const newChallengUid = await push(challengesRef, newChallenge).key;
       triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
-      console.log('new c', newChallengUid);
       setSentChallenges(prevSentChallenges => {
         const nextSentChallenges = [...prevSentChallenges];
         const newChallengeData = { ...newChallenge, id: newChallengUid };
@@ -108,12 +106,9 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const handleAcceptChallenge = async (challenge: ChallengeData) => {
     if (!challenges || !playerList || !user) return;
     const { dimensions, difficulty, id: challengeId, instigator: instigatorId, respondent: respondentId, timeLimit } = challenge;
-    // console.log('idToRemove', challengeId);
-    // await remove(ref(database, `challenges/${challengeId}`));
     const opponentName = playerList.filter(p => p.uid === instigatorId)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
     const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
-    console.log('testPuzzle', randomPuzzle);
     if (challengeId) {
       const newGameData: CurrentGameData = {
         ...randomPuzzle,
@@ -123,27 +118,28 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         instigator: {
           uid: instigatorId,
           score: 0,
-          foundWords: {},
+          touchedCells: [],
         },
         playerProgress: {
           [instigatorId]: {
             uid: instigatorId,
             score: 0,
-            foundWords: {},
+            touchedCells: [],
           },
           [respondentId]: {
             uid: respondentId,
             score: 0,
-            foundWords: {},
+            touchedCells: [],
           },
         },
         respondent: {
           uid: respondentId,
           score: 0,
-          foundWords: {},
+          touchedCells: [],
         },
         startTime: 0,
       }
+      console.group('---- starting game')
       await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
       await markChallengeAccepted(challengeId)
       changePhase('game');
@@ -173,7 +169,6 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
               const opponentData = playerList?.find(player => player.uid === challenge.instigator);
               return (
                 <ChallengeListItem
-                  key={challenge.id}
                   challenge={challenge}
                   opponentData={opponentData || null}
                   handleDeclineChallenge={handleDeclineChallenge}

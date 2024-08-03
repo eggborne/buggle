@@ -1,8 +1,9 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction } from 'react';
-import { ref, onValue, remove, off, get, set, update, DataSnapshot } from 'firebase/database';
-import { ChallengeData, CurrentGameData, UserData } from '../types/types';
+import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot } from 'firebase/database';
+import { CellObj, ChallengeData, CurrentGameData, UserData } from '../types/types';
 import { database } from '../scripts/firebase';
 import { useUser } from './UserContext';
+import { pointValues } from '../App';
 
 interface FirebaseContextProps {
   playerList: UserData[] | null;
@@ -18,8 +19,8 @@ interface FirebaseContextProps {
   revokeOutgoingChallenge: (challengeId: string) => void;
   setGameId: (id: string | null) => void;
   setPlayerList: Dispatch<SetStateAction<UserData[] | null>>;
-  updatePlayerFoundWords: (playerUid: string, newWord: string) => void;
-  updatePlayerScore: (playerUid: string, newValue: number) => void;
+  setPlayerTouchedCells: (playerUid: string, newValue: CellObj[]) => void;
+  submitWord: (playerUid: string, word: string) => void;
 }
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
@@ -95,19 +96,23 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
   const revokeOutgoingChallenge = async (challengeId: string) => {
     if (challenges) {
-      await remove(ref(database, `challenges/${challengeId}`));      
+      await remove(ref(database, `challenges/${challengeId}`));
     }
   };
 
   const startNewGame = async (newGameData: CurrentGameData, newGameId: string | null = null) => {
-    if (newGameId && newGameData) {
-      newGameData.startTime = Date.now();
-      newGameData.endTime = Date.now() + ((newGameData.timeLimit || 180) * 1000);
+    newGameData.startTime = Date.now();
+    newGameData.endTime = Date.now() + ((newGameData.timeLimit || 180) * 1000);
+    let foundWordsRecord: Record<string, string | boolean> = {};
+    Array.from(newGameData.allWords).forEach(word => {
+      foundWordsRecord[word] = false;
+    })
+    newGameData.foundWordsRecord = foundWordsRecord;
+    if (newGameId) {
       await set(ref(database, `games/${newGameId}`), newGameData);
-      setGameId(newGameId);
+      setGameId(newGameId); // subscribes to listener
     }
     setCurrentMatch(newGameData);
-    console.log('set current match to', newGameData);
   };
 
   const joinNewGame = async (newGameId: string | null = null) => {
@@ -115,47 +120,56 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       const snapshot = await get(ref(database, `games/${newGameId}`));
       if (snapshot.exists()) {
         const newGameData = snapshot.val();
-        console.log('newGameData', newGameData);
         setCurrentMatch(newGameData);
-        setGameId(newGameId);
-        console.log('set current match to', newGameData);
+        setGameId(newGameId); // subscribes to listener
       } else {
         console.error('NO GAME WITH THAT ID')
       }
     }
   };
-  
+
   const destroyGame = async (gameId: string) => {
     if (currentMatch && currentMatch.id) {
       await remove(ref(database, `games/${gameId}`));
     }
     setCurrentMatch(null);
+    setGameId(null);
   }
 
-  const updatePlayerFoundWords = async (playerUid: string, newWord: string) => {
-    if (!currentMatch) {
-      console.error("No currentMatch");
+  const submitWord = async (playerId: string, word: string) => {
+    if (!currentMatch) return;
+    if (!gameId) {
+      const nextCurrentMatch = { ...currentMatch };
+      if (nextCurrentMatch.foundWordsRecord) {
+        nextCurrentMatch.foundWordsRecord[word] = playerId;
+        setCurrentMatch(nextCurrentMatch);
+        submitWordForPoints(playerId, word);
+      }
       return;
     }
-
-    if (currentMatch.id) {
-      const playerFoundWordsPath = `games/${currentMatch.id}/playerProgress/${playerUid}/foundWords`;
-      try {
-        const updates: Record<string, boolean> = {};
-        updates[`${playerFoundWordsPath}/${newWord}`] = true;
-        await update(ref(database), updates);
-      } catch (error) {
-        console.error("Error updating found words:", error);
+    const wordRef = ref(database, `/games/${currentMatch.id}/foundWordsRecord/${word}`);
+    const claimedSuccessfully = await runTransaction(wordRef, (currentData) => {
+      if (!currentData) {
+        return playerId;
+      } else {
         return;
       }
-    } else {
-      console.log('not updating DB');
-      const nextCurrentMatch = { ...currentMatch };
-      nextCurrentMatch.playerProgress[playerUid].foundWords[newWord] = true;
-      console.log('setting next match', nextCurrentMatch);
-      setCurrentMatch(nextCurrentMatch);
+    });
+    if (claimedSuccessfully.committed) {
+      submitWordForPoints(playerId, word);
     }
-  };
+  }
+
+  const submitWordForPoints = async (playerId: string, word: string) => {
+    let wordValue;
+    if (word.length >= 8) {
+      wordValue = pointValues[8];
+    } else {
+      wordValue = pointValues[word.length];
+    }
+    const nextScore = (currentMatch?.playerProgress[playerId].score || 0) + wordValue;
+    updatePlayerScore(playerId, nextScore);
+  }
 
   const updatePlayerScore = async (playerUid: string, newValue: number) => {
     if (!currentMatch) {
@@ -173,6 +187,13 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       setCurrentMatch(nextCurrentMatch)
     }
   }
+
+  const setPlayerTouchedCells = async (playerId: string, newValue: CellObj[]) => {
+    if (!currentMatch) return;
+    if (currentMatch.id) {
+      await set(ref(database, `games/${currentMatch.id}/playerProgress/${playerId}/touchedCells`), newValue);
+    }
+  };
 
   const markChallengeAccepted = async (challegeId: string) => {
     if (challenges) {
@@ -205,9 +226,9 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       revokeAllOutgoingChallenges,
       revokeOutgoingChallenge,
       setPlayerList,
+      setPlayerTouchedCells,
       setGameId,
-      updatePlayerFoundWords,
-      updatePlayerScore,
+      submitWord,
     }}>
       {children}
     </FirebaseContext.Provider>

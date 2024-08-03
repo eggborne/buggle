@@ -24,8 +24,6 @@ function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: Ga
     targetPhase: 'lobby',
   });
 
-  // console.log('isMultiplayer, opponentData,', isMultiplayer, opponentData)
-
   return (
     <div className={styles.gameStatusDisplay}>
       <div className={styles.playerArea}>

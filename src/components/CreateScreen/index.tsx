@@ -155,7 +155,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         [user.uid]: {
           uid: user.uid,
           score: 0,
-          foundWords: {},
+          touchedCells: [],
         },
       },
       timeLimit: 180,
@@ -251,7 +251,6 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     if (requiredWordInputRef.current) {
       const newWord = requiredWordInputRef.current.value;
       const cleanedWord = newWord.trim().replace(/[^a-zA-Z]/g, '').toUpperCase();
-      console.log('cleanedWord', cleanedWord);
       if (!cleanedWord || cleanedWord.length < 3 || userWords.includes(cleanedWord)) {
         requiredWordInputRef.current.value = cleanedWord;
         return;

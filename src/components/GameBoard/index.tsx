@@ -6,18 +6,19 @@ import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
+import { ref, runTransaction } from 'firebase/database';
+import { database } from '../../scripts/firebase';
 
 interface GameBoardProps {
   opponentData: UserData | null;
   fillerData?: CurrentGameData;
   noAnimation?: boolean;
-  onSubmitValidWord: (word: string) => void;
 }
 
-function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }: GameBoardProps) {
+function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   const { user } = useUser();
   const options = user?.preferences;
-  let { currentMatch } = useFirebase();
+  let { currentMatch, setPlayerTouchedCells, submitWord } = useFirebase();
   if (fillerData) {
     currentMatch = fillerData;
   }
@@ -93,7 +94,41 @@ function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }:
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [dragging, touchedCells]);
+  }, [wordStatus, dragging, touchedCells]);
+
+  useEffect(() => {
+    if (currentWord && currentMatch && user && opponentData) {
+      setWordValidity(currentWord);
+    }
+  }, [currentMatch, wordStatus, dragging, currentWord]);
+
+  useEffect(() => {
+    if (user && opponentData) {
+      setPlayerTouchedCells(user.uid, touchedCells);
+    }
+  }, [touchedCells]);
+
+  const setWordValidity = (word: string) => {
+    if (!currentMatch) return;
+    if (currentMatch && user && currentMatch.foundWordsRecord) {
+      const wordClaimStatus = currentMatch.foundWordsRecord[word.toLowerCase()];
+      const alreadyFound = wordClaimStatus === user.uid;
+      const opponentAlreadyFound = opponentData ? wordClaimStatus === opponentData.uid : false;
+      const wordExistsInPuzzle = new Set(currentMatch.allWords).has(word);
+  
+      let newStatus = 'invalid';
+      if (opponentAlreadyFound) {
+        newStatus = 'opponentFound';
+      } else if (alreadyFound) {
+        newStatus = 'duplicate';
+      } else if (wordExistsInPuzzle) {
+        newStatus = 'valid';
+      }
+
+      setWordStatus(newStatus);
+      setWordValid(!alreadyFound && !opponentAlreadyFound && wordExistsInPuzzle);
+    }
+  }
 
   const boardRect = gameBoardRef.current?.getBoundingClientRect();
   const handleCellHover = (clientX: number, clientY: number) => {
@@ -123,57 +158,11 @@ function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }:
         row,
         col,
       };
+      if (touchedCells.find((c) => c.id === id)) return;
       handleCellTouchStart(cellObj);
     } else {
       handleCellTouchEnd();
     }
-  };
-
-  const handleWordSubmit = () => {
-    if (wordValid) {
-      onSubmitValidWord(currentWord);
-    }
-    setCurrentWord('');
-    setTouchedCells([]);
-    setWordValid(false);
-    setWordStatus('invalid');
-  };
-
-  const handleCellTouchStart = (cell: CellObj) => {
-    if (!dragging) return;
-    if (touchedCells.find((c) => c.id === cell.id)) return;
-    if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
-
-    const nextCurrentWord = (currentWord + cell.letter);
-    setTouchedCells((prevTouchedCells) => {
-      const newTouchedCells = [...prevTouchedCells, cell];
-      return newTouchedCells;
-    });
-    setCurrentWord(nextCurrentWord);
-    const foundWords: Record<string, boolean> = currentMatch?.playerProgress[user?.uid ?? '']?.foundWords ?? {};
-    const opponentFoundWords: Record<string, boolean> = currentMatch?.playerProgress[opponentData?.uid ?? '']?.foundWords ?? {};
-    console.log('foundWords:', foundWords, 'opponentFoundWords:', opponentFoundWords)
-    const alreadyFound = foundWords[nextCurrentWord.toLowerCase()]
-    const opponentAlreadyFound = opponentFoundWords[nextCurrentWord.toLowerCase()];
-    // const alreadyFound = Array.from(foundWords).includes(nextCurrentWord);
-    // const opponentAlreadyFound = Array.from(opponentFoundWords).includes(nextCurrentWord);
-    const wordExistsInPuzzle = new Set(currentMatch?.allWords).has(nextCurrentWord);
-    let newStatus;
-    if (alreadyFound) {
-      newStatus = 'duplicate';
-    } else if (opponentAlreadyFound) {
-      newStatus = 'opponentFound';
-    } else if (wordExistsInPuzzle) {
-      newStatus = 'valid';
-    } else {
-      newStatus = 'invalid';
-    }
-    setWordStatus(newStatus);
-    setWordValid(!alreadyFound && !opponentAlreadyFound && wordExistsInPuzzle);
-  };
-
-  const handleCellTouchEnd = () => {
-    // No action needed here?
   };
 
   const isValidNeighbor = (cell1: CellObj, cell2: CellObj): boolean => {
@@ -181,6 +170,32 @@ function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }:
     const colDiff = Math.abs(cell1.col - cell2.col);
     return rowDiff <= 1 && colDiff <= 1 && !(rowDiff === 0 && colDiff === 0);
   };
+
+  const handleCellTouchStart = (cell: CellObj) => {
+    if (!dragging) return;
+    if (touchedCells.find((c) => c.id === cell.id)) return;
+    if (touchedCells.length > 0 && !isValidNeighbor(cell, touchedCells[touchedCells.length - 1])) return;
+    const nextCurrentWord = currentWord + cell.letter;
+    setTouchedCells((prevTouchedCells) => [...prevTouchedCells, cell]);
+    setCurrentWord(nextCurrentWord);
+    setWordValidity(nextCurrentWord);
+  };
+
+  const handleCellTouchEnd = () => {
+    // No action needed here?
+  };
+
+  const handleWordSubmit = async () => {
+    if (user && wordStatus === 'valid' && wordValid) {
+      submitWord(user.uid, currentWord.toLowerCase());
+    }
+    setCurrentWord('');
+    setTouchedCells([]);
+    setWordValid(false);
+    setWordStatus('invalid');
+  };
+
+  const opponentTouchedCells = opponentData && currentMatch?.playerProgress[opponentData?.uid]?.touchedCells || undefined;
 
   return (
     <div className={styles.gameArea}>
@@ -207,7 +222,13 @@ function GameBoard({ opponentData, fillerData, noAnimation, onSubmitValidWord }:
               key={`${letter}${r}${l}`}
               id={`${r}${l}`}
             >
-              <BoardCell letter={letter} touched={touchedCells.some(c => c.id === `${r}${l}`)} wordStatus={wordStatus} />
+              <BoardCell
+                letter={letter}
+                opponentTouching={ opponentTouchedCells && opponentTouchedCells.some(c => c.id === `${r}${l}`) || undefined
+                }
+                touched={touchedCells.some(c => c.id === `${r}${l}`)}
+                wordStatus={wordStatus}
+              />
             </div>
           ))
         )}

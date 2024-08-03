@@ -53,7 +53,7 @@ export const difficultyWordAmounts: Record<string, { min: number, max: number }>
   medium: { min: 150, max: 250 },
   hard: { min: 1, max: 150 }
 };
-const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
+export const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
   const {
@@ -65,7 +65,7 @@ function App() {
 
   } = useUser();
   const phase = user?.phase;
-  const { currentMatch, destroyGame, revokeAllOutgoingChallenges, updatePlayerFoundWords, updatePlayerScore } = useFirebase();
+  const { currentMatch, destroyGame, revokeAllOutgoingChallenges } = useFirebase();
   const [userReady, setUserReady] = useState<boolean>(false);
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
@@ -86,20 +86,6 @@ function App() {
       triggerShowMessage(`Signed in as ${user?.displayName}!`);
     }
   }, [isLoggedIn]);
-
-  const handleSubmitValidWord = async (word: string) => {
-    if (!user) return
-    let wordValue;
-    if (word.length >= 8) {
-      wordValue = pointValues[8];
-    } else {
-      wordValue = pointValues[word.length];
-    }
-    const nextScore = (currentMatch?.playerProgress[user.uid].score || 0) + wordValue;
-    console.warn(user.uid, 'sending word', word, 'of', wordValue, 'points for new score', nextScore)
-    await updatePlayerFoundWords(user.uid, word)
-    await updatePlayerScore(user.uid, nextScore);
-  };
 
   const uploadPuzzle = async () => {
     if (!currentMatch) return;
@@ -159,7 +145,6 @@ function App() {
           {phase === 'game' && currentMatch &&
             <GameScreen
               hidden={phase !== 'game'}
-              handleSubmitValidWord={handleSubmitValidWord}
               showConfirmModal={showConfirmModal}
               uploadPuzzle={uploadPuzzle}
             />

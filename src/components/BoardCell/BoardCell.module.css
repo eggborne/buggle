@@ -1,4 +1,4 @@
-.board-cell {
+.BoardCell {
   --face-size: 95%;
   scale: var(--cube-scale);
   position: relative;
@@ -14,46 +14,66 @@
   border: 0.1rem solid transparent;
   opacity: 0.8;
   box-shadow:
-  inset -0.2rem -0.2rem 0.5rem rgba(0, 0, 0, 0.2),
-  inset 0.2rem 0.2rem 0.5rem rgba(255, 255, 255, 0.2);
+    inset -0.2rem -0.2rem 0.5rem rgba(0, 0, 0, 0.2),
+    inset 0.2rem 0.2rem 0.5rem rgba(255, 255, 255, 0.2);
   transition: transform 200ms ease;
   box-sizing: padding-box;
 }
 
-.board-cell::before {
+.BoardCell::before {
   content: '';
   position: absolute;
   width: var(--face-size);
   height: var(--face-size);
   background-color: var(--cube-color);
   border-radius: 50%;
-  box-shadow:
-  0 0 0.25rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0.25rem rgba(0, 0, 0, 0.1);
+  z-index: -1;
 }
 
-.board-cell p {
+.BoardCell::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: #88008833;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 100ms ease;
+  z-index: 0;
+}
+
+.BoardCell p {
   z-index: 2;
   text-transform: capitalize;
 }
 
-.board-cell.touched {
+.BoardCell.touched {
   transform: scale(95%);
   opacity: 1;
 }
 
-.board-cell.touched.valid {
+.BoardCell.touched.valid {
   border-color: var(--valid-color);
   /* background-color: #64ff6433; */
 }
 
-.board-cell.touched.valid::before {
+.BoardCell.touched.valid::before {
   background-color: #64ff6433;
 }
 
-.board-cell.touched.duplicate {
+.BoardCell.touched.duplicate {
   border-color: var(--duplicate-color);
 }
 
-.board-cell.touched.opponentFound {
+.BoardCell.touched.opponentFound {
   border-color: var(--opponent-found-color);
 }
+
+.BoardCell.opponentTouching::after {
+  opacity: 1;
+}
+
+/* .BoardCell.opponentTouching::before {
+  background-color: #88008805;
+} */

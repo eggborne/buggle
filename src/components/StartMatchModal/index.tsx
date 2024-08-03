@@ -13,9 +13,7 @@ const StartMatchModal = () => {
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
 
   useEffect(() => {
-    console.warn('challenges changed')
     if (challenges && user) {
-      console.warn('checking for accepted challenge')
       const accepted = Object.values(challenges).find(challenge => challenge.accepted && challenge.instigator === user.uid);
       if (accepted) {
         setAcceptedChallenge(accepted);
@@ -43,7 +41,6 @@ const StartMatchModal = () => {
   const handleConfirmAcceptance = async () => {
     if (acceptedChallenge?.id) {
       const newGameId = acceptedChallenge?.id;
-      console.log('confirming acceptance', acceptedChallenge)
       newGameId && joinNewGame(newGameId);
       await revokeOutgoingChallenge(acceptedChallenge?.id);
       await setAcceptedChallenge(null);

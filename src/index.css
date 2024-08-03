@@ -273,10 +273,10 @@ button.knob > img {
 
 .dev-window {
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: var(--footer-height);
   background: #00000088;
   z-index: 101;
   opacity: 0.5;
-  display: none;
+  /* display: none; */
 }

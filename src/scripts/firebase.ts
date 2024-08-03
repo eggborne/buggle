@@ -27,7 +27,6 @@ console.warn('Firebase initialized.');
 const fetchRandomPuzzle = async ({ dimensions, difficulty }: GameOptions): Promise<CurrentGameData> => {
   const snapshot = await get(child(ref(database), `puzzles/`));
   const data: StoredPuzzleData[] = snapshot.val();
-  console.warn('got puzzles from Firebase DB:', Object.values(data))
   const wordLimits = difficultyWordAmounts[difficulty];
   const randomPool = Object.values(data).filter(puzzle => {
     const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
@@ -68,7 +67,7 @@ const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedB
     if (response.success) {
       const data: GeneratedBoardData = response.data
       console.warn(`${response.message} in ${Date.now() - fetchStart}ms`);
-      console.warn('<<<<<<<<<<<<  returning GeneratedBoardData', response.data);
+      console.warn('<<<<<<  returning GeneratedBoardData', response.data);
       return data;
     } else {
       console.error(response.message);

@@ -14,8 +14,6 @@ function PlayerAnnouncementEffect() {
     const currentPlayerSet = new Set<string>();
     const currentDetailsMap = new Map<string, string>();
 
-    console.log('running announce effeft')
-
     // Populate current sets and maps
     playerList.forEach(player => {
       currentPlayerSet.add(player.uid);

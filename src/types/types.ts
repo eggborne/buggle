@@ -109,7 +109,7 @@ export interface GeneratedBoardData {
 export interface PlayerMatchData {
   uid: string;
   score: number;
-  foundWords: Record<string, boolean>;
+  touchedCells: CellObj[];
 }
 
 export interface CurrentGameData {
@@ -121,7 +121,6 @@ export interface CurrentGameData {
     percentUncommon: number;
   };
   playerProgress: Record<string, PlayerMatchData>;
-
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
   specialWords?: Set<string> | string[] | null;
@@ -132,6 +131,7 @@ export interface CurrentGameData {
   respondent?: PlayerMatchData;
   startTime?: number;
   endTime?: number;
+  foundWordsRecord?: Record<string, string | boolean>
 }
 
 export interface GameOptions {

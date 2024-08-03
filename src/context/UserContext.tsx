@@ -66,7 +66,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             const sinceLast = now - lastHeartbeatRef.current;
             if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 4))) {
               console.warn('sinceLast is', sinceLast, '; skipping this heartbeat');
-              // return;
+              return;
             }
             await sendHeartbeat();
             lastHeartbeatRef.current = now;
@@ -81,7 +81,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedIn(false);
       }
       setUser(userData);
-      console.log('userData is', userData)
       for (const type in userData.preferences) {
         const prefsSection = userData.preferences[type as keyof OptionsData];
         for (const optionKey in prefsSection) {
@@ -177,7 +176,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const auth = getAuth();
     try {
       await signOut(auth);
-      console.log("User signed out successfully");
       await removeUserFromPlayerList(user.uid);
       setUser({
         ...user,
@@ -186,7 +184,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       });
       setIsLoggedIn(false);
       clearInterval(heartbeatInterval);
-      // triggerShowMessage(`${user?.displayName} logged out :(`);
     } catch (error) {
       console.error("Error signing out: ", error);
     }
