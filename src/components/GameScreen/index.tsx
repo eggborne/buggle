@@ -37,13 +37,6 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
     }
   }, [currentMatch]);
 
-  let requiredWordList: string[] = [];
-  if (currentMatch?.customizations?.requiredWords?.wordList) {
-    requiredWordList = currentMatch.customizations.requiredWords.wordList
-      .map(word => word.toLowerCase())
-      .sort((a, b) => b.length - a.length);
-  }
-
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
 
   return (
@@ -56,10 +49,10 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
         <button className={`knob`}></button>
         <button className={`knob`}></button>
         <button className={`knob`}></button>
-      </div>
+      </div>      
       {wordListShowing && currentMatch && user &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
-          {requiredWordList.map(word =>
+          {(currentMatch.specialWords || []).sort((a, b) => b.length - a.length).map(word =>
             <div style={{
               color: '#5f5',
               textTransform: 'uppercase',
@@ -68,7 +61,10 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
               {word}
             </div>
           )}
-          {Array.from(currentMatch.allWords).sort((a, b) => b.length - a.length).map(word =>
+          {Array.from(currentMatch.allWords)
+            .sort((a, b) => b.length - a.length)
+            .filter(word => currentMatch.specialWords?.includes(word) === false)
+            .map(word =>
             <div style={{
               textTransform: 'uppercase',
               textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',

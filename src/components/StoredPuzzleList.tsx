@@ -45,7 +45,7 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
                 <div key={`${puzzle.dimensions.width}${dimensions.width}${puzzle.letterString}`
                 } onClick={() => onClickStoredPuzzle(puzzle)} className={styles.puzzleListing} >
                   <PuzzleIcon
-                    iconSize={{ width: '9rem' }}
+                    iconSize={{ width: '100%' }}
                     puzzleDimensions={{ ...dimensions }} contents={puzzle.letterString.split('')} 
                   />
                   <div className={styles.puzzleInfo}>

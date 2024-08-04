@@ -93,64 +93,98 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     }
   }, [dimensions, optionsEnabled]);
 
+  const testSize = 5;
+
+  const customOptions: BoardRequestData = {
+    dimensions: {
+      width: testSize,
+      height: testSize
+    },
+    letterDistribution: 'modernEnglish',
+    maxAttempts: 5000000,
+    returnBest: true,
+    customizations: {
+      // customLetters: {
+      //   letterList: 'XXXXXXXXRIEVERGOODBOYPAWK'.split(''),
+      //   shuffle: true,
+      // },
+      requiredWords: {
+        wordList: [
+          "Piano",
+          "Guitar",
+          "Violin",
+          "Trumpet",
+          "Keyboard",
+          "Trombone",
+          "Clarinet"
+        ],
+        convertQ: false,
+      }
+    },
+    theme: '🎵 Music and Instruments 🎸'
+  }
+
   const handleStartCreatedPuzzle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!user) return;
     const target = e.currentTarget as HTMLFormElement;
-    const options: BoardRequestData = {
+    const options: BoardRequestData = customOptions || {
       ...defaultValues,
       dimensions,
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
       maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
       returnBest: returnBestInputRef.current ? returnBestInputRef.current.checked : defaultValues.returnBest,
     };
+
     if (Object.values(optionsEnabled).some((o => o))) {
-      options.filters = {};
-      if (optionsEnabled['totalWordsOption']) {
-        options.filters.totalWordLimits = {
-          min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
-          max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || 99999,
-        };
+      const { filters, customizations } = options;
+      if (filters) {
+        if (optionsEnabled['totalWordsOption']) {
+          filters.totalWordLimits = {
+            min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
+            max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || 99999,
+          };
+        }
+        if (optionsEnabled['averageWordLengthOption']) {
+          filters.averageWordLengthFilter = {
+            comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
+            value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
+          };
+        }
+        if (optionsEnabled['uncommonWordLimitOption']) {
+          filters.uncommonWordLimit = {
+            comparison: (target.elements.namedItem('uncommonWordLimitComparison') as HTMLInputElement).value,
+            value: parseInt((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
+          };
+        }
+        if (optionsEnabled['wordLengthLimitOption']) {
+          filters.wordLengthLimits = [...wordLengthPrefs];
+        }
       }
-      if (optionsEnabled['averageWordLengthOption']) {
-        options.filters.averageWordLengthFilter = {
-          comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
-          value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
-        };
-      }
-      if (optionsEnabled['uncommonWordLimitOption']) {
-        options.filters.uncommonWordLimit = {
-          comparison: (target.elements.namedItem('uncommonWordLimitComparison') as HTMLInputElement).value,
-          value: parseInt((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
-        };
-      }
-      if (optionsEnabled['wordLengthLimitOption']) {
-        options.filters.wordLengthLimits = [...wordLengthPrefs];
-      }
-      if (optionsEnabled['customLettersOption']) {
-        options.customizations = options.customizations || {};
-        options.customizations.customLetters = {
-          letterList: userLetters,
-          convertQ: convertQForLettersRef.current !== null && convertQForLettersRef.current.checked,
-          shuffle: shuffleCustomLettersRef.current !== null && shuffleCustomLettersRef.current.checked
-        };
-      }
-      if (optionsEnabled['requiredWordsOption']) {
-        options.customizations = options.customizations || {};
-        options.customizations.requiredWords = {
-          wordList: userWords.sort((a, b) => b.length - a.length),
-          convertQ: convertQForWordsRef.current !== null && convertQForWordsRef.current.checked
-        };
+      if (customizations) {
+        if (optionsEnabled['customLettersOption']) {
+          customizations.customLetters = {
+            letterList: userLetters,
+            convertQ: convertQForLettersRef.current !== null && convertQForLettersRef.current.checked,
+            shuffle: shuffleCustomLettersRef.current !== null && shuffleCustomLettersRef.current.checked
+          };
+        }
+        if (optionsEnabled['requiredWordsOption']) {
+          customizations.requiredWords = {
+            wordList: userWords.sort((a, b) => b.length - a.length),
+            convertQ: convertQForWordsRef.current !== null && convertQForWordsRef.current.checked
+          };
+        }
       }
     }
-    if (!user) return;
     setGenerating(true);
     const generatedBoardData = await createSolvedPuzzle(options);
     if (!generatedBoardData) return;
     const gameData = {
+      ...generatedBoardData,
       allWords: new Set(generatedBoardData.wordList),
-      dimensions: options.dimensions,
       letterMatrix: generatedBoardData.matrix,
-      metadata: generatedBoardData.metadata,
+      dimensions: options.dimensions,
       playerProgress: {
         [user.uid]: {
           uid: user.uid,
@@ -159,9 +193,12 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         },
       },
       timeLimit: 180,
-      customizations: generatedBoardData.customizations,
-      filters: generatedBoardData.filters,
-      specialWords: generatedBoardData.specialWords,
+    };
+    if (options.customizations) {
+      if (options.customizations.requiredWords) {
+        gameData.specialWords = options.customizations.requiredWords.wordList.map(word => word.toLowerCase());
+        gameData.theme = options.theme;
+      }
     }
     await startNewGame(gameData);
     changePhase('game');
@@ -256,7 +293,6 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         return;
       }
       setUserWords(prevRequiredWords => [...prevRequiredWords, cleanedWord]);
-      // how do I add user focus back to the text box now?
       requiredWordInputRef.current.value = '';
       requiredWordInputRef.current.focus();
     }
@@ -271,7 +307,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent form submission
+      e.preventDefault();
       handleAddRequiredWord();
     }
   }
@@ -338,7 +374,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
             <div className={`${styles.optionalInputRow} ${styles.textRow} ${optionsEnabled['requiredWordsOption'] ? styles.active : styles.inactive}`}>
               <h4>Required words</h4>
               <div className={styles.wordCollection}>
-                {userWords.map(word =>
+                {userWords.sort((a, b) => b.length - a.length).map(word =>
                   <div key={word} className={styles.collectionMember}>
                     <span>{word}</span>
                     <button onClick={() => handleRemoveRequiredWord(word)} type='button' className='x-close'>X</button>
@@ -346,7 +382,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
                 )}
               </div>
               <label>
-                <input onKeyDown={handleKeyPress} ref={requiredWordInputRef} disabled={!optionsEnabled['requiredWordsOption']} type='text' min='3' max='15' />
+                <input autoCorrect='on' onKeyDown={handleKeyPress} ref={requiredWordInputRef} disabled={!optionsEnabled['requiredWordsOption']} type='text' min='3' max='15' />
                 <button onClick={handleAddRequiredWord} type='button'>Add</button>
               </label>
               <label style={{

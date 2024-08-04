@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { triggerShowMessage } from './hooks/useMessageBanner';
 import { useUser } from './context/UserContext';
 import './App.css'
-import { ConfirmData, PointValues, UserData, } from './types/types';
+import { ConfirmData, PointValues, StoredPuzzleData, UserData, } from './types/types';
 import LoadingDisplay from './components/LoadingDisplay';
 import Footer from './components/Footer';
 import TitleScreen from './components/TitleScreen';
@@ -89,12 +89,18 @@ function App() {
 
   const uploadPuzzle = async () => {
     if (!currentMatch) return;
-    const nextPuzzleData = {
+    const nextPuzzleData: StoredPuzzleData = {
       allWords: Array.from(currentMatch.allWords),
+      specialWords: currentMatch.specialWords,
       dimensions: currentMatch.dimensions,
       letterString: encodeMatrix(currentMatch.letterMatrix, currentMatch.metadata.key).map(row => row.join('')).join(''),
       metadata: currentMatch.metadata,
     };
+    
+    if (currentMatch.theme) {
+      nextPuzzleData.theme = currentMatch.theme;
+    }
+    
     const newPuzzleId = `${currentMatch.dimensions.width}${currentMatch.dimensions.height}${nextPuzzleData.letterString}`;
     console.log('uploading', nextPuzzleData)
     await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);

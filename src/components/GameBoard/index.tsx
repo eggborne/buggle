@@ -6,8 +6,8 @@ import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
-import { ref, runTransaction } from 'firebase/database';
-import { database } from '../../scripts/firebase';
+import Swarm from '../Swarm';
+import Bee from '../Swarm/Bee';
 
 interface GameBoardProps {
   opponentData: UserData | null;
@@ -72,29 +72,53 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
       setDragging(false);
     };
 
-    // Touch Events
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    // Mouse Events 
-    window.addEventListener('mousedown', (e) => {
-      if (e.target === gameBoardRef.current || gameBoardRef.current?.contains(e.target as Node)) {
-        setDragging(true);
-      }
-    });
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    const gameBoardElement = gameBoardRef.current;
+    if (gameBoardElement) {
+      gameBoardElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+      gameBoardElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+      gameBoardElement.addEventListener('touchend', handleTouchEnd);
+      gameBoardElement.addEventListener('mousedown', () => setDragging(true));
+      gameBoardElement.addEventListener('mousemove', handleMouseMove);
+      gameBoardElement.addEventListener('mouseup', handleMouseUp);
+    }
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('mousedown', handleMouseUp);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      if (gameBoardElement) {
+        gameBoardElement.removeEventListener('touchstart', handleTouchStart);
+        gameBoardElement.removeEventListener('touchmove', handleTouchMove);
+        gameBoardElement.removeEventListener('touchend', handleTouchEnd);
+        gameBoardElement.removeEventListener('mousedown', () => setDragging(true));
+        gameBoardElement.removeEventListener('mousemove', handleMouseMove);
+        gameBoardElement.removeEventListener('mouseup', handleMouseUp);
+      }
     };
-  }, [wordStatus, dragging, touchedCells]);
+
+    // const interactionTarget = window;
+
+    // // Touch Events
+    // interactionTarget.addEventListener('touchstart', handleTouchStart, { passive: false });
+    // interactionTarget.addEventListener('touchmove', handleTouchMove, { passive: false });
+    // interactionTarget.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    // // Mouse Events 
+    // interactionTarget.addEventListener('mousedown', (e) => {
+    //   if (e.target === gameBoardRef.current || gameBoardRef.current?.contains(e.target as Node)) {
+    //     setDragging(true);
+    //   }
+    // });
+    // interactionTarget.addEventListener('mousemove', handleMouseMove);
+    // interactionTarget.addEventListener('mouseup', handleMouseUp);
+
+    // return () => {
+    //   interactionTarget.removeEventListener('touchstart', handleTouchStart);
+    //   interactionTarget.removeEventListener('touchmove', handleTouchMove);
+    //   interactionTarget.removeEventListener('touchend', handleTouchEnd);
+    //   interactionTarget.removeEventListener('mousedown', handleMouseUp);
+    //   interactionTarget.removeEventListener('mousemove', handleMouseMove);
+    //   interactionTarget.removeEventListener('mouseup', handleMouseUp);
+    // };
+  }, [dragging, touchedCells, handleWordSubmit]);
+  // }, [wordStatus, dragging, touchedCells]);
 
   useEffect(() => {
     if (currentWord && currentMatch && user && opponentData) {
@@ -115,7 +139,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
       const alreadyFound = wordClaimStatus === user.uid;
       const opponentAlreadyFound = opponentData ? wordClaimStatus === opponentData.uid : false;
       const wordExistsInPuzzle = new Set(currentMatch.allWords).has(word);
-  
+
       let newStatus = 'invalid';
       if (opponentAlreadyFound) {
         newStatus = 'opponentFound';
@@ -185,7 +209,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
     // No action needed here?
   };
 
-  const handleWordSubmit = async () => {
+  async function handleWordSubmit() {
     if (user && wordStatus === 'valid' && wordValid) {
       submitWord(user.uid, currentWord.toLowerCase());
     }
@@ -224,7 +248,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
             >
               <BoardCell
                 letter={letter}
-                opponentTouching={ opponentTouchedCells && opponentTouchedCells.some(c => c.id === `${r}${l}`) || undefined
+                opponentTouching={opponentTouchedCells && opponentTouchedCells.some(c => c.id === `${r}${l}`) || undefined
                 }
                 touched={touchedCells.some(c => c.id === `${r}${l}`)}
                 wordStatus={wordStatus}
@@ -235,10 +259,17 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
         <SmoothPathOverlay
           isSelecting={touchedCells.length > 0}
           cells={touchedCells}
-          dimensions={currentMatch?.dimensions || { width: 5, height: 5}}
+          dimensions={currentMatch?.dimensions || { width: 5, height: 5 }}
           wordStatus={wordStatus}
         />
       </div>
+      {gameBoardRef.current && currentMatch &&
+        <Swarm
+          gameWidth={currentMatch.dimensions.width}
+          parent={gameBoardRef.current}
+          swarmSize={20}
+        />
+      }
     </div>
   )
 }

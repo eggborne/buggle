@@ -41,7 +41,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
   const getRandomPuzzleWithOptions = async (newGameOptions: GameOptions): Promise<CurrentGameData> => {
     const fetchedPuzzle = await fetchRandomPuzzle(newGameOptions);
     const newGameData: CurrentGameData = {
-      ...newGameOptions,
+      // ...newGameOptions,
       ...fetchedPuzzle,
       allWords: Array.from(fetchedPuzzle.allWords),
       startTime: Date.now(),
@@ -67,7 +67,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       [user.uid]: {
         uid: user.uid,
         score: 0,
-        foundWords: {},
+        touchedCells: [],
       },
     };
     await startNewGame(newGameData);
@@ -78,21 +78,20 @@ function SelectScreen({ hidden }: SelectScreenProps) {
     if (!user) return;
     const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
     const newGameData = {
+      ...puzzle,
       allWords: new Set(puzzle.allWords),
       letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
-      dimensions: {
-        width: puzzle.dimensions.width,
-        height: puzzle.dimensions.height,
-      },
-      metadata: puzzle.metadata,
       playerProgress: {
         [user.uid]: {
           uid: user.uid,
           score: 0,
-          foundWords: {},
+          touchedCells: [],
         },
-      }
+      },
+      startTime: Date.now(),
+      endTime: Date.now() + (600 * 1000),
     }
+    console.log('starting stored with', newGameData)
     await startNewGame(newGameData);
     changePhase('game');
   }

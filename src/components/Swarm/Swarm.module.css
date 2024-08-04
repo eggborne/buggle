@@ -1,0 +1,67 @@
+.Swarm {
+  position: absolute;
+  width: var(--game-board-size);
+  height: var(--game-board-size);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.Bee {
+  position: absolute;
+  translate: -50% -50%;
+  text-shadow: 0 0 0.5rem #00000099;
+  pointer-events: all !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/public/assets/beebody.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: all 100ms ease-out;
+  filter: 
+  drop-shadow(0rem 0.1rem 0rem #000000) 
+  ;
+  z-index: 1;
+}
+
+.beeWing {
+  position: absolute;
+  background-image: url('public/assets/beewing.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 70%;
+  width: inherit;
+  height: inherit;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.beeWing.left {
+  transform-origin: right center;
+  top: -10%;
+  right: 65%;
+  rotate: 35deg;
+  animation: flap-left 60ms linear alternate infinite;
+}
+
+.beeWing.right {
+  transform-origin: right center;
+  scale: -1 1;
+  top: -10%;
+  left: -42%;
+  rotate: -35deg;
+  animation: flap-right 60ms linear alternate infinite;
+}
+
+@keyframes flap-left {
+  to {
+    rotate: -35deg
+  }
+}
+@keyframes flap-right {
+  to {
+    rotate: 35deg
+  }
+}

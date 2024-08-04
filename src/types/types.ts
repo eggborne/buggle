@@ -57,13 +57,6 @@ export interface PuzzleMetadata {
   key?: Record<string, string>;
 }
 
-export interface StoredPuzzleData {
-  allWords: string[];
-  dimensions: PuzzleDimensions;
-  letterString: string;
-  metadata: PuzzleMetadata;
-}
-
 export type WordLengthPreference = {
   comparison: string;
   wordLength: number;
@@ -91,8 +84,17 @@ export interface BoardRequestData {
   returnBest: boolean;
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
+  theme?: string;
 }
 
+export interface StoredPuzzleData {
+  allWords: string[];
+  dimensions: PuzzleDimensions;
+  letterString: string;
+  metadata: PuzzleMetadata;
+  specialWords?: string[];
+  theme?: string;
+}
 
 export interface GeneratedBoardData {
   attempts: number,
@@ -102,6 +104,7 @@ export interface GeneratedBoardData {
   metadata: PuzzleMetadata;
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
+  theme?: string;
 }
 
 //game
@@ -114,22 +117,20 @@ export interface PlayerMatchData {
 
 export interface CurrentGameData {
   allWords: Set<string> | string[];
+  specialWords?: string[];
   dimensions: PuzzleDimensions;
   letterMatrix: string[][];
-  metadata: {
-    key?: Record<string, string>;
-    percentUncommon: number;
-  };
+  metadata: PuzzleMetadata;
   playerProgress: Record<string, PlayerMatchData>;
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
-  specialWords?: Set<string> | string[] | null;
   timeLimit?: number;
   
   id?: string;
   instigator?: PlayerMatchData;
   respondent?: PlayerMatchData;
   startTime?: number;
+  theme?: string;
   endTime?: number;
   foundWordsRecord?: Record<string, string | boolean>
 }
