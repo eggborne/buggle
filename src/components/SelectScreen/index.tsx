@@ -65,6 +65,8 @@ function SelectScreen({ hidden }: SelectScreenProps) {
     const newGameData = await getRandomPuzzleWithOptions(newGameOptions);
     newGameData.playerProgress = {
       [user.uid]: {
+        attackPoints: 0,
+        foundOpponentWords: {},
         uid: user.uid,
         score: 0,
         touchedCells: [],
@@ -83,6 +85,8 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
       playerProgress: {
         [user.uid]: {
+          attackPoints: 0,
+          foundOpponentWords: {},
           uid: user.uid,
           score: 0,
           touchedCells: [],

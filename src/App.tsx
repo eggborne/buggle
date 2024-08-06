@@ -121,7 +121,7 @@ function App() {
 
   const handleConfirmGameExit = async () => {
     await destroyGame(currentMatch?.id || '');
-    changePhase('title');
+    // changePhase('title');
     
   }
 
@@ -161,6 +161,7 @@ function App() {
             message={confirmShowing?.message || ''}
             style={{ height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem', padding: '2.5rem' }}
             onConfirm={() => {
+              console.log('confirming to', confirmShowing)
               confirmShowing?.typeOpen === 'leaveGame' ? handleConfirmGameExit() : handleConfirmSignOut();
               changePhase(confirmShowing?.targetPhase || '');
               showConfirmModal(confirmShowing, true);

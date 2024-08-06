@@ -5,6 +5,16 @@
   place-items: center;
 }
 
+.BeeSwarm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--game-board-size);
+  height: var(--game-board-size);
+  z-index: 100;
+  pointer-events: none;
+}
+
 .gameBoard {
   position: relative;
   width: var(--game-board-size);
@@ -23,7 +33,7 @@
   transition-delay: 200ms;
   animation: bounce-out 300ms 600ms linear, bounce-in 150ms 900ms linear;
   position: relative;
-  margin: var(--board-outline-width) 0;
+  /* margin: var(--board-outline-width) 0; */
 }
 
 .gameBoard.showing {
@@ -49,7 +59,7 @@
   user-select: none;
   filter: drop-shadow(0 0 1px black);
   /* filter: url(#lineShadow); */
-  transition: opacity 60ms ease;
+  /* transition: opacity 60ms ease; */
 }
 
 .pathOverlay.visible {
@@ -58,13 +68,13 @@
 
 .pathSegment {
   fill: none;
-  transition: stroke 60ms ease;
+  /* transition: stroke 60ms ease; */
 }
 
 .animatedSegment {
-  /* stroke-dasharray: 100;
+  stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: drawLine 200ms ease-in-out forwards; */
+  animation: drawLine 200ms ease-in-out forwards;
 }
 
 .pathSegment.outerLine {
@@ -81,9 +91,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
   }
+
   100% {
     transform: scale(1);
   }
@@ -93,9 +105,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(0.95);
   }
+
   100% {
     transform: scale(1);
   }
@@ -104,6 +118,9 @@
 .pathOverlay.valid .pathSegment.outerLine {
   stroke: var(--valid-color);
 }
+.pathOverlay.special .pathSegment.outerLine {
+  stroke: var(--special-color);
+}
 
 .pathOverlay.duplicate .pathSegment.outerLine {
   stroke: #a1bd04;
@@ -111,4 +128,8 @@
 
 .pathOverlay.opponentFound .pathSegment.outerLine {
   stroke: var(--opponent-found-color);
+}
+
+.pathOverlay.redeemable .pathSegment.outerLine {
+  stroke: var(--redeemable-color);
 }

@@ -6,8 +6,7 @@ import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
-import Swarm from '../Swarm';
-import Bee from '../Swarm/Bee';
+// import BeeSwarm from './BeeSwarm'
 
 interface GameBoardProps {
   opponentData: UserData | null;
@@ -28,6 +27,8 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   const [wordValid, setWordValid] = useState<boolean>(false);
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const gameBoardRef = useRef<HTMLDivElement>(null);
+
+  console.log(wordValid);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -92,36 +93,10 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
         gameBoardElement.removeEventListener('mouseup', handleMouseUp);
       }
     };
-
-    // const interactionTarget = window;
-
-    // // Touch Events
-    // interactionTarget.addEventListener('touchstart', handleTouchStart, { passive: false });
-    // interactionTarget.addEventListener('touchmove', handleTouchMove, { passive: false });
-    // interactionTarget.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    // // Mouse Events 
-    // interactionTarget.addEventListener('mousedown', (e) => {
-    //   if (e.target === gameBoardRef.current || gameBoardRef.current?.contains(e.target as Node)) {
-    //     setDragging(true);
-    //   }
-    // });
-    // interactionTarget.addEventListener('mousemove', handleMouseMove);
-    // interactionTarget.addEventListener('mouseup', handleMouseUp);
-
-    // return () => {
-    //   interactionTarget.removeEventListener('touchstart', handleTouchStart);
-    //   interactionTarget.removeEventListener('touchmove', handleTouchMove);
-    //   interactionTarget.removeEventListener('touchend', handleTouchEnd);
-    //   interactionTarget.removeEventListener('mousedown', handleMouseUp);
-    //   interactionTarget.removeEventListener('mousemove', handleMouseMove);
-    //   interactionTarget.removeEventListener('mouseup', handleMouseUp);
-    // };
   }, [dragging, touchedCells, handleWordSubmit]);
-  // }, [wordStatus, dragging, touchedCells]);
 
   useEffect(() => {
-    if (currentWord && currentMatch && user && opponentData) {
+    if (currentWord && currentMatch && user) {
       setWordValidity(currentWord);
     }
   }, [currentMatch, wordStatus, dragging, currentWord]);
@@ -139,14 +114,19 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
       const alreadyFound = wordClaimStatus === user.uid;
       const opponentAlreadyFound = opponentData ? wordClaimStatus === opponentData.uid : false;
       const wordExistsInPuzzle = new Set(currentMatch.allWords).has(word);
-
       let newStatus = 'invalid';
       if (opponentAlreadyFound) {
-        newStatus = 'opponentFound';
+        const behind = currentMatch.playerProgress[user.uid].score < currentMatch.playerProgress[(opponentData || user).uid].score;
+        if (behind && (!currentMatch.playerProgress[user.uid].foundOpponentWords || !currentMatch.playerProgress[user.uid].foundOpponentWords[word])) {
+          newStatus = 'redeemable';
+        } else {
+          newStatus = 'opponentFound';
+        }
       } else if (alreadyFound) {
         newStatus = 'duplicate';
       } else if (wordExistsInPuzzle) {
-        newStatus = 'valid';
+        const isSpecialWord = currentMatch.specialWords?.includes(word);
+        newStatus = isSpecialWord? 'special' : 'valid';
       }
 
       setWordStatus(newStatus);
@@ -210,8 +190,8 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   };
 
   async function handleWordSubmit() {
-    if (user && wordStatus === 'valid' && wordValid) {
-      submitWord(user.uid, currentWord.toLowerCase());
+    if (user) {
+      submitWord(user.uid, currentWord.toLowerCase(), wordStatus);
     }
     setCurrentWord('');
     setTouchedCells([]);
@@ -263,13 +243,15 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
           wordStatus={wordStatus}
         />
       </div>
-      {gameBoardRef.current && currentMatch &&
-        <Swarm
-          gameWidth={currentMatch.dimensions.width}
-          parent={gameBoardRef.current}
-          swarmSize={20}
+      {/* {gameBoardRef.current &&
+        <BeeSwarm
+          gameBoardElement={gameBoardRef.current}
+          gameWidth={currentMatch?.dimensions.width || 5}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          swarmSize={24}
         />
-      }
+      } */}
     </div>
   )
 }

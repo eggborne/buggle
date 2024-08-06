@@ -12,8 +12,9 @@
   --actual-height: 100dvh;
   --main-width: 100vw;
 
-  --header-height: clamp(4.25rem, 12dvh, 20dvw);
-  --current-word-display-height: calc(var(--header-height) * 1);
+  --header-height: clamp(4.25rem, 14dvh, 30dvw);
+  --header-button-size: clamp(4.25rem, 12dvh, 20dvw);
+  --current-word-display-height: calc(var(--header-button-size) * 1.2);
   /* --current-word-display-height: 24vw; */
   --footer-height: clamp(4rem, 12vw, 5rem);
     
@@ -23,8 +24,10 @@
 
   --invalid-color: #b9d1a6;
   --valid-color: #64ff64;
+  --special-color: #ffaa55;
   --duplicate-color: #b2c078;
   --opponent-found-color: #938aac;
+  --redeemable-color: #f50707;
 
   --main-text-color: #e0e0e0;
   --header-background-color: #4266B2;
@@ -275,8 +278,6 @@ button.knob > img {
 .dev-window {
   position: fixed;
   bottom: 0;
-  left: var(--footer-height);
-  background: #00000088;
   z-index: 101;
   opacity: 0.5;
   /* display: none; */

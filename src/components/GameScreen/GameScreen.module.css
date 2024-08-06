@@ -7,23 +7,3 @@
   padding-bottom: 0 !important;
   overflow: hidden;
 }
-
-.GameScreen > .gameButtons {
-  align-self: start;
-  align-items: end;
-  justify-content: center;
-  gap: 0.1rem;
-  margin-top: var(--board-outline-width)
-}
-
-.gameButtons > button:nth-child(2) {
-  width: calc(var(--footer-height) * 1.2);
-  height: calc(var(--footer-height) * 1.2);
-  margin-bottom: calc(var(--footer-height) / 8);
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}

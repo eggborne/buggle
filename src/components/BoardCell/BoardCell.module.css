@@ -10,8 +10,7 @@
   justify-content: center;
   font-weight: bold;
   color: var(--cube-text-color, #333);
-  outline: 0.1rem solid #00000055;
-  border: 0.1rem solid transparent;
+  outline: 1px solid #00000055;
   opacity: 0.8;
   box-shadow:
     inset -0.2rem -0.2rem 0.5rem rgba(0, 0, 0, 0.2),
@@ -36,10 +35,10 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: #88008833;
+  background-color: #88008822;
   border-radius: inherit;
+  transition: opacity 150ms ease;
   opacity: 0;
-  transition: opacity 100ms ease;
   z-index: 0;
 }
 
@@ -53,27 +52,29 @@
   opacity: 1;
 }
 
-.BoardCell.touched.valid {
-  border-color: var(--valid-color);
-  /* background-color: #64ff6433; */
+.BoardCell.touched.valid::after {
+  opacity: 0.25;
+  background-color: var(--valid-color);
 }
 
-.BoardCell.touched.valid::before {
-  background-color: #64ff6433;
+.BoardCell.touched.special::after {
+  opacity: 0.25;
+  background-color: var(--special-color);
 }
 
-.BoardCell.touched.duplicate {
-  border-color: var(--duplicate-color);
+.BoardCell.touched.duplicate::after {
+  opacity: 0.25;
+  background-color: var(--duplicate-color);
 }
 
 .BoardCell.touched.opponentFound {
   border-color: var(--opponent-found-color);
 }
 
+.BoardCell.touched.redeemable {
+  border-color: var(--redeemable-color);
+}
+
 .BoardCell.opponentTouching::after {
   opacity: 1;
 }
-
-/* .BoardCell.opponentTouching::before {
-  background-color: #88008805;
-} */

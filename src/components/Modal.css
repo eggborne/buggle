@@ -58,9 +58,9 @@
   margin-bottom: 1rem;
 }
 
-.modal>button {
+.modal-overlay > button.x-close {
   position: fixed;
-  top: 1.75rem;
+  top: 2rem;
   right: 2rem;
   z-index: 4;
 }

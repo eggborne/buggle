@@ -40,13 +40,13 @@ const fetchRandomPuzzle = async ({ dimensions, difficulty }: GameOptions): Promi
   const randomPuzzle: StoredPuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
   const nextMatrix = stringTo2DArray(randomPuzzle.letterString, dimensions.width, dimensions.height);
   const nextGameData: CurrentGameData = {
+    ...randomPuzzle,
     allWords: new Set(randomPuzzle.allWords),
     letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
     dimensions: {
       width: dimensions.width,
       height: dimensions.height,
     },
-    metadata: randomPuzzle.metadata,
     playerProgress: {},
   }
   return nextGameData;

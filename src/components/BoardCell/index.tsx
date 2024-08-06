@@ -8,7 +8,7 @@ interface BoardCellProps {
 }
 
 function BoardCell({ letter, opponentTouching, touched, wordStatus }: BoardCellProps) {
-  const boardCellClass = `${styles.BoardCell} ${touched && styles.touched} ${opponentTouching && styles.opponentTouching} ${wordStatus}`;
+  const boardCellClass = `${styles.BoardCell} ${touched ? styles.touched : ''} ${opponentTouching ? styles.opponentTouching : ''} ${styles[wordStatus]}`;
   return (
     <>
       <div

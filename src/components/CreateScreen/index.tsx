@@ -93,36 +93,37 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     }
   }, [dimensions, optionsEnabled]);
 
-  const testSize = 5;
+  // const testSize = 5;
 
-  const customOptions: BoardRequestData = {
-    dimensions: {
-      width: testSize,
-      height: testSize
-    },
-    letterDistribution: 'modernEnglish',
-    maxAttempts: 5000000,
-    returnBest: true,
-    customizations: {
-      // customLetters: {
-      //   letterList: 'XXXXXXXXRIEVERGOODBOYPAWK'.split(''),
-      //   shuffle: true,
-      // },
-      requiredWords: {
-        wordList: [
-          "Piano",
-          "Guitar",
-          "Violin",
-          "Trumpet",
-          "Keyboard",
-          "Trombone",
-          "Clarinet"
-        ],
-        convertQ: false,
-      }
-    },
-    theme: '🎵 Music and Instruments 🎸'
-  }
+  const customOptions = false;
+  // const customOptions: BoardRequestData = {
+  //   dimensions: {
+  //     width: testSize,
+  //     height: testSize
+  //   },
+  //   letterDistribution: 'modernEnglish',
+  //   maxAttempts: 5000000,
+  //   returnBest: true,
+  //   customizations: {
+  //     // customLetters: {
+  //     //   letterList: 'XXXXXXXXRIEVERGOODBOYPAWK'.split(''),
+  //     //   shuffle: true,
+  //     // },
+  //     requiredWords: {
+  //       wordList: [
+  //         "Piano",
+  //         "Guitar",
+  //         "Violin",
+  //         "Trumpet",
+  //         "Keyboard",
+  //         "Trombone",
+  //         "Clarinet"
+  //       ],
+  //       convertQ: false,
+  //     }
+  //   },
+  //   theme: '🎵 Music and Instruments 🎸'
+  // }
 
   const handleStartCreatedPuzzle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -137,48 +138,57 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     };
 
     if (Object.values(optionsEnabled).some((o => o))) {
-      const { filters, customizations } = options;
-      if (filters) {
+      console.log('-------------------------------------------> options enables??', optionsEnabled, options)
+      // if (filters) {
         if (optionsEnabled['totalWordsOption']) {
-          filters.totalWordLimits = {
+          options.filters = {};
+          options.filters.totalWordLimits = {
             min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
             max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || 99999,
           };
         }
         if (optionsEnabled['averageWordLengthOption']) {
-          filters.averageWordLengthFilter = {
+          options.filters = {};
+          options.filters.averageWordLengthFilter = {
             comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
             value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
           };
         }
         if (optionsEnabled['uncommonWordLimitOption']) {
-          filters.uncommonWordLimit = {
+          options.filters = {};
+          options.filters.uncommonWordLimit = {
             comparison: (target.elements.namedItem('uncommonWordLimitComparison') as HTMLInputElement).value,
             value: parseInt((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
           };
         }
         if (optionsEnabled['wordLengthLimitOption']) {
-          filters.wordLengthLimits = [...wordLengthPrefs];
+          options.filters = {};
+          options.filters.wordLengthLimits = [...wordLengthPrefs];
         }
-      }
-      if (customizations) {
+      // }
+      // if (customizations) {
+        console.log('-------------------------------------------> customizations enables??', optionsEnabled)
+
         if (optionsEnabled['customLettersOption']) {
-          customizations.customLetters = {
+          options.customizations = {};
+          options.customizations.customLetters = {
             letterList: userLetters,
             convertQ: convertQForLettersRef.current !== null && convertQForLettersRef.current.checked,
             shuffle: shuffleCustomLettersRef.current !== null && shuffleCustomLettersRef.current.checked
           };
         }
         if (optionsEnabled['requiredWordsOption']) {
-          customizations.requiredWords = {
+          options.customizations = {};
+          options.customizations.requiredWords = {
             wordList: userWords.sort((a, b) => b.length - a.length),
             convertQ: convertQForWordsRef.current !== null && convertQForWordsRef.current.checked
           };
         }
-      }
+      // }
     }
     setGenerating(true);
     const generatedBoardData = await createSolvedPuzzle(options);
+    console.log('generatedBoardData', generatedBoardData);
     if (!generatedBoardData) return;
     const gameData = {
       ...generatedBoardData,
@@ -187,9 +197,11 @@ function CreateScreen({ hidden }: CreateScreenProps) {
       dimensions: options.dimensions,
       playerProgress: {
         [user.uid]: {
-          uid: user.uid,
+          attackPoints: 0,
+          foundOpponentWords: {},
           score: 0,
           touchedCells: [],
+          uid: user.uid,
         },
       },
       timeLimit: 180,

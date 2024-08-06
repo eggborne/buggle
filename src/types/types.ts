@@ -110,9 +110,11 @@ export interface GeneratedBoardData {
 //game
 
 export interface PlayerMatchData {
-  uid: string;
+  attackPoints: number,
+  foundOpponentWords: Record<string, boolean>;
   score: number;
   touchedCells: CellObj[];
+  uid: string;
 }
 
 export interface CurrentGameData {
@@ -122,17 +124,18 @@ export interface CurrentGameData {
   letterMatrix: string[][];
   metadata: PuzzleMetadata;
   playerProgress: Record<string, PlayerMatchData>;
+
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
-  timeLimit?: number;
-  
+
   id?: string;
   instigator?: PlayerMatchData;
+  endTime?: number;
   respondent?: PlayerMatchData;
+  foundWordsRecord?: Record<string, string | boolean>
   startTime?: number;
   theme?: string;
-  endTime?: number;
-  foundWordsRecord?: Record<string, string | boolean>
+  timeLimit?: number;
 }
 
 export interface GameOptions {

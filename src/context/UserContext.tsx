@@ -6,7 +6,7 @@ import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 
-const HEARTBEAT_INTERVAL = 5000;
+const HEARTBEAT_INTERVAL = 10000;
 // const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
 
 interface UserContextProps {

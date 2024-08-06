@@ -7,8 +7,8 @@
   font-size: calc(var(--current-word-display-height) / 2);
   font-weight: bold;
   text-transform: uppercase;
-  /* background: salmon; */
-}
+  margin-bottom: var(--board-outline-width);
+    }
 
 .wordLegend {
   display: flex;
@@ -23,11 +23,15 @@
   color: var(--valid-color);
 }
 
+.special {  
+  color: var(--special-color);
+}
+
 .duplicate {
   color: var(--duplicate-color);
 }
 
-.opponentFound {
+.opponentFound, .redeemable{
   color: var(--opponent-found-color);
 }
 

@@ -8,6 +8,7 @@ import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
 import { get, child, ref } from 'firebase/database';
 import { database } from '../../scripts/firebase';
+import AttackButtons from '../AttackButtons';
 
 interface GameScreenProps {
   hidden: boolean;
@@ -39,21 +40,22 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
 
+  console.log('gamescreen current match', currentMatch)
+
   return (
     <main className={gameScreenClass} >
       <GameStatusDisplay isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
       <GameBoard
         opponentData={opponentData}
       />
-      <div className={`lower-button-area ${styles.gameButtons}`}>
-        <button className={`knob`}></button>
-        <button className={`knob`}></button>
-        <button className={`knob`}></button>
-      </div>      
+      {user && currentMatch && opponentData && <AttackButtons
+        userProgress={currentMatch?.playerProgress[user.uid]}
+        behind={currentMatch?.playerProgress[opponentData.uid].score > currentMatch?.playerProgress[user.uid].score}
+      />}
       {wordListShowing && currentMatch && user &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
           {(currentMatch.specialWords || []).sort((a, b) => b.length - a.length).map(word =>
-            <div style={{
+            <div key={word} style={{
               color: '#5f5',
               textTransform: 'uppercase',
               textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',
@@ -63,17 +65,16 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
           )}
           {Array.from(currentMatch.allWords)
             .sort((a, b) => b.length - a.length)
-            .filter(word => currentMatch.specialWords?.includes(word) === false)
+            .filter(word => !currentMatch.specialWords || !currentMatch.specialWords?.includes(word))
             .map(word =>
-            <div style={{
-              textTransform: 'uppercase',
-              textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',
-              opacity: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? '0.75' : '1',
-            }}
-              key={word}>
-              {word}
-            </div>
-          )}
+              <div key={word} style={{
+                textTransform: 'uppercase',
+                textDecoration: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? 'line-through' : 'none',
+                opacity: currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[word] === user.uid ? '0.75' : '1',
+              }}>
+                {word}
+              </div>
+            )}
         </Modal>
       }
       {process.env.NODE_ENV === 'development' && <div className={`dev-window`}>

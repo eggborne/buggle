@@ -20,7 +20,7 @@ interface FirebaseContextProps {
   setGameId: (id: string | null) => void;
   setPlayerList: Dispatch<SetStateAction<UserData[] | null>>;
   setPlayerTouchedCells: (playerUid: string, newValue: CellObj[]) => void;
-  submitWord: (playerUid: string, word: string) => void;
+  submitWord: (playerUid: string, word: string, wordStatus?: string) => void;
 }
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
@@ -136,39 +136,52 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     setGameId(null);
   }
 
-  const submitWord = async (playerId: string, word: string) => {
+  const submitWord = async (playerId: string, word: string, wordStatus = 'valid') => {
+    console.log(`submitting ${wordStatus} word ${word}`)
     if (!currentMatch) return;
     if (!gameId) {
       const nextCurrentMatch = { ...currentMatch };
       if (nextCurrentMatch.foundWordsRecord) {
         nextCurrentMatch.foundWordsRecord[word] = playerId;
         setCurrentMatch(nextCurrentMatch);
-        submitWordForPoints(playerId, word);
+        submitWordForPoints(playerId, word, wordStatus);
       }
       return;
     }
-    const wordRef = ref(database, `/games/${currentMatch.id}/foundWordsRecord/${word}`);
-    const claimedSuccessfully = await runTransaction(wordRef, (currentData) => {
-      if (!currentData) {
-        return playerId;
-      } else {
-        return;
+    if (wordStatus === 'valid' || wordStatus === 'special') {
+      const wordRef = ref(database, `/games/${currentMatch.id}/foundWordsRecord/${word}`);
+      const claimedSuccessfully = await runTransaction(wordRef, (currentData) => {
+        if (!currentData) {
+          return playerId;
+        } else {
+          return;
+        }
+      });
+      if (claimedSuccessfully.committed) {
+        submitWordForPoints(playerId, word, wordStatus);
       }
-    });
-    if (claimedSuccessfully.committed) {
-      submitWordForPoints(playerId, word);
+    } else if (gameId && wordStatus === 'redeemable') {
+      submitWordForPoints(playerId, word, wordStatus);
     }
   }
 
-  const submitWordForPoints = async (playerId: string, word: string) => {
+  const submitWordForPoints = async (playerId: string, word: string, wordStatus = 'valid') => {
     let wordValue;
     if (word.length >= 8) {
       wordValue = pointValues[8];
     } else {
       wordValue = pointValues[word.length];
     }
-    const nextScore = (currentMatch?.playerProgress[playerId].score || 0) + wordValue;
-    updatePlayerScore(playerId, nextScore);
+    if (wordStatus === 'special') {
+      wordValue *= 2;
+    }
+    if (wordStatus === 'valid' || wordStatus === 'special') {
+      const nextScore = (currentMatch?.playerProgress[playerId].score || 0) + wordValue;
+      updatePlayerScore(playerId, nextScore);
+    } else if (wordStatus === 'redeemable') {
+      const nextAttackPoints = (currentMatch?.playerProgress[playerId].attackPoints || 0) + wordValue;
+      updatePlayerAttackPoints(playerId, nextAttackPoints, word);
+    }
   }
 
   const updatePlayerScore = async (playerUid: string, newValue: number) => {
@@ -184,7 +197,26 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     } else {
       const nextCurrentMatch = { ...currentMatch };
       nextCurrentMatch.playerProgress[playerUid].score = newValue;
-      setCurrentMatch(nextCurrentMatch)
+      setCurrentMatch(nextCurrentMatch);
+    }
+  }
+
+  const updatePlayerAttackPoints = async (playerUid: string, newValue: number, word: string) => {
+    if (!currentMatch) {
+      console.error("No currentMatch");
+      return;
+    }
+    if (currentMatch.id) {
+      const updates: Record<string, string | number> = {};
+      const updatePath = `games/${currentMatch.id}/playerProgress/${playerUid}/attackPoints`;
+      const foundWordPath = `games/${currentMatch.id}/playerProgress/${playerUid}/foundOpponentWords/${word}`;
+      updates[updatePath] = newValue;
+      updates[foundWordPath] = 'true';
+      await update(ref(database), updates);
+    } else {
+      const nextCurrentMatch = { ...currentMatch };
+      nextCurrentMatch.playerProgress[playerUid].attackPoints = newValue;
+      setCurrentMatch(nextCurrentMatch);
     }
   }
 

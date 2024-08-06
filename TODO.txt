@@ -1,0 +1,4 @@
+
+create game on acceptance of confirmation, not confirmation
+
+notify players of game end

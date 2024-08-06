@@ -8,7 +8,7 @@ interface GameTimerProps {
   timeLimit: number;
 }
 
-const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
+const GameTimer = ({ gameId, started }: GameTimerProps) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const { currentMatch, endGame } = useFirebase();
 

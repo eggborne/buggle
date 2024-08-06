@@ -15,11 +15,11 @@ const Modal: React.FC<ModalProps> = ({ className = '', children, isOpen, noClose
   return ReactDOM.createPortal(
     <div className={`modal-overlay ${isOpen ? 'showing' : 'hidden'}`} onClick={onClose}>
       <div className={`modal ${className}`} onClick={(e) => e.stopPropagation()} style={style}>
-        {!noCloseButton && <button className="x-close" onClick={onClose}>
-          &times;
-        </button>}
         {children}
       </div>
+      {!noCloseButton && <button className="x-close" onClick={onClose}>
+        &times;
+      </button>}
     </div>,
     document.body
   );

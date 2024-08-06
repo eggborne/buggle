@@ -78,18 +78,21 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
             dimensions: boardDimensions,
             letterMatrix: sampleLetterMatrices[sizeSelected - 4],
             metadata: {
-              percentUncommon: 1
+              percentUncommon: 1,
+              averageWordLength: 5,
+              dateCreated: 0,
             },
             playerProgress: {
               'fakeId': {
+                attackPoints: 0,
+                foundOpponentWords: {},
                 score: 0,
-                foundWords: {},
+                touchedCells: [],
                 uid: 'fakeId'
               }
             },
           }}
           opponentData={null}
-          onSubmitValidWord={() => { }}
         />}
         <div className={styles.viewSelect}>
           <button className={`${styles.editModeButton} ${(sizeSelected === 4) ? styles.selected : ''}`} onClick={() => setSizeSelected(4)}>4 x 4</button>
