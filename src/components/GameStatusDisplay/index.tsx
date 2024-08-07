@@ -7,12 +7,13 @@ import GameTimer from '../GameBoard/GameTimer';
 
 
 interface GameStatusDisplayProps {
+  gameStarted: boolean;
   isMultiplayer: boolean;
   opponentData: UserData | null;
   showConfirmModal: (confirmData: ConfirmData) => void;
 }
 
-function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: GameStatusDisplayProps) {
+function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfirmModal }: GameStatusDisplayProps) {
   const { user, isLoggedIn } = useUser();
   const { currentMatch } = useFirebase();
   if (!currentMatch || !user) return;
@@ -31,8 +32,6 @@ function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: Ga
         <div className={styles.userLabel} style={{ fontSize: `${1.5 - ((user.displayName?.length || 0) / 15)}rem` }}>{user.displayName || 'Guest'}</div>
       </div>
 
-      
-
       <div className={styles.scoreArea}>
         <div className={styles.labeledCounter}>
           <div>Score</div>
@@ -41,9 +40,8 @@ function GameStatusDisplay({ isMultiplayer, opponentData, showConfirmModal }: Ga
       </div>
 
       <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
-        <GameTimer gameId={currentMatch.id || ''} started={true} timeLimit={currentMatch.timeLimit || 200} />
+        <GameTimer gameId={currentMatch.id || ''} started={gameStarted} timeLimit={currentMatch.timeLimit || 200} />
       </div>
-
 
       <div className={styles.scoreArea}>
         <div className={styles.labeledCounter} style={{ visibility: isMultiplayer ? 'visible' : 'hidden' }} >

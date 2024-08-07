@@ -112,6 +112,7 @@ export interface GeneratedBoardData {
 export interface PlayerMatchData {
   attackPoints: number,
   foundOpponentWords: Record<string, boolean>;
+  ready?: boolean;
   score: number;
   touchedCells: CellObj[];
   uid: string;
@@ -121,6 +122,7 @@ export interface CurrentGameData {
   allWords: Set<string> | string[];
   specialWords?: string[];
   dimensions: PuzzleDimensions;
+  gameOver: boolean;
   letterMatrix: string[][];
   metadata: PuzzleMetadata;
   playerProgress: Record<string, PlayerMatchData>;

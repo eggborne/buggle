@@ -62,15 +62,15 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         },
         accepted: false,
       }
-      const newChallengUid = await push(challengesRef, newChallenge).key;
+      const newChallengeUid = await push(challengesRef, newChallenge).key;
       triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
       setSentChallenges(prevSentChallenges => {
         const nextSentChallenges = [...prevSentChallenges];
-        const newChallengeData = { ...newChallenge, id: newChallengUid };
+        const newChallengeData = { ...newChallenge, id: newChallengeUid };
         nextSentChallenges.push(newChallengeData);
         return nextSentChallenges;
       });
-      await update(ref(database, `challenges/${newChallengUid}`), { id: newChallengUid });
+      await update(ref(database, `challenges/${newChallengeUid}`), { id: newChallengeUid });
       setPendingOutgoingChallenge(null);
     }
   };
@@ -108,12 +108,13 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     const { dimensions, difficulty, id: challengeId, instigator: instigatorId, respondent: respondentId, timeLimit } = challenge;
     const opponentName = playerList.filter(p => p.uid === instigatorId)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
-    const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
+    const randomPuzzle = await fetchRandomPuzzle({dimensions, difficulty, timeLimit});
     if (challengeId) {
       const newGameData: CurrentGameData = {
         ...randomPuzzle,
         allWords: Array.from(randomPuzzle.allWords),
         endTime: 0,
+        gameOver: false,
         id: challengeId,
         instigator: {
           uid: instigatorId,
@@ -146,10 +147,11 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           touchedCells: [],
         },
         startTime: 0,
-      }
+        timeLimit: challenge.timeLimit
+      }      
+      await markChallengeAccepted(challengeId)
       console.group('---- starting game')
       await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
-      await markChallengeAccepted(challengeId)
       changePhase('game');
     }
   };
@@ -263,9 +265,9 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
               <option value='hard'>Hard</option>
             </select>
             <select ref={timeLimitInputRef}>
-              <option value='60'>1 minute</option>
-              <option value='180'>3 minutes</option>
-              <option value='300'>5 minutes</option>
+              <option value='5'>5 seconds</option>
+              <option value='10'>10 seconds</option>
+              <option value='30'>30 seconds</option>
             </select>
           </div>
         </div>

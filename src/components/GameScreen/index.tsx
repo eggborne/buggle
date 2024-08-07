@@ -40,11 +40,11 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
 
   const gameScreenClass = `${styles.GameScreen}${hidden ? ' hidden' : ''}`;
 
-  console.log('gamescreen current match', currentMatch)
+  // console.log('gamescreen current match', currentMatch)
 
   return (
     <main className={gameScreenClass} >
-      <GameStatusDisplay isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
+      {currentMatch && <GameStatusDisplay gameStarted={opponentData ? currentMatch.playerProgress[opponentData.uid].ready === true : true} isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />}
       <GameBoard
         opponentData={opponentData}
       />

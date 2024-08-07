@@ -6,6 +6,9 @@ import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
 import SmoothPathOverlay from './PathOverlay';
 import { useFirebase } from '../../context/FirebaseContext';
+import { triggerShowMessage } from '../../hooks/useMessageBanner';
+import LoadingDisplay from '../LoadingDisplay';
+import Modal from '../Modal';
 // import BeeSwarm from './BeeSwarm'
 
 interface GameBoardProps {
@@ -15,9 +18,9 @@ interface GameBoardProps {
 }
 
 function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
-  const { user } = useUser();
+  const { user, changePhase } = useUser();
   const options = user?.preferences;
-  let { currentMatch, setPlayerTouchedCells, submitWord } = useFirebase();
+  let { currentMatch, setPlayerTouchedCells, setPlayerReady, submitWord } = useFirebase();
   if (fillerData) {
     currentMatch = fillerData;
   }
@@ -28,15 +31,40 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   const [wordStatus, setWordStatus] = useState<string>('invalid');
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
-  console.log(wordValid);
+  useEffect(() => {
+    if (currentMatch && !currentMatch.id) {
+      requestAnimationFrame(() => {
+        if (user && user.uid && gameBoardRef.current) {
+          gameBoardRef.current.classList.add(styles.showing);
+        }
+      });
+    }
+  }, [])
 
   useEffect(() => {
-    requestAnimationFrame(() => {
-      if (gameBoardRef.current) {
-        gameBoardRef.current.classList.add(styles.showing)
+    if (user && user.uid && gameBoardRef.current && currentMatch) {
+      if (currentMatch.id) {
+        // set ready if not
+        if (!currentMatch.playerProgress[user.uid].ready) {
+          setPlayerReady(user.uid);
+        }
+        const opponentProgress = currentMatch.playerProgress[opponentData?.uid || user.uid];
+        if (opponentProgress.ready && !gameBoardRef.current.classList.contains(styles.showing)) {
+          requestAnimationFrame(() => {
+            if (gameBoardRef.current) {
+              gameBoardRef.current.classList.add(styles.showing);
+            }
+          });
+        } else {
+          console.warn('opponent not ready yet!')
+        }
       }
-    })
-  }, []);
+      if (currentMatch.gameOver) {
+        triggerShowMessage(`Game over!`);
+        gameBoardRef.current.classList.remove(styles.showing)
+      }
+    }
+  }, [currentMatch]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -95,11 +123,17 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
     };
   }, [dragging, touchedCells, handleWordSubmit]);
 
+  // useEffect(() => {
+  //   if (currentWord && currentMatch && user) {
+  //     setWordValidity(currentWord);
+  //   }
+  // }, [currentMatch, wordStatus, dragging, currentWord]);
+
   useEffect(() => {
     if (currentWord && currentMatch && user) {
       setWordValidity(currentWord);
     }
-  }, [currentMatch, wordStatus, dragging, currentWord]);
+  }, [currentWord]);
 
   useEffect(() => {
     if (user && opponentData) {
@@ -126,7 +160,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
         newStatus = 'duplicate';
       } else if (wordExistsInPuzzle) {
         const isSpecialWord = currentMatch.specialWords?.includes(word);
-        newStatus = isSpecialWord? 'special' : 'valid';
+        newStatus = isSpecialWord ? 'special' : 'valid';
       }
 
       setWordStatus(newStatus);
@@ -203,7 +237,37 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
 
   return (
     <div className={styles.gameArea}>
+      <Modal
+        isOpen={currentMatch?.gameOver || false}
+        className={styles.CloseModal}
+        noCloseButton
+        onClose={() => null}
+
+      >
+        <h1>GAME OVER</h1>
+        <div className={styles.resultsBody}>
+          {user && opponentData ?
+            <div>multiplayer results yo</div>
+            :
+            currentMatch && <>
+              <div>{Object.entries(currentMatch?.foundWordsRecord || {})
+                .filter(([_, value]) => value === user?.uid)
+                .map(([key, _]) => key).length} words found</div>
+              <div>Score: {currentMatch?.playerProgress[user?.uid || '']?.score || 0}</div>
+            </>
+          }
+        </div>
+        <div className={'button-group'}>
+          <button className={'start'} onClick={() => changePhase('title')}>OK</button>
+        </div>
+      </Modal>
       {!noAnimation && <CurrentWordDisplay letters={currentWord.split('')} wordStatus={wordStatus} />}
+      {(currentMatch && opponentData && !currentMatch.playerProgress[opponentData?.uid].ready) &&
+        <div className={styles.waitingPlaceholder}>
+          <p>Waiting for {opponentData?.displayName} to join...</p>
+          <LoadingDisplay />
+        </div>
+      }
       <div
         ref={gameBoardRef}
         id='game-board'

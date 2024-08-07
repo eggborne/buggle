@@ -7,7 +7,7 @@ import { ChallengeData, UserData } from '../../types/types';
 import ChallengeListItem from '../ChallengeListItem';
 
 const StartMatchModal = () => {
-  const { challenges, playerList, joinNewGame, revokeOutgoingChallenge } = useFirebase();
+  const { challenges, playerList, joinNewGame, revokeOutgoingChallenge, setPlayerReady } = useFirebase();
   const { user, changePhase } = useUser();
   const [acceptedChallenge, setAcceptedChallenge] = useState<ChallengeData | null>(null);
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
@@ -39,12 +39,13 @@ const StartMatchModal = () => {
   }
 
   const handleConfirmAcceptance = async () => {
-    if (acceptedChallenge?.id) {
+    if (user && acceptedChallenge?.id) {
       const newGameId = acceptedChallenge?.id;
       newGameId && joinNewGame(newGameId);
-      await revokeOutgoingChallenge(acceptedChallenge?.id);
-      await setAcceptedChallenge(null);
+      revokeOutgoingChallenge(acceptedChallenge?.id);
+      setAcceptedChallenge(null);
       changePhase('game');
+      setPlayerReady(user.uid);
     } else {
       console.error('StartMatchModal found no acceptedChallange.id', acceptedChallenge)
     }

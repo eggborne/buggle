@@ -7,6 +7,10 @@
   border-radius: 0.25rem;
 }
 
+.numeralDisplay.throbbing {
+  animation: throb 250ms ease-in-out alternate infinite;
+}
+
 .numeralDigit {
   background-image: url('/assets/numerals.svg');
   background-repeat: no-repeat;
@@ -25,5 +29,22 @@
 }
 
 .numeralDigit.green {
-  filter: invert(1) sepia(1) saturate(8) hue-rotate(40deg);
+  filter: invert(1) sepia(1) saturate(9) hue-rotate(40deg);
+}
+
+.numeralDigit.yellow {
+  filter: invert(1) sepia(1) saturate(8) hue-rotate(0deg);
+}
+.numeralDigit.red {
+  filter: invert(1) sepia(1) saturate(24) hue-rotate(250deg);
+}
+
+@keyframes throb {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.1);
+  }
 }

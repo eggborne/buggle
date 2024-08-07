@@ -47,6 +47,7 @@ const fetchRandomPuzzle = async ({ dimensions, difficulty }: GameOptions): Promi
       width: dimensions.width,
       height: dimensions.height,
     },
+    gameOver: false,
     playerProgress: {},
   }
   return nextGameData;

@@ -45,7 +45,8 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       ...fetchedPuzzle,
       allWords: Array.from(fetchedPuzzle.allWords),
       startTime: Date.now(),
-      endTime: Date.now() + newGameOptions.timeLimit * 1000
+      endTime: Date.now() + newGameOptions.timeLimit * 1000,
+      timeLimit: newGameOptions.timeLimit,
     }
     return newGameData;
   };
@@ -92,6 +93,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
           touchedCells: [],
         },
       },
+      gameOver: false,
       startTime: Date.now(),
       endTime: Date.now() + (600 * 1000),
     }
@@ -139,9 +141,9 @@ function SelectScreen({ hidden }: SelectScreenProps) {
                 <option value='hard'>Hard</option>
               </select>
               <select name='timeLimit'>
-                <option value='60'>1 minute</option>
-                <option value='180'>3 minutes</option>
-                <option value='300'>5 minutes</option>
+                <option value='5'>5 seconds</option>
+                <option value='10'>10 seconds</option>
+                <option value='30'>30 seconds</option>
               </select>
             </div>
           </div>

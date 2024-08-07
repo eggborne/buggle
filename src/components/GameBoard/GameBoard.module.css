@@ -5,16 +5,6 @@
   place-items: center;
 }
 
-.BeeSwarm {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: var(--game-board-size);
-  height: var(--game-board-size);
-  z-index: 100;
-  pointer-events: none;
-}
-
 .gameBoard {
   position: relative;
   width: var(--game-board-size);
@@ -39,6 +29,25 @@
 .gameBoard.showing {
   scale: 1;
   opacity: 1;
+}
+
+.waitingPlaceholder {
+  position: absolute;
+  translate: -50% -50%;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 5rem;
+}
+
+.waitingPlaceholder > p {
+  font-size: 1.1rem;
+  position: absolute;
+  bottom: 6rem;
 }
 
 .boardContainer {
@@ -132,4 +141,37 @@
 
 .pathOverlay.redeemable .pathSegment.outerLine {
   stroke: var(--redeemable-color);
+}
+
+.CloseModal {
+  height: unset;
+  background-color: rgb(56, 119, 42);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  gap: 2rem;
+  padding:2rem;
+}
+
+.CloseModal > h1 {
+  font-size: 2.75rem;
+}
+
+.CloseModal > .resultsBody {
+  font-size: 1.25rem;
+  text-shadow: var(--text-stroke);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+.CloseModal button {
+  font-size: 1.5rem;
+  padding: 1rem;
+  width: 12rem;
 }

@@ -24,7 +24,7 @@ const ChallengeListItem = ({ challenge, opponentData, handleDeclineChallenge, ha
       <span><img className='profile-pic' src={opponentData?.photoURL || undefined} /></span>
       <span>{opponentData?.displayName}</span>
       <div className={styles.difficultyLabel}>
-        <span>{`${challenge.timeLimit / 60}:00`}</span>
+        <span>{`${challenge.timeLimit} seconds`}</span>
         <span>{challenge.difficulty}</span>
       </div>
       <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>

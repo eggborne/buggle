@@ -9,16 +9,17 @@ interface GameTimerProps {
 }
 
 const GameTimer = ({ gameId, started }: GameTimerProps) => {
-  const [timeLeft, setTimeLeft] = useState(0);
   const { currentMatch, endGame } = useFirebase();
+  const [timeLeft, setTimeLeft] = useState(currentMatch?.timeLimit || 0);
 
   useEffect(() => {
     if (started) {
-      if (currentMatch && currentMatch.endTime) {
+      if (currentMatch && currentMatch.timeLimit) {
+        const endTime = Date.now() + (currentMatch.timeLimit * 1000);
         const timer = setInterval(() => {
           const now = Date.now();
-          const remaining = Math.max(0, (currentMatch.endTime || 0) - now);
-          setTimeLeft(Math.floor(remaining / 1000));
+          const remaining = Math.max(0, (endTime || 0) - now);
+          setTimeLeft(Math.ceil(remaining / 1000));
 
           if (remaining <= 0) {
             clearInterval(timer);
@@ -30,8 +31,15 @@ const GameTimer = ({ gameId, started }: GameTimerProps) => {
     }
   }, [started]);
 
+  if (!currentMatch || !currentMatch.timeLimit) return;
+
+  const numeralColor =
+    timeLeft > (currentMatch.timeLimit * 0.5) ? 'green'
+      : timeLeft > (currentMatch.timeLimit * 0.2) ? 'yellow'
+        : 'red'
+
   return (
-    <NumeralDisplay digits={timeLeft || 0} length={3} color={'green'} height={'clamp(1rem, calc(var(--header-height) * 0.5), 2rem)'} />
+    <NumeralDisplay throbbing={numeralColor === 'red'} digits={timeLeft || 0} length={3} color={numeralColor} height={'clamp(1rem, calc(var(--header-height) * 0.5), 2rem)'} />
   );
 };
 

@@ -93,7 +93,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     }
   }, [dimensions, optionsEnabled]);
 
-  // const testSize = 5;
+  const testSize = 5;
 
   const customOptions = false;
   // const customOptions: BoardRequestData = {
@@ -116,7 +116,6 @@ function CreateScreen({ hidden }: CreateScreenProps) {
   //         "Violin",
   //         "Trumpet",
   //         "Keyboard",
-  //         "Trombone",
   //         "Clarinet"
   //       ],
   //       convertQ: false,
@@ -193,8 +192,9 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     const gameData = {
       ...generatedBoardData,
       allWords: new Set(generatedBoardData.wordList),
-      letterMatrix: generatedBoardData.matrix,
       dimensions: options.dimensions,
+      letterMatrix: generatedBoardData.matrix,
+      gameOver: false,
       playerProgress: {
         [user.uid]: {
           attackPoints: 0,
