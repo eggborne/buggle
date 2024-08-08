@@ -248,9 +248,9 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
           {user && opponentData ?
             <div>multiplayer results yo</div>
             :
-            currentMatch && <>
+            currentMatch && user && user.uid && <>
               <div>{Object.entries(currentMatch?.foundWordsRecord || {})
-                .filter(([_, value]) => value === user?.uid)
+                .filter(([_, value]) => value === user.uid)
                 .map(([key, _]) => key).length} words found</div>
               <div>Score: {currentMatch?.playerProgress[user?.uid || '']?.score || 0}</div>
             </>

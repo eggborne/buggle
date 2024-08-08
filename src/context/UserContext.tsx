@@ -7,7 +7,7 @@ import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 
 const HEARTBEAT_INTERVAL = 2000;
-const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
+const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 1;
 
 interface UserContextProps {
   user: UserData | null;
