@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: var(--main-width);
   height: 2.5rem;
   background-color: darkred;
   font-weight: bold;

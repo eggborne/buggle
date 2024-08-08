@@ -5,5 +5,5 @@
   background-color: var(--game-background-color);
   z-index: 0;
   padding-bottom: 0 !important;
-  overflow: hidden;
+  overflow-x: hidden;
 }

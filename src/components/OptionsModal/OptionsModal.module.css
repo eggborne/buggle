@@ -5,7 +5,7 @@
   top: 0;
   display: grid;
   grid-template-rows: auto 1fr clamp(3rem, calc(var(--footer-height) / 1.5), 4rem);
-  width: 100vw;
+  width: var(--main-width);
   height: var(--actual-height);
   background-color: rgb(71, 71, 94);
   transition: opacity 200ms ease, transform 200ms ease;

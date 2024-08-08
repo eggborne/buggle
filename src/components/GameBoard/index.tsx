@@ -242,7 +242,6 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
         className={styles.CloseModal}
         noCloseButton
         onClose={() => null}
-
       >
         <h1>GAME OVER</h1>
         <div className={styles.resultsBody}>

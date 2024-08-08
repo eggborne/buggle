@@ -12,11 +12,13 @@
   --actual-height: 100dvh;
   --main-width: 100vw;
 
-  --header-height: clamp(4.25rem, 14dvh, 30dvw);
-  --header-button-size: clamp(4.25rem, 12dvh, 20dvw);
+  /* --header-height: clamp(4.25rem, 14dvh, 30dvw); */
+  --header-height: clamp(4.25rem, 14dvh, calc(var(--main-width) * 0.3));
+  /* --header-button-size: clamp(4.25rem, 12dvh, 20dvw); */
+  --header-button-size: clamp(4.25rem, 12dvh, calc(var(--main-width) * 0.2));
   --current-word-display-height: calc(var(--header-button-size) * 1.2);
-  /* --current-word-display-height: 24vw; */
-  --footer-height: clamp(4rem, 12vw, 5rem);
+  /* --footer-height: clamp(4rem, 12vw, 5rem); */
+  --footer-height: clamp(4rem, calc(var(--main-width) * 0.12), 5rem);
     
   --start-color: #32864A;
   --cancel-color: #847f27;
@@ -177,12 +179,30 @@ button:focus-visible {
 }
 
 main {
+  position: absolute;
+  top: 0;
+  left: 0;  
+  width: 100%;
+  width: var(--main-width);
+  height: var(--actual-height);
   display: flex !important;
   flex-grow: 1;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* z-index: 3; */
+
+  overflow-y: auto;
+  padding-bottom: calc(var(--bottom-margin) + (var(--footer-height) / 2)) !important;
+  transition: opacity 300ms ease;
+}
+
+main.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+main h1 {
+  padding: 0.5rem 0;
 }
 
 button.knob {
@@ -208,7 +228,7 @@ button.knob > img {
   justify-content: space-between;
   padding: 0.5rem;
   align-self: stretch;
-  width: calc(100vw - (var(--footer-height) * 2))
+  width: calc(var(--main-width) - (var(--footer-height) * 2))
 }
 
 .button-group {
@@ -255,7 +275,7 @@ button.knob > img {
 @keyframes fade-in {
   from {
     opacity: 0;
-    scale: 0.85;
+    scale: 0.9;
   }
   to {
     opacity: 1;
@@ -265,15 +285,50 @@ button.knob > img {
 
 @media (min-aspect-ratio: 2.4/4) {
   :root {
-    --main-width: 52vh;
+    --frame-size: 2rem;
+    --actual-height: calc(100vh - (var(--frame-size) * 2));
+    --main-width: calc(var(--actual-height) * (9/18));
+  }
+
+  main {
+    translate: -50% 0;
+    left: 50%;
+  }
+
+  .modal-overlay {
+    translate: -50% 0;
+    top: var(--frame-size) !important;
+    left: 50% !important;
+    bottom: unset !important;
+    right: unset !important;
+    height: 100%;
+    width: var(--main-width);
+    height: var(--actual-height);
+    z-index: 0;
+  }
+  
+  .screen-container {
+    translate: 0 var(--frame-size);
+    width: var(--main-width);
+    align-self: center;
+  }
+  
+  body:after {
+    content: '';
+    position: absolute;
+    translate: -50% 0;
+    top: 0;
+    left: 50%;
+    width: calc(var(--main-width) + (var(--frame-size) / 1.35));
+    height: 100dvh;
+    background-image: url('/assets/phone.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    pointer-events: none;
+    z-index: 100;
   }
 }
-
-/* @media (min-width: 1024px) {
-  main {
-    opacity: 0.5 !important;
-  }
-} */
 
 .dev-window {
   position: fixed;

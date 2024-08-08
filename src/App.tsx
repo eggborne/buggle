@@ -91,7 +91,6 @@ function App() {
     if (!currentMatch) return;
     const nextPuzzleData: StoredPuzzleData = {
       allWords: Array.from(currentMatch.allWords),
-      specialWords: currentMatch.specialWords,
       dimensions: currentMatch.dimensions,
       letterString: encodeMatrix(currentMatch.letterMatrix, currentMatch.metadata.key).map(row => row.join('')).join(''),
       metadata: currentMatch.metadata,
@@ -99,6 +98,7 @@ function App() {
     
     if (currentMatch.theme) {
       nextPuzzleData.theme = currentMatch.theme;
+      nextPuzzleData.specialWords = currentMatch.specialWords;
     }
     
     const newPuzzleId = `${currentMatch.dimensions.width}${currentMatch.dimensions.height}${nextPuzzleData.letterString}`;
@@ -135,13 +135,13 @@ function App() {
     isLoading ? <LoadingDisplay /> :
       <>
         {isLoggedIn && <PlayerAnnouncementEffect />}
-        <MessageBanner />
         <div
           className={'screen-container'}
           style={{
             opacity: userReady ? 1 : 0,
           }}
         >
+          <MessageBanner />
           <TitleScreen hidden={phase !== 'title' || !userReady} showOptions={() => setOptionsShowing(true)} />
           <CreateScreen hidden={phase !== 'create'} />
           <SelectScreen
@@ -169,7 +169,11 @@ function App() {
               showConfirmModal(confirmShowing, true);
             }}
           />
-        </div>
+        <SideMenu
+          sideMenuShowing={sideMenuShowing}
+          setOptionsShowing={() => { setOptionsShowing(true); setSideMenuShowing(false) }}
+          showConfirmModal={showConfirmModal}
+        />
         <Footer
           optionsShowing={optionsShowing}
           sideMenuShowing={sideMenuShowing}
@@ -177,11 +181,7 @@ function App() {
           toggleOptionsShowing={() => setOptionsShowing(!optionsShowing)}
           toggleSideMenuShowing={() => setSideMenuShowing(!sideMenuShowing)}
         />
-        <SideMenu
-          sideMenuShowing={sideMenuShowing}
-          setOptionsShowing={() => { setOptionsShowing(true); setSideMenuShowing(false) }}
-          showConfirmModal={showConfirmModal}
-        />
+        </div>
         {isLoggedIn && <StartMatchModal />}
       </>
   )

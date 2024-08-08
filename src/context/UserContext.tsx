@@ -6,8 +6,8 @@ import { database } from '../scripts/firebase';
 import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 
-const HEARTBEAT_INTERVAL = 10000;
-// const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
+const HEARTBEAT_INTERVAL = 2000;
+const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
 
 interface UserContextProps {
   user: UserData | null;
@@ -70,7 +70,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             }
             await sendHeartbeat();
             lastHeartbeatRef.current = now;
-            // await pruneInactivePlayers();
+            pruneInactivePlayers(userData.uid);
           }, duration);
         };
 
@@ -80,6 +80,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         console.warn('-- NO Firebase user!');
         setIsLoggedIn(false);
       }
+      console.log('setting user to', userData)
       setUser(userData);
       for (const type in userData.preferences) {
         const prefsSection = userData.preferences[type as keyof OptionsData];
@@ -115,27 +116,24 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // const pruneInactivePlayers = async () => {
-  //   const snapshot = await get(child(ref(database), 'players'));
-  //   const players = snapshot.val();
+  const pruneInactivePlayers = async (prunerUid: string) => {
+    const snapshot = await get(child(ref(database), 'players'));
+    const players = snapshot.val();
 
-  //   if (players) {
-  //     Object.keys(players).forEach(async (playerUid) => {
-  //       console.log('playerUid', playerUid)
-  //       console.log('user.uid', user?.uid)
-  //       const player = players[playerUid];
-  //       const sinceLast = Date.now() - player.heartbeat;
-
-  //       if (sinceLast > PRUNE_INTERVAL) {
-  //         console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
-  //         await remove(ref(database, `players/${playerUid}`));
-  //         console.log(`Removed inactive player: ${playerUid}`);
-  //       } else {
-  //         console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
-  //       }
-  //     });
-  //   }
-  // };
+    if (players) {
+      Object.keys(players).filter(p => p !== prunerUid).forEach(async (playerUid) => {
+        const player = players[playerUid];
+        const sinceLast = Date.now() - player.heartbeat;
+        if (sinceLast > PRUNE_INTERVAL) {
+          console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
+          await remove(ref(database, `players/${playerUid}`));
+          console.log(`Removed inactive player: ${playerUid}`);
+        } else {
+          console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
+        }
+      });
+    }
+  };
 
   const getUserFromDatabase = async (uid: string) => {
     return get(child(ref(database), `users/${uid}`));
@@ -152,7 +150,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const removeUserFromPlayerList = async (uid: string) => {
     await remove(ref(database, `players/${uid}`));
   };
-
+  
   const updateUserInPlayerList = async (path: string, newValue: string | number) => {
     const updates: Record<string, string | number> = {};
     updates[path] = newValue;
@@ -175,15 +173,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     const auth = getAuth();
     try {
-      await signOut(auth);
+      clearInterval(heartbeatInterval);
       await removeUserFromPlayerList(user.uid);
       setUser({
         ...user,
         ...defaultUser,
         phase: 'title'
       });
+      await signOut(auth);
       setIsLoggedIn(false);
-      clearInterval(heartbeatInterval);
     } catch (error) {
       console.error("Error signing out: ", error);
     }

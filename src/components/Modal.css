@@ -18,7 +18,7 @@
   border-radius: 0.5rem;
   box-shadow: 0 0.1rem 1rem rgba(0, 0, 0, 0.4);
   position: relative;
-  width: calc(100vw - 2rem);
+  width: calc(var(--main-width) - 2rem);
   height: calc(var(--actual-height) - 2rem);
   overflow-y: auto;
   text-align: center;

@@ -1,3 +1,26 @@
+export interface DatabaseStructure {
+  challenges: {
+    [challengeId: string]: ChallengeData;
+  };
+  games: {
+    [gameId: string]: CurrentGameData;
+  };
+  lobby: {
+    messages: {
+      [messageId: string]: ChatMessageData;
+    };
+  };
+  players: {
+    [uid: string]: UserData;
+  };
+  puzzles: {
+    [puzzleId: string]: StoredPuzzleData;
+  };
+  users: {
+    [uid: string]: UserData;
+  };
+}
+
 export interface BannerOptions {
   message: string;
   duration?: number;

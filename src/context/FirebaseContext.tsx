@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction } from 'react';
+import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction, useCallback } from 'react';
 import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot } from 'firebase/database';
 import { CellObj, ChallengeData, CurrentGameData, UserData } from '../types/types';
 import { database } from '../scripts/firebase';
@@ -22,6 +22,7 @@ interface FirebaseContextProps {
   setPlayerReady: (playerUid: string) => void;
   setPlayerTouchedCells: (playerUid: string, newValue: CellObj[]) => void;
   submitWord: (playerUid: string, word: string, wordStatus?: string) => void;
+  subscribeToFoundWords: (callback: (foundWordsRecord: Record<string, false | string>) => void) => (() => void);
 }
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
@@ -73,25 +74,6 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       const handleGame = (snapshot: DataSnapshot) => {
         const data: CurrentGameData = snapshot.val();
         setCurrentMatch(data);
-
-        // if (data.gameOver) {
-        //   const currentUserId = useUser().user?.uid;
-        //   const userScore = data.playerProgress[currentUserId]?.score || 0;
-        //   const opponentId = Object.keys(data.playerProgress).find(id => id !== currentUserId);
-        //   const opponentScore = opponentId ? data.playerProgress[opponentId].score : 0;
-
-        //   let message: string;
-        //   if (userScore > opponentScore) {
-        //     message = "Game Over! You win!";
-        //   } else if (userScore < opponentScore) {
-        //     message = "Game Over! You lose!";
-        //   } else {
-        //     message = "Game Over! It's a tie!";
-        //   }
-
-        //   triggerShowMessage(message);
-        // }
-
       }
       const unsubscribeGame = onValue(gameRef, handleGame);
       console.warn(`game ----------> Context STARTED listener`);
@@ -103,6 +85,31 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       setCurrentMatch(null);
     }
   }, [gameId]);
+
+  const subscribeToFoundWords = (callback: (foundWordsRecord: Record<string, false | string>) => void) => {
+    console.warn('calling subscribttowords')
+    if (!currentMatch?.id) {
+      console.warn('No current match ID available for subscription');
+      return () => { };
+    }
+
+    const foundWordsRef = ref(database, `games/${currentMatch.id}/foundWordsRecord`);
+
+    const handleFoundWords = (snapshot: DataSnapshot) => {
+      const data: Record<string, false | string> = snapshot.val();
+      if (data) {
+        callback(data);
+      }
+    };
+
+    onValue(foundWordsRef, handleFoundWords);
+    console.warn(`Found words ----------> Context STARTED listener for game ${currentMatch.id}`);
+
+    return () => {
+      off(foundWordsRef);
+      console.warn(`Found words <---------- Context STOPPED listener for game ${currentMatch.id}`);
+    };
+  };
 
   const revokeAllOutgoingChallenges = async (uid: string) => {
     if (challenges) {
@@ -159,6 +166,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const destroyGame = async (gameId: string) => {
     if (currentMatch && currentMatch.id) {
       await remove(ref(database, `games/${gameId}`));
+      // await set(ref(database, `games/${gameId}`), null);
     }
     setCurrentMatch(null);
     setGameId(null);
@@ -300,6 +308,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       setPlayerTouchedCells,
       setGameId,
       submitWord,
+      subscribeToFoundWords,
     }}>
       {children}
     </FirebaseContext.Provider>

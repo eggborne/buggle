@@ -1,81 +1,28 @@
 #root {
-  /* height: var(--actual-height);
-  max-height: var(--actual-height); */
   height: 100%;
-  max-width: 1280px;
+  max-width: 100dvw;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
-
-/* .screen-container {
-  position: relative;
-  width: 100vw;
-  height: 100%;
-}
-
-main {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  transition:
-    opacity 200ms ease,
-    scale 200ms ease;
-}
-
-main.hidden {
-  opacity: 0;
-  pointer-events: none;
-} */
-
 .screen-container {
   position: relative;
-  width: 100vw;
-  height: 100%;
   flex-grow: 1;
   display: flex;
+  flex-direction: column;
   overflow: hidden;
   opacity: 0;
   transition: opacity 200ms ease, transform 500ms ease;
-  /* animation: dip 600ms ease;
-  animation-delay: 1100ms; */
-  /* transition-delay: 600ms; */
-}
-
-main {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  min-width: 100vw;
-  height: var(--actual-height);
-  overflow-y: auto;
-  padding-bottom: calc(var(--bottom-margin) + (var(--footer-height) / 2)) !important;
-  transition: opacity 300ms ease;
-}
-
-main.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-main h1 {
-  padding: 0.5rem 0;
 }
 
 @keyframes dip {
   0% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(0.95);
   }
-
   100% {
     transform: scale(1);
   }
@@ -85,7 +32,6 @@ main h1 {
   from {
     transform: translateY(calc(var(--header-height) * -1));
   }
-
   to {
     transform: translateY(0);
   }
