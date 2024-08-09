@@ -10,7 +10,7 @@ interface TitleScreenProps {
 
 function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
   const { user, isLoggedIn, changePhase } = useUser();
-  const { playerList } = useFirebase();
+  const { totalPlayers } = useFirebase();
 
   const handleClickMultiplayer = () => {
     if (!isLoggedIn) {
@@ -21,7 +21,7 @@ function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
   }
 
   const titleScreenClass = `${styles.TitleScreen} ${hidden ? `${styles.hidden}` : ''}`;
-  const playerAmount = playerList ? playerList.length - (isLoggedIn ? 1 : 0) : 0
+  const playerAmount = isLoggedIn ? totalPlayers - 1 : totalPlayers;
   const playersString = `${playerAmount === 0 ? 'No' : playerAmount}${isLoggedIn ? ' other' : ''} player${playerAmount !== 1 ? 's' : ''} here`;
   return (
     <main className={titleScreenClass}>

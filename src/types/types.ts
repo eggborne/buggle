@@ -117,6 +117,7 @@ export interface StoredPuzzleData {
   metadata: PuzzleMetadata;
   specialWords?: string[];
   theme?: string;
+  wordCount: number;
 }
 
 export interface GeneratedBoardData {
@@ -133,12 +134,24 @@ export interface GeneratedBoardData {
 //game
 
 export interface PlayerMatchData {
-  attackPoints: number,
-  foundOpponentWords: Record<string, boolean>;
+  attackPoints: number;
+  availablePowers?: PowerupData[];
+  foundOpponentWords: Record<string, false>;
   ready?: boolean;
   score: number;
   touchedCells: CellObj[];
   uid: string;
+}
+
+export interface PowerupData {
+  activatedBy?: string;
+  activatedAt?: number;
+  category: 'curses' | 'buffs';
+  cost: number;
+  duration: number;
+  id?: number;
+  target?: string;
+  type: string;
 }
 
 export interface CurrentGameData {
@@ -149,15 +162,16 @@ export interface CurrentGameData {
   letterMatrix: string[][];
   metadata: PuzzleMetadata;
   playerProgress: Record<string, PlayerMatchData>;
-
+  
+  activePowerups?: PowerupData[];
   customizations?: BoardCustomizations;
   filters?: BoardFilters;
 
   id?: string;
-  instigator?: PlayerMatchData;
+  instigatorUid?: string;
   endTime?: number;
-  respondent?: PlayerMatchData;
-  foundWordsRecord?: Record<string, string | boolean>
+  respondentUid?: string;
+  foundWordsRecord?: Record<string, string | false>
   startTime?: number;
   theme?: string;
   timeLimit?: number;
@@ -188,14 +202,14 @@ export interface LobbyData {
 export interface ChallengeData {
   accepted: boolean;
   difficulty: string;
-  instigator: string;
-  respondent: string;
+  instigatorUid: string;
+  respondentUid: string;
   dimensions: {
     width: number;
     height: number;
   };
   timeLimit: number;
-  id?: string | null;
+  id?: string;
 }
 
 

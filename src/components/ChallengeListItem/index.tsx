@@ -30,7 +30,7 @@ const ChallengeListItem = ({ challenge, opponentData, handleDeclineChallenge, ha
       <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
       {handleDeclineChallenge && handleAcceptChallenge && 
       <div className={`button-group row ${styles.challengeButtons}`}>
-        <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigator)}>Decline</button>
+        <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigatorUid)}>Decline</button>
         <button className={`start ${styles.acceptButton}`} onClick={() => handleAcceptChallenge(challenge)}>Accept</button>
       </div>}
     </div>

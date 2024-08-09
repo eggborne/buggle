@@ -2,7 +2,7 @@ import styles from './LobbyScreen.module.css'
 import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect } from 'react';
 import { database, fetchRandomPuzzle } from '../../scripts/firebase';
-import { ref, push, update } from "firebase/database";
+import { ref, push, update, DataSnapshot, off, onValue } from "firebase/database";
 import Modal from '../../components/Modal';
 import PuzzleIcon from '../../components/PuzzleIcon';
 import { ChallengeData, CurrentGameData, UserData } from '../../types/types';
@@ -17,8 +17,10 @@ interface LobbyScreenProps {
 
 function LobbyScreen({ hidden }: LobbyScreenProps) {
   const { user, sentChallenges, changePhase, setSentChallenges } = useUser();
-  const { challenges, playerList, markChallengeAccepted, revokeOutgoingChallenge, startNewGame } = useFirebase();
+  const { challenges, markChallengeAccepted, revokeOutgoingChallenge, startNewGame } = useFirebase();
+  const [currentPlayerList, setCurrentPlayerList] = useState<UserData[]>([]);
   const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<UserData | null>(null);
+  const [challengeList, setChallengeList] = useState<ChallengeData[]>([]);
 
   const [sizeSelected, setSizeSelected] = useState<number>(5);
   const difficultyInputRef = useRef<HTMLSelectElement>(null);
@@ -31,12 +33,42 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         lobbyScreenRef.current.classList.add(styles.showing);
       }
     });
+
+    console.log(`challenges ----------> Context STARTED listener`);
+    
+    const playerListRef = ref(database, '/players');
+    const handlePlayerList = (snapshot: DataSnapshot) => {
+      const data: { [key: string]: UserData } = snapshot.val();
+      setCurrentPlayerList(Object.values(data || {}));
+    };
+
+    onValue(playerListRef, handlePlayerList);
+    console.log(`players ----------> Context STARTED listener`);
+    
+    return () => {
+      off(playerListRef, 'value', handlePlayerList);
+      console.log('players <---------- Context STOPPED listener');
+    };
+
   }, []);
 
   useEffect(() => {
     let newSentChallenges = [...sentChallenges];
-    if (challenges && sentChallenges.length > 0) {
-      newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenge.id ? challenges[challenge.id] : null);
+    if (challenges) {
+      if (sentChallenges.length > 0) {
+        newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenge.id ? challenges[challenge.id] : null);
+      }
+      const nextChallengeList = Object.values(challenges).filter(challenge => {
+        const respondentIsUser = challenge.respondentUid === user?.uid;
+        const instigatorExistsInPlayerList = currentPlayerList?.some(player => player.uid === challenge.instigatorUid);
+        return respondentIsUser && instigatorExistsInPlayerList;
+      });
+      setChallengeList(nextChallengeList)
+    } else {
+      if (sentChallenges.length > 0) {
+        newSentChallenges = [];
+      }
+      console.warn('no challenges at LobbyScreen')
     }
     setSentChallenges(newSentChallenges);
 
@@ -44,7 +76,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   const sendChallenge = async () => {
     if (user && pendingOutgoingChallenge && difficultyInputRef.current && timeLimitInputRef.current) {
-      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondent === pendingOutgoingChallenge.uid)) {
+      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondentUid === pendingOutgoingChallenge.uid)) {
         // should never be able to occur as there is no button
         console.warn('already challenging');
         triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.displayName}!`);
@@ -52,26 +84,28 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       }
       const challengesRef = ref(database, 'challenges/');
       const newChallenge: ChallengeData = {
+        accepted: false,
         difficulty: difficultyInputRef.current.value,
-        instigator: user.uid,
-        respondent: pendingOutgoingChallenge.uid,
-        timeLimit: parseInt(timeLimitInputRef.current.value),
+        instigatorUid: user.uid,
+        respondentUid: pendingOutgoingChallenge.uid,
+        timeLimit: Number(timeLimitInputRef.current.value),
         dimensions: {
           width: sizeSelected,
           height: sizeSelected
         },
-        accepted: false,
       }
       const newChallengeUid = await push(challengesRef, newChallenge).key;
-      triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
-      setSentChallenges(prevSentChallenges => {
-        const nextSentChallenges = [...prevSentChallenges];
-        const newChallengeData = { ...newChallenge, id: newChallengeUid };
-        nextSentChallenges.push(newChallengeData);
-        return nextSentChallenges;
-      });
-      await update(ref(database, `challenges/${newChallengeUid}`), { id: newChallengeUid });
-      setPendingOutgoingChallenge(null);
+      if (newChallengeUid) {
+        triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
+        setSentChallenges(prevSentChallenges => {
+          const nextSentChallenges = [...prevSentChallenges];
+          const newChallengeData = { ...newChallenge, id: newChallengeUid };
+          nextSentChallenges.push(newChallengeData);
+          return nextSentChallenges;
+        });
+        await update(ref(database, `challenges/${newChallengeUid}`), { id: newChallengeUid });
+        setPendingOutgoingChallenge(null);
+      }
     }
   };
 
@@ -80,10 +114,10 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   }
 
   const handleCancelChallengingPlayer = async (opponentUid: string) => {
-    if (!challenges || !playerList) return;
-    const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === user?.uid && challenges[key].respondent === opponentUid);
+    if (!challenges || !currentPlayerList) return;
+    const idToRemove = Object.keys(challenges).find(key => challenges[key].instigatorUid === user?.uid && challenges[key].respondentUid === opponentUid);
     idToRemove && revokeOutgoingChallenge(idToRemove);
-    const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
+    const opponentName = currentPlayerList.filter(p => p.uid === opponentUid)[0].displayName;
     triggerShowMessage(`Challenge to ${opponentName} cancelled!`);
 
     setSentChallenges(prevSentChallenges => {
@@ -92,10 +126,10 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   };
 
   const handleDeclineChallenge = async (opponentUid: string) => {
-    if (!challenges || !playerList || !user) return;
-    const idToRemove = Object.keys(challenges).find(key => challenges[key].respondent === user.uid && challenges[key].instigator === opponentUid);
+    if (!challenges || !currentPlayerList || !user) return;
+    const idToRemove = Object.keys(challenges).find(key => challenges[key].respondentUid === user.uid && challenges[key].instigatorUid === opponentUid);
     idToRemove && revokeOutgoingChallenge(idToRemove);
-    const opponentName = playerList.filter(p => p.uid === opponentUid)[0].displayName;
+    const opponentName = currentPlayerList.filter(p => p.uid === opponentUid)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} declined!`);
 
     setSentChallenges(prevSentChallenges => {
@@ -104,9 +138,9 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   };
 
   const handleAcceptChallenge = async (challenge: ChallengeData) => {
-    if (!challenges || !playerList || !user) return;
-    const { dimensions, difficulty, id: challengeId, instigator: instigatorId, respondent: respondentId, timeLimit } = challenge;
-    const opponentName = playerList.filter(p => p.uid === instigatorId)[0].displayName;
+    if (!challenges || !currentPlayerList || !user) return;
+    const { dimensions, difficulty, id: challengeId, instigatorUid, respondentUid, timeLimit } = challenge;
+    const opponentName = currentPlayerList.filter(p => p.uid === instigatorUid)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
     const randomPuzzle = await fetchRandomPuzzle({dimensions, difficulty, timeLimit});
     if (challengeId) {
@@ -116,56 +150,42 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         endTime: 0,
         gameOver: false,
         id: challengeId,
-        instigator: {
-          uid: instigatorId,
-          score: 0,
-          touchedCells: [],
-          attackPoints: 0,
-          foundOpponentWords: {},
-        },
         playerProgress: {
-          [instigatorId]: {
+          [instigatorUid]: {
             attackPoints: 0,
             foundOpponentWords: {},
-            uid: instigatorId,
+            uid: instigatorUid,
             score: 0,
-            touchedCells: [],      
+            touchedCells: [],
           },
-          [respondentId]: {
+          [respondentUid]: {
             attackPoints: 0,
             foundOpponentWords: {},
-            uid: respondentId,
+            uid: respondentUid,
             score: 0,
             touchedCells: [],
           },
         },
-        respondent: {
-          attackPoints: 0,
-          foundOpponentWords: {},
-          uid: respondentId,
-          score: 0,
-          touchedCells: [],
-        },
         startTime: 0,
         timeLimit: challenge.timeLimit
-      }      
+      };
       await markChallengeAccepted(challengeId)
-      console.group('---- starting game')
+      console.group('---- starting game', challengeId)
       await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
       changePhase('game');
     }
   };
 
-  const opponentList = playerList?.filter(player => {
+  const opponentList = currentPlayerList?.filter(player => {
     const isOpponent = player.uid !== user?.uid;
     return isOpponent;
   });
 
-  const challengeList = challenges ? Object.values(challenges).filter(challenge => {
-    const isChallengingUser = challenge.respondent === user?.uid;
-    const instigatorExistsInPlayerList = playerList?.some(player => player.uid === challenge.instigator);
-    return isChallengingUser && instigatorExistsInPlayerList;
-  }) : null;
+  // const challengeList = challenges ? Object.values(challenges).filter(challenge => {
+  //   const respondentIsUser = challenge.respondentUid === user?.uid;
+  //   const instigatorExistsInPlayerList = currentPlayerList?.some(player => player.uid === challenge.instigatorUid);
+  //   return respondentIsUser && instigatorExistsInPlayerList;
+  // }) : null;
 
   const lobbyScreenClass = `${styles.LobbyScreen}${hidden ? ' hidden' : ''}`;
   return (
@@ -176,7 +196,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
         <div className={styles.challengeList}>
           {challengeList && challengeList.length > 0 ?
             challengeList?.map(challenge => {
-              const opponentData = playerList?.find(player => player.uid === challenge.instigator);
+              const opponentData = currentPlayerList?.find(player => player.uid === challenge.instigatorUid);
               return (
                 <ChallengeListItem
                   challenge={challenge}
@@ -206,7 +226,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           </div>
           {opponentList &&
             opponentList.map(playerData => {
-              const alreadyChallenged = sentChallenges.some(c => c.respondent === playerData.uid);
+              const alreadyChallenged = sentChallenges.some(c => c.respondentUid === playerData.uid);
               return (<div
                 key={playerData.uid}
                 className={styles.playerListItem}
@@ -259,15 +279,16 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
             }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
           </div>
           <div className='button-group row'>
-            <select ref={difficultyInputRef}>
+            <select defaultValue='easy' ref={difficultyInputRef}>
               <option value='easy'>Easy</option>
               <option value='medium'>Medium</option>
               <option value='hard'>Hard</option>
             </select>
-            <select ref={timeLimitInputRef}>
+            <select defaultValue='30' ref={timeLimitInputRef}>
               <option value='5'>5 seconds</option>
               <option value='10'>10 seconds</option>
               <option value='30'>30 seconds</option>
+              <option value='120'>2 minutes</option>
             </select>
           </div>
         </div>

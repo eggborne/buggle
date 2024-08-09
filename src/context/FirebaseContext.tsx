@@ -1,14 +1,19 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction, useCallback } from 'react';
-import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot } from 'firebase/database';
-import { CellObj, ChallengeData, CurrentGameData, UserData } from '../types/types';
-import { database } from '../scripts/firebase';
+import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot, push } from 'firebase/database';
+import { CellObj, ChallengeData, CurrentGameData, PowerupData, StoredPuzzleData, UserData } from '../types/types';
+import { database, firestore } from '../scripts/firebase';
 import { useUser } from './UserContext';
 import { pointValues } from '../App';
+import { triggerShowMessage } from '../hooks/useMessageBanner';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface FirebaseContextProps {
   playerList: UserData[] | null;
   challenges: Record<string, ChallengeData> | null;
   currentMatch: CurrentGameData | null;
+  totalPlayers: number;
+  activatePowerup: (playerUid: string, targetUid: string, powerup: PowerupData) => void;
+  addAvailablePower: (playerId: string, powerup: PowerupData) => void;
   destroyGame: (gameId: string) => void;
   endGame: (gameId: string) => void;
   joinNewGame: (newGameId: string | null) => void;
@@ -23,30 +28,31 @@ interface FirebaseContextProps {
   setPlayerTouchedCells: (playerUid: string, newValue: CellObj[]) => void;
   submitWord: (playerUid: string, word: string, wordStatus?: string) => void;
   subscribeToFoundWords: (callback: (foundWordsRecord: Record<string, false | string>) => void) => (() => void);
+  uploadPuzzle: (puzzleData: StoredPuzzleData) => void;
+  updatePlayerAttackPoints: (playerUid: string, newValue: number, word?: string) => void;
 }
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
 
 export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
-  const [playerList, setPlayerList] = useState<UserData[] | null>(null);
   const [challenges, setChallenges] = useState<Record<string, ChallengeData> | null>(null);
   const [currentMatch, setCurrentMatch] = useState<CurrentGameData | null>(null);
+  const [totalPlayers, setTotalPlayers] = useState<number>(0);
+  const [playerList, setPlayerList] = useState<UserData[] | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
   const { isLoggedIn } = useUser();
 
   useEffect(() => {
-    const playerListRef = ref(database, '/players');
-    const handlePlayerList = (snapshot: DataSnapshot) => {
-      const data: { [key: string]: UserData } = snapshot.val();
-      setPlayerList(Object.values(data || {}));
-    };
-    onValue(playerListRef, handlePlayerList);
-    console.warn(`players ----------> Context STARTED listener`);
-
-    return () => {
-      off(playerListRef, 'value', handlePlayerList);
-      console.warn('players <---------- Context STOPPED listener');
-    };
+    const playersRef = ref(database, 'players');
+    const unsubscribe = onValue(playersRef, (snapshot) => {
+      const playerData = snapshot.val();
+      if (playerData) {
+        setTotalPlayers(Object.keys(playerData).length); // Get the count of players
+      } else {
+        setTotalPlayers(0); // Handle the case where there are no players
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -57,11 +63,10 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
         setChallenges(data || {});
       };
       onValue(challengesRef, handleChallenges);
-      console.warn(`challenges ----------> Context STARTED listener`);
-
+      
       return () => {
         off(challengesRef, 'value', handleChallenges);
-        console.warn('challenges <---------- Context STOPPED listener');
+        console.log('challenges <---------- Context STOPPED listener');
       };
     } else {
       setChallenges(null);
@@ -76,10 +81,10 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
         setCurrentMatch(data);
       }
       const unsubscribeGame = onValue(gameRef, handleGame);
-      console.warn(`game ----------> Context STARTED listener`);
+      console.log(`game ----------> Context STARTED listener`);
       return () => {
         unsubscribeGame();
-        console.warn('game <---------- Context STOPPED listener');
+        console.log('game <---------- Context STOPPED listener');
       };
     } else {
       setCurrentMatch(null);
@@ -87,7 +92,6 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   }, [gameId]);
 
   const subscribeToFoundWords = (callback: (foundWordsRecord: Record<string, false | string>) => void) => {
-    console.warn('calling subscribttowords')
     if (!currentMatch?.id) {
       console.warn('No current match ID available for subscription');
       return () => { };
@@ -103,19 +107,19 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     };
 
     onValue(foundWordsRef, handleFoundWords);
-    console.warn(`Found words ----------> Context STARTED listener for game ${currentMatch.id}`);
+    console.log(`Found words ----------> Context STARTED listener for game ${currentMatch.id}`);
 
     return () => {
       off(foundWordsRef);
-      console.warn(`Found words <---------- Context STOPPED listener for game ${currentMatch.id}`);
+      console.log(`Found words <---------- Context STOPPED listener for game ${currentMatch.id}`);
     };
   };
 
   const revokeAllOutgoingChallenges = async (uid: string) => {
     if (challenges) {
-      const challengesToRemove = Object.values(challenges).filter(challenge => challenge.instigator === uid);
+      const challengesToRemove = Object.values(challenges).filter(challenge => challenge.instigatorUid === uid);
       challengesToRemove.forEach(async (challenge) => {
-        const idToRemove = Object.keys(challenges).find(key => challenges[key].instigator === uid && challenges[key].respondent === challenge.respondent);
+        const idToRemove = Object.keys(challenges).find(key => challenges[key].instigatorUid === uid && challenges[key].respondentUid === challenge.respondentUid);
         await remove(ref(database, `challenges/${idToRemove}`));
       });
     }
@@ -128,15 +132,15 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const startNewGame = async (newGameData: CurrentGameData, newGameId: string | null = null) => {
-    console.log('firebase context startNewGame got data', newGameData)
     newGameData.startTime = Date.now();
-    newGameData.endTime = Date.now() + ((newGameData.timeLimit || 180) * 1000);
-    let foundWordsRecord: Record<string, string | boolean> = {};
+    newGameData.endTime = Date.now() + ((newGameData.timeLimit || 10) * 1000);
+    let foundWordsRecord: Record<string, string | false> = {};
     Array.from(newGameData.allWords).forEach(word => {
       foundWordsRecord[word] = false;
     })
     newGameData.foundWordsRecord = foundWordsRecord;
     if (newGameId) {
+      console.log('attempting to send game to DB', newGameData)
       await set(ref(database, `games/${newGameId}`), newGameData);
       setGameId(newGameId); // subscribes to listener
     }
@@ -178,26 +182,28 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     if (!gameId) {
       const nextCurrentMatch = { ...currentMatch };
       if (nextCurrentMatch.foundWordsRecord) {
+        console.log('single player submitting', wordStatus, word)
         nextCurrentMatch.foundWordsRecord[word] = playerId;
         setCurrentMatch(nextCurrentMatch);
         submitWordForPoints(playerId, word, wordStatus);
       }
       return;
-    }
-    if (wordStatus === 'valid' || wordStatus === 'special') {
-      const wordRef = ref(database, `/games/${currentMatch.id}/foundWordsRecord/${word}`);
-      const claimedSuccessfully = await runTransaction(wordRef, (currentData) => {
-        if (!currentData) {
-          return playerId;
-        } else {
-          return;
+    } else {
+      if (wordStatus === 'valid' || wordStatus === 'special') {
+        const wordRef = ref(database, `/games/${currentMatch.id}/foundWordsRecord/${word}`);
+        const claimedSuccessfully = await runTransaction(wordRef, (currentData) => {
+          if (!currentData) {
+            return playerId;
+          } else {
+            return;
+          }
+        });
+        if (claimedSuccessfully.committed) {
+          submitWordForPoints(playerId, word, wordStatus);
         }
-      });
-      if (claimedSuccessfully.committed) {
+      } else if (gameId && wordStatus === 'redeemable') {
         submitWordForPoints(playerId, word, wordStatus);
       }
-    } else if (gameId && wordStatus === 'redeemable') {
-      submitWordForPoints(playerId, word, wordStatus);
     }
   }
 
@@ -237,7 +243,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const updatePlayerAttackPoints = async (playerUid: string, newValue: number, word: string) => {
+  const updatePlayerAttackPoints = async (playerUid: string, newValue: number, word?: string) => {
     if (!currentMatch) {
       console.error("No currentMatch");
       return;
@@ -245,9 +251,11 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     if (currentMatch.id) {
       const updates: Record<string, string | number> = {};
       const updatePath = `games/${currentMatch.id}/playerProgress/${playerUid}/attackPoints`;
-      const foundWordPath = `games/${currentMatch.id}/playerProgress/${playerUid}/foundOpponentWords/${word}`;
       updates[updatePath] = newValue;
-      updates[foundWordPath] = 'true';
+      if (word) { 
+        const foundWordPath = `games/${currentMatch.id}/playerProgress/${playerUid}/foundOpponentWords/${word}`;
+        updates[foundWordPath] = 'true';
+      }
       await update(ref(database), updates);
     } else {
       const nextCurrentMatch = { ...currentMatch };
@@ -260,6 +268,37 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     if (!currentMatch) return;
     if (currentMatch.id) {
       await set(ref(database, `games/${currentMatch.id}/playerProgress/${playerId}/touchedCells`), newValue);
+    }
+  };
+
+  const addAvailablePower = async (playerId: string, powerup: PowerupData) => {
+    if (!currentMatch) return;
+    if (currentMatch.id) {
+      const path = `games/${currentMatch.id}/playerProgress/${playerId}/availablePowers`;
+      const availablePowersRef = ref(database, path);
+      const newPowerId = await push(availablePowersRef, powerup).key;
+      await update(ref(database, `${path}/${newPowerId}`), { id: newPowerId });
+    }
+  };
+  
+  const activatePowerup = async (playerUid: string, targetUid: string, powerup: PowerupData) => {
+    if (!currentMatch) return;
+    if (currentMatch.id) {
+      const newPowerup = {
+        ...powerup,
+        activatedBy: playerUid,
+        target: targetUid,
+      }      
+      triggerShowMessage(`Sending ${powerup.type}!`);
+
+      const path = `games/${currentMatch.id}/activePowerups`;
+      const activePowerupsRef = ref(database, path);
+      const newPowerupId = await push(activePowerupsRef, newPowerup).key;
+      await update(ref(database, `${path}/${newPowerupId}`), { id: newPowerupId });
+      
+      const availablePowerPath = `games/${currentMatch.id}/playerProgress/${playerUid}/availablePowers`;
+      await remove(ref(database, `${availablePowerPath}/${powerup.id}`));
+
     }
   };
 
@@ -290,11 +329,23 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const uploadPuzzle = async (nextPuzzleData: StoredPuzzleData) => {
+    if (!nextPuzzleData) return;
+    console.log('uploading', nextPuzzleData);
+    const newPuzzleId = `${nextPuzzleData.dimensions.width}${nextPuzzleData.dimensions.height}${nextPuzzleData.letterString}`;
+    const puzzleRef = doc(firestore, 'puzzles', newPuzzleId);
+    await setDoc(puzzleRef, nextPuzzleData);
+    console.warn('Puzzle uploaded!');
+  };
+
   return (
     <FirebaseContext.Provider value={{
       challenges,
       currentMatch,
       playerList,
+      totalPlayers,
+      activatePowerup,
+      addAvailablePower,
       destroyGame,
       endGame,
       joinNewGame,
@@ -309,6 +360,8 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       setGameId,
       submitWord,
       subscribeToFoundWords,
+      updatePlayerAttackPoints,
+      uploadPuzzle,
     }}>
       {children}
     </FirebaseContext.Provider>

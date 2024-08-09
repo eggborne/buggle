@@ -10,39 +10,42 @@ interface GameTimerProps {
 
 const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
   const { currentMatch, endGame, subscribeToFoundWords } = useFirebase();
-  const [timeLeft, setTimeLeft] = useState(timeLimit || 0);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
   const prevFoundWordsCountRef = useRef<number>(0);
 
-  const handleFoundWordsChange = useCallback((foundWordsRecord: Record<string, false | string>) => {
-    console.log('handlefoundwordschange', foundWordsRecord)
+  const handleFoundWordsChange = (foundWordsRecord: Record<string, false | string>) => {
+    if (!foundWordsRecord) return;
+    console.log('handleFoundWordsChange');
     const currentFoundWordsCount = Object.values(foundWordsRecord).filter(value => value !== false).length;
-
     if (currentFoundWordsCount > prevFoundWordsCountRef.current) {
       const newWordsFound = currentFoundWordsCount - prevFoundWordsCountRef.current;
-      console.warn(`Adding time for ${newWordsFound} new words!`);
-      setTimeLeft(prevTimeLeft => prevTimeLeft + timeLimit * newWordsFound);
+      // const addedTime = timeLimit - timeLeft;
+      const addedTime = timeLimit;
+      console.warn(`When timeLeft ${timeLeft} and timeLimit ${timeLimit}, adding ${addedTime} for ${newWordsFound} new words!`);
+      setTimeLeft(prevTimeLeft => prevTimeLeft + addedTime);
       prevFoundWordsCountRef.current = currentFoundWordsCount;
     }
-  }, [timeLimit]);
+  };
 
   useEffect(() => {
     let unsubscribe: (() => void);
 
     if (started && gameId) {
-      console.log('calling unsub')
+      console.log('calling subscribeToFoundWords');
       unsubscribe = subscribeToFoundWords(handleFoundWordsChange);
     }
 
     return () => {
       if (unsubscribe) {
+        console.log('unsubbing subscribeToFoundWords')
         unsubscribe();
       }
     };
   }, []);
 
   useEffect(() => {
+    // start timer if game started
     let timer: NodeJS.Timeout | null = null;
-
     if (started && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft((prevTime) => {
@@ -58,6 +61,7 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
       }, 1000);
     }
 
+    // clear timer
     return () => {
       if (timer) {
         console.log('Clearing timer interval.');
@@ -65,6 +69,13 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
       }
     };
   }, [started]);
+
+  useEffect(() => {
+    if (!gameId && currentMatch) {
+      console.warn('word record changed in singleplayer!');
+      handleFoundWordsChange(currentMatch.foundWordsRecord || {})
+    }
+  }, [currentMatch]);
 
   if (!timeLimit) return;
 

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import styles from './SelectScreen.module.css'
 import { ref, child, get } from "firebase/database";
-import { database, fetchRandomPuzzle } from '../../scripts/firebase';
+import { database, fetchRandomPuzzle, firestore } from '../../scripts/firebase';
 import { CurrentGameData, GameOptions, StoredPuzzleData } from '../../types/types';
 import PuzzleIcon from '../PuzzleIcon'
 import Modal from '../Modal';
@@ -9,6 +9,7 @@ import StoredPuzzleList from '../StoredPuzzleList';
 import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
 import { stringTo2DArray, decodeMatrix } from '../../scripts/util';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface SelectScreenProps {
   hidden: boolean;
@@ -23,19 +24,22 @@ function SelectScreen({ hidden }: SelectScreenProps) {
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    const getPuzzles = async () => {
-      get(child(ref(database), `puzzles/`)).then((snapshot) => {
-        if (snapshot.exists()) {
-          const nextPuzzleList = snapshot.val();
-          setPuzzleList(Object.values(nextPuzzleList));
-        } else {
-          console.log("No data available");
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
-    }
-    getPuzzles();
+    const fetchPuzzles = async () => {
+      try {
+        const puzzlesCollection = collection(firestore, 'puzzles');
+        const puzzlesSnapshot = await getDocs(puzzlesCollection);
+        const puzzleList: StoredPuzzleData[] = [];
+        puzzlesSnapshot.forEach((doc) => {
+          const puzzleData = doc.data() as StoredPuzzleData;
+          puzzleList.push(puzzleData);
+        });
+        setPuzzleList(puzzleList);
+      } catch (error) {
+        console.error("Error fetching puzzles: ", error);
+      }
+    };
+
+    fetchPuzzles();
   }, []);
 
   const getRandomPuzzleWithOptions = async (newGameOptions: GameOptions): Promise<CurrentGameData> => {
@@ -61,7 +65,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         width: sizeSelected,
         height: sizeSelected
       },
-      timeLimit: parseInt((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
+      timeLimit: Number((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
     };
     const newGameData = await getRandomPuzzleWithOptions(newGameOptions);
     newGameData.playerProgress = {

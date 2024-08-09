@@ -9,19 +9,19 @@ import { useUser } from '../../context/UserContext';
 import { get, child, ref } from 'firebase/database';
 import { database } from '../../scripts/firebase';
 import AttackButtons from '../AttackButtons';
+import DevWindow from '../DevWindow';
 
 interface GameScreenProps {
   hidden: boolean;
   showConfirmModal: (confirmData: ConfirmData) => void;
-  uploadPuzzle: () => void;
 }
 
-function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps) {
+function GameScreen({ hidden, showConfirmModal }: GameScreenProps) {
   const [wordListShowing, setWordListShowing] = useState<boolean>(false);
   const { isLoggedIn, user } = useUser();
   const { currentMatch } = useFirebase();
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
-  const isMultiplayer = !!(isLoggedIn && currentMatch && currentMatch.id && currentMatch.respondent && currentMatch.instigator);
+  const isMultiplayer = !!(isLoggedIn && currentMatch && currentMatch.id);
 
   useEffect(() => {
     if (currentMatch && isMultiplayer && !opponentData) {
@@ -32,7 +32,8 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
           setOpponentData(opponentData);
         }
       }
-      const initialOpponentUid = (isMultiplayer && currentMatch.instigator?.uid === user?.uid) ? currentMatch.respondent?.uid : currentMatch.instigator?.uid;
+      // const initialOpponentUid = (isMultiplayer && currentMatch.instigatorUid === user?.uid) ? currentMatch.respondentUid : currentMatch.instigatorUid;
+      const initialOpponentUid = Object.keys(currentMatch.playerProgress).filter(key => key !== user?.uid)[0];
       if (!initialOpponentUid) return;
       getOpponentData(initialOpponentUid);
     }
@@ -48,10 +49,14 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
       <GameBoard
         opponentData={opponentData}
       />
-      {user && currentMatch && opponentData && <AttackButtons
-        userProgress={currentMatch?.playerProgress[user.uid]}
-        behind={currentMatch?.playerProgress[opponentData.uid].score > currentMatch?.playerProgress[user.uid].score}
-      />}
+      {user && currentMatch && opponentData &&
+        <AttackButtons
+          availablePowers={currentMatch.playerProgress[user.uid].availablePowers}
+          opponentData={opponentData}
+          userProgress={currentMatch?.playerProgress[user.uid]}
+          behind={currentMatch?.playerProgress[opponentData.uid].score > currentMatch?.playerProgress[user.uid].score}
+        />
+      }
       {wordListShowing && currentMatch && user &&
         <Modal isOpen={wordListShowing} onClose={() => setWordListShowing(false)}>
           {(currentMatch.specialWords || []).sort((a, b) => b.length - a.length).map(word =>
@@ -77,10 +82,8 @@ function GameScreen({ hidden, showConfirmModal, uploadPuzzle }: GameScreenProps)
             )}
         </Modal>
       }
-      {process.env.NODE_ENV === 'development' && <div className={`dev-window`}>
-        {<button onClick={uploadPuzzle}>Upload</button>}
-        <button onClick={() => setWordListShowing(true)}>Word List</button>
-      </div>}
+      {process.env.NODE_ENV === 'development' && 
+        <DevWindow currentMatch={currentMatch} showWordList={() => setWordListShowing(true)} />}
     </main>
   )
 }

@@ -40,7 +40,7 @@ function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfi
       </div>
 
       <div className={`${styles.labeledCounter} ${styles.timeCounter}`}>
-        <GameTimer gameId={currentMatch.id || ''} started={gameStarted} timeLimit={currentMatch.timeLimit || 200} />
+        <GameTimer gameId={currentMatch.id || ''} started={gameStarted} timeLimit={currentMatch.timeLimit || 10} />
       </div>
 
       <div className={styles.scoreArea}>
@@ -66,7 +66,7 @@ function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfi
         }
       </div>
 
-      {currentMatch.specialWords && <div className={styles.infoArea}>
+      {currentMatch.theme && currentMatch.specialWords && <div className={styles.infoArea}>
         <div className={styles.themeLabel}>{currentMatch.theme}</div>
         <div className={styles.themeProgress}>{currentMatch.specialWords.filter(w => currentMatch.foundWordsRecord && currentMatch.foundWordsRecord[w]).length}/{currentMatch.specialWords.length} special words found</div>
       </div>}

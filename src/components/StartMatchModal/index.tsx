@@ -5,16 +5,17 @@ import { useFirebase } from '../../context/FirebaseContext';
 import { useEffect, useState } from 'react';
 import { ChallengeData, UserData } from '../../types/types';
 import ChallengeListItem from '../ChallengeListItem';
+import { getUserFromDatabase } from '../../scripts/firebase';
 
 const StartMatchModal = () => {
-  const { challenges, playerList, joinNewGame, revokeOutgoingChallenge, setPlayerReady } = useFirebase();
+  const { challenges, joinNewGame, revokeOutgoingChallenge, setPlayerReady } = useFirebase();
   const { user, changePhase } = useUser();
   const [acceptedChallenge, setAcceptedChallenge] = useState<ChallengeData | null>(null);
   const [opponentData, setOpponentData] = useState<UserData | null>(null);
 
   useEffect(() => {
     if (challenges && user) {
-      const accepted = Object.values(challenges).find(challenge => challenge.accepted && challenge.instigator === user.uid);
+      const accepted = Object.values(challenges).find(challenge => challenge.accepted && challenge.instigatorUid === user.uid);
       if (accepted) {
         setAcceptedChallenge(accepted);
       } else {
@@ -25,7 +26,18 @@ const StartMatchModal = () => {
 
   useEffect(() => {
     if (acceptedChallenge && acceptedChallenge.id) {
-      setOpponentData(playerList?.find(player => player.uid === acceptedChallenge.respondent) || null);
+      const getProspectiveOpponentData = async () => {
+        const snapshot = await getUserFromDatabase(acceptedChallenge.respondentUid);
+        if (snapshot.exists()) {
+          const prospectiveOpponentData = snapshot.data() as UserData;
+          if (prospectiveOpponentData !== null) {
+            setOpponentData(prospectiveOpponentData);
+          }
+        } else {
+          return null;
+        }
+      }
+      getProspectiveOpponentData();      
     } else {
       setOpponentData(null);
     }
@@ -62,6 +74,7 @@ const StartMatchModal = () => {
     >
       <h2>{opponentData?.displayName} accepted your challenge!</h2>
       {acceptedChallenge && <ChallengeListItem
+        key={acceptedChallenge.id}
         challenge={acceptedChallenge}
         opponentData={opponentData}
       />}

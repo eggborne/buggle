@@ -132,7 +132,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
       ...defaultValues,
       dimensions,
       letterDistribution: (target.elements.namedItem('letterDistribution') as HTMLInputElement).value,
-      maxAttempts: attemptsInputRef.current && parseInt(attemptsInputRef.current.value) || defaultValues.maxAttempts,
+      maxAttempts: attemptsInputRef.current && Number(attemptsInputRef.current.value) || defaultValues.maxAttempts,
       returnBest: returnBestInputRef.current ? returnBestInputRef.current.checked : defaultValues.returnBest,
     };
 
@@ -142,22 +142,22 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         if (optionsEnabled['totalWordsOption']) {
           options.filters = {};
           options.filters.totalWordLimits = {
-            min: parseInt((target.elements.namedItem('minWords') as HTMLInputElement).value, 10) || 1,
-            max: parseInt((target.elements.namedItem('maxWords') as HTMLInputElement).value, 10) || 99999,
+            min: Number((target.elements.namedItem('minWords') as HTMLInputElement).value) || 1,
+            max: Number((target.elements.namedItem('maxWords') as HTMLInputElement).value) || 99999,
           };
         }
         if (optionsEnabled['averageWordLengthOption']) {
           options.filters = {};
           options.filters.averageWordLengthFilter = {
             comparison: (target.elements.namedItem('averageWordLengthComparison') as HTMLInputElement).value,
-            value: parseFloat((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
+            value: Number((target.elements.namedItem('averageWordLengthValue') as HTMLInputElement).value),
           };
         }
         if (optionsEnabled['uncommonWordLimitOption']) {
           options.filters = {};
           options.filters.uncommonWordLimit = {
             comparison: (target.elements.namedItem('uncommonWordLimitComparison') as HTMLInputElement).value,
-            value: parseInt((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
+            value: Number((target.elements.namedItem('uncommonWordLimitValue') as HTMLInputElement).value),
           };
         }
         if (optionsEnabled['wordLengthLimitOption']) {
@@ -218,17 +218,17 @@ function CreateScreen({ hidden }: CreateScreenProps) {
   }
 
   const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newWidth = parseInt(e.target.value, 10);
+    const newWidth = Number(e.target.value);
     setDimensions({ ...dimensions, width: newWidth });
   };
 
   const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newHeight = parseInt(e.target.value, 10);
+    const newHeight = Number(e.target.value);
     setDimensions({ ...dimensions, height: newHeight });
   };
 
   const handleChangeSizeSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSize = parseInt(e.target.value, 10);
+    const newSize = Number(e.target.value);
     setDimensions({ width: newSize, height: newSize });
   }
 
@@ -253,7 +253,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
 
   const handleAddNewWordLength = () => {
     if (newWordLengthInputRef.current) {
-      const wordLength = parseInt(newWordLengthInputRef.current.value);
+      const wordLength = Number(newWordLengthInputRef.current.value);
       newWordLengthInputRef.current.value = '';
       if (!isNaN(wordLength) && wordLengthPrefs.filter(pref => pref.wordLength === wordLength).length === 0) {
         setWordLengthPrefs((prevPrefs) => {
@@ -277,7 +277,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     const target = e.target as HTMLInputElement;
     const nextPrefs = [...wordLengthPrefs];
     const newLengthPref = nextPrefs.filter(pref => pref.wordLength === wordLength)[0];
-    newLengthPref.value = parseInt(target.value);
+    newLengthPref.value = Number(target.value);
     setWordLengthPrefs(nextPrefs);
   };
 

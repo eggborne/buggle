@@ -45,7 +45,7 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
                 <div key={`${puzzle.dimensions.width}${dimensions.width}${puzzle.letterString}`
                 } onClick={() => onClickStoredPuzzle(puzzle)} className={styles.puzzleListing}>
                   <div style={{ fontWeight: 'bold' }}>{puzzle.theme}</div>
-                  <p>{puzzle.specialWords?.length} special words</p>
+                  {puzzle.theme && <p>{puzzle.specialWords?.length} special words</p>}
                   <PuzzleIcon
                     iconSize={{ width: '100%' }}
                     puzzleDimensions={{ ...dimensions }}
@@ -53,7 +53,7 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
                   />
                   <div className={styles.puzzleInfo}>
 
-                    <p>{[...puzzle.allWords].length} total words</p>
+                    <p>{puzzle.wordCount} total words</p>
                     <p>Avg. length: {(averageWordLength).toFixed(2)}</p>
                     <p> {percentUncommon}% uncommon</p>
                     <small>{dateTime.date} {dateTime.time}</small>

@@ -17,7 +17,7 @@ function PlayerAnnouncementEffect() {
     // Populate current sets and maps
     playerList.forEach(player => {
       currentPlayerSet.add(player.uid);
-      currentDetailsMap.set(player.uid, player.displayName || 'Unknown Player');
+      currentDetailsMap.set(player.uid, player.displayName || 'Error McErrorson');
     });
 
     // Check for new players

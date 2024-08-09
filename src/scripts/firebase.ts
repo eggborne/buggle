@@ -1,9 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { child, get, getDatabase, ref } from "firebase/database";
+import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
-import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, StoredPuzzleData } from "../types/types";
+import { BoardRequestData, CurrentGameData, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
 import { difficultyWordAmounts } from "../App";
 import { randomInt, stringTo2DArray, decodeMatrix } from "./util";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, where, DocumentData, Query, query, WhereFilterOp } from "firebase/firestore";
 // import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -25,33 +26,42 @@ const auth = getAuth(app);
 console.warn('Firebase initialized.');
 
 const fetchRandomPuzzle = async ({ dimensions, difficulty }: GameOptions): Promise<CurrentGameData> => {
-  const snapshot = await get(child(ref(database), `puzzles/`));
-  const data: StoredPuzzleData[] = snapshot.val();
-  const wordLimits = difficultyWordAmounts[difficulty];
-  const randomPool = Object.values(data).filter(puzzle => {
-    const sizeMatches = puzzle.dimensions.width === dimensions.width && puzzle.dimensions.height === dimensions.height;
-    const notTooFewWords = puzzle.allWords.length >= wordLimits.min;
-    const notTooManyWords = puzzle.allWords.length <= wordLimits.max;
-    return (sizeMatches && notTooFewWords && notTooManyWords);
-  });
-  if (randomPool.length === 0) {
-    console.error('NO PUZZLES FOUND!');
+  try {
+    const puzzlesCollection = collection(firestore, 'puzzles');
+    const wordLimits = difficultyWordAmounts[difficulty];
+
+    const q = query(
+      puzzlesCollection,
+      where('dimensions.width', '==', dimensions.width),
+      where('dimensions.height', '==', dimensions.height),
+      where('wordCount', '>=', wordLimits.min),
+      where('wordCount', '<=', wordLimits.max)
+    )
+    const puzzlesSnapshot = await getDocs(q);
+    if (puzzlesSnapshot.empty) {
+      throw new Error('No matching puzzles found');
+    }
+    const randomPool = puzzlesSnapshot.docs.map(doc => doc.data()) as StoredPuzzleData[];
+    const randomPuzzle: StoredPuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
+    const nextMatrix = stringTo2DArray(randomPuzzle.letterString, dimensions.width, dimensions.height);
+    const nextGameData: CurrentGameData = {
+      ...randomPuzzle,
+      allWords: new Set(randomPuzzle.allWords),
+      letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
+      dimensions: {
+        width: dimensions.width,
+        height: dimensions.height,
+      },
+      gameOver: false,
+      playerProgress: {},
+    };
+
+    return nextGameData;
+  } catch (error) {
+    console.error("Error fetching random puzzle:", error);
+    throw error; // Re-throw the error for higher-level handling
   }
-  const randomPuzzle: StoredPuzzleData = randomPool[randomInt(0, randomPool.length - 1)];
-  const nextMatrix = stringTo2DArray(randomPuzzle.letterString, dimensions.width, dimensions.height);
-  const nextGameData: CurrentGameData = {
-    ...randomPuzzle,
-    allWords: new Set(randomPuzzle.allWords),
-    letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
-    dimensions: {
-      width: dimensions.width,
-      height: dimensions.height,
-    },
-    gameOver: false,
-    playerProgress: {},
-  }
-  return nextGameData;
-}
+};
 
 const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
 
@@ -80,10 +90,25 @@ const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedB
   }
 };
 
+const firestore = getFirestore();
+
+const createUserInDatabase = async (userData: UserData) => {
+  const userRef = doc(firestore, 'users', userData.uid);
+  await setDoc(userRef, userData);
+};
+
+const getUserFromDatabase = async (uid: string) => {
+  const userRef = doc(firestore, 'users', uid);
+  return await getDoc(userRef);
+};
+
 export {
   auth,
   database,
+  firestore,
   createSolvedPuzzle,
+  createUserInDatabase,
   fetchRandomPuzzle,
+  getUserFromDatabase,
 }
 

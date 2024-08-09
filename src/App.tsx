@@ -11,14 +11,10 @@ import SelectScreen from './components/SelectScreen';
 import GameScreen from './components/GameScreen';
 import OptionsModal from './components/OptionsModal';
 import CreateScreen from './components/CreateScreen';
-import { set, ref } from 'firebase/database';
-import { database } from './scripts/firebase';
-import { encodeMatrix } from "./scripts/util";
 import MessageBanner from './components/MessageBanner/';
 import SideMenu from './components/SideMenu';
 import { useFirebase } from './context/FirebaseContext';
 import ConfirmModal from './components/ConfirmModal';
-
 import PlayerAnnouncementEffect from './effects/PlayerAnnouncementEffect';
 import StartMatchModal from './components/StartMatchModal';
 
@@ -87,26 +83,6 @@ function App() {
     }
   }, [isLoggedIn]);
 
-  const uploadPuzzle = async () => {
-    if (!currentMatch) return;
-    const nextPuzzleData: StoredPuzzleData = {
-      allWords: Array.from(currentMatch.allWords),
-      dimensions: currentMatch.dimensions,
-      letterString: encodeMatrix(currentMatch.letterMatrix, currentMatch.metadata.key).map(row => row.join('')).join(''),
-      metadata: currentMatch.metadata,
-    };
-    
-    if (currentMatch.theme) {
-      nextPuzzleData.theme = currentMatch.theme;
-      nextPuzzleData.specialWords = currentMatch.specialWords;
-    }
-    
-    const newPuzzleId = `${currentMatch.dimensions.width}${currentMatch.dimensions.height}${nextPuzzleData.letterString}`;
-    console.log('uploading', nextPuzzleData)
-    await set(ref(database, 'puzzles/' + newPuzzleId), nextPuzzleData);
-    console.warn('puzzle uploaded!')
-  };
-
   const showConfirmModal = (confirmData: ConfirmData | null, hide?: boolean) => {
     if (!confirmData) return;
     if (hide) {
@@ -121,8 +97,7 @@ function App() {
 
   const handleConfirmGameExit = async () => {
     await destroyGame(currentMatch?.id || '');
-    // changePhase('title');
-    
+    // changePhase('title');    
   }
 
   const handleConfirmSignOut = async () => {
@@ -152,7 +127,6 @@ function App() {
             <GameScreen
               hidden={phase !== 'game'}
               showConfirmModal={showConfirmModal}
-              uploadPuzzle={uploadPuzzle}
             />
           }
           {<OptionsModal hidden={!optionsShowing} />}

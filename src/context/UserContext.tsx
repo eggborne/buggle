@@ -2,12 +2,14 @@ import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, Se
 import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData, ChallengeData } from '../types/types';
 import { ref, remove, set, update, get, child } from 'firebase/database';
-import { database } from '../scripts/firebase';
+import { database, firestore, getUserFromDatabase } from '../scripts/firebase';
 import { defaultUser } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
+import { createUserInDatabase } from '../scripts/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
-const HEARTBEAT_INTERVAL = 2000;
-const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 1;
+const HEARTBEAT_INTERVAL = 5000;
+const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
 
 interface UserContextProps {
   user: UserData | null;
@@ -47,7 +49,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
       let userData = defaultUser;
-      if (firebaseUser) {        
+      if (firebaseUser) {
         console.warn('-- found Firebase user!')
         userData = await getUserData(firebaseUser);
         addUserToPlayerList({
@@ -64,11 +66,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           return setInterval(async () => {
             const now = Date.now();
             const sinceLast = now - lastHeartbeatRef.current;
-            if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 4))) {
+            if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
               console.warn('sinceLast is', sinceLast, '; skipping this heartbeat');
               return;
             }
-            await sendHeartbeat();
+            // await sendHeartbeat();
+            sendHeartbeat();
             lastHeartbeatRef.current = now;
             pruneInactivePlayers(userData.uid);
           }, duration);
@@ -102,7 +105,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const getUserData = async (firebaseUser: User): Promise<UserData> => {
     const snapshot = await getUserFromDatabase(firebaseUser.uid);
     if (snapshot.exists()) {
-      return snapshot.val();
+      return snapshot.data() as UserData;
     } else {
       const newUserData: UserData = {
         displayName: firebaseUser.displayName?.split(' ')[0] || 'Guest',
@@ -128,19 +131,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           console.log(`${player.displayName} sinceLast too long: ${sinceLast} > ${PRUNE_INTERVAL}`)
           await remove(ref(database, `players/${playerUid}`));
           console.log(`Removed inactive player: ${playerUid}`);
-        } else {
-          console.log(`${player.displayName} sinceLast is OK: ${sinceLast} <= ${PRUNE_INTERVAL}`)
         }
       });
     }
-  };
-
-  const getUserFromDatabase = async (uid: string) => {
-    return get(child(ref(database), `users/${uid}`));
-  };
-
-  const createUserInDatabase = async (userData: UserData) => {
-    await set(ref(database, `users/${userData.uid}`), userData);
   };
 
   const addUserToPlayerList = async (userData: UserData) => {
@@ -150,7 +143,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const removeUserFromPlayerList = async (uid: string) => {
     await remove(ref(database, `players/${uid}`));
   };
-  
+
   const updateUserInPlayerList = async (path: string, newValue: string | number) => {
     const updates: Record<string, string | number> = {};
     updates[path] = newValue;
@@ -217,11 +210,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const saveOptions = async (newOptions: OptionsData) => {
     if (!user || !isLoggedIn) return;
-    await update(ref(database, `users/${user.uid}`), {
-      preferences: newOptions,
+
+    const userRef = doc(firestore, 'users', user.uid);
+
+    await updateDoc(userRef, {
+      preferences: newOptions
     });
+
     triggerShowMessage('Options saved!');
-  }
+  };
 
   return (
     <UserContext.Provider value={{

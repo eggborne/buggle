@@ -3,7 +3,7 @@
   align-items: stretch;
   opacity: 0.1;
   scale: 0.9;
-  width: var(--main-width);
+  max-width: var(--main-width);
   transition: all 200ms ease;
   overflow-x: hidden;
 }

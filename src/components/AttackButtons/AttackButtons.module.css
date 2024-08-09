@@ -12,8 +12,22 @@
   justify-content: center;
   border: 0;
   outline: 0.15rem solid #ffffff44;
+  pointer-events: none;
   box-shadow: inset 0 0 calc(var(--footer-height) / 2.5) #000000aa;
   overflow: hidden;
+}
+
+.AttackButtons > button.available {
+  outline: 0.5rem solid green;
+  color: rgb(124, 208, 124);
+  font-size: 2rem;
+  background-color: rgb(198, 138, 18);
+  pointer-events: all;
+  box-shadow: 
+    inset 0 0 calc(var(--footer-height) / 2.5) #000000aa
+    0 0 0.5rem #000000aa
+  ;
+  animation: throb 500ms ease-in-out alternate infinite;
 }
 
 .AttackButtons > .centerButton {
@@ -26,7 +40,6 @@
 .centerButton.disabled {
   opacity :0.5;
   transform: scale(0.8);
-  pointer-events: none;
   outline: none;
   box-shadow: none;
 }
@@ -50,6 +63,12 @@
   text-shadow: var(--text-stroke);
 }
 
-.AttackButtons > button::before {
-  
+@keyframes throb {
+  from {
+    transform: scale(0.95);
+  }
+
+  to {
+    transform: scale(1.05);
+  }
 }

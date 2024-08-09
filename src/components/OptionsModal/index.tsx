@@ -62,7 +62,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.name as keyof OptionsData['style'] | keyof OptionsData['gameplay'];
-    const value = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
+    const value = e.target.type === 'range' ? Number(e.target.value) : e.target.value;
     changeOption(name, value);
   }
   const categoryList = editMode === 'gameplay' ? 'gameplay' : 'style';
@@ -91,6 +91,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
                 uid: 'fakeId'
               }
             },
+            gameOver: false,
           }}
           opponentData={null}
         />}

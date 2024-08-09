@@ -175,3 +175,13 @@
   padding: 1rem;
   width: 12rem;
 }
+
+.BeeSwarm {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--game-board-size);
+  height: var(--game-board-size);
+  z-index: 100;
+  pointer-events: none;
+}

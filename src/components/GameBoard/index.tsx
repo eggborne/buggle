@@ -1,5 +1,5 @@
 import styles from './GameBoard.module.css'
-import { CellObj, CurrentGameData, UserData } from '../../types/types';
+import { CellObj, CurrentGameData, PowerupData, UserData } from '../../types/types';
 import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
@@ -9,7 +9,16 @@ import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';
 import LoadingDisplay from '../LoadingDisplay';
 import Modal from '../Modal';
-// import BeeSwarm from './BeeSwarm'
+import BeeSwarm from './BeeSwarm';
+
+export const powers: Record<string, PowerupData> = {
+  'bees': {
+    category: 'curses',
+    cost: 2,
+    duration: 10,    
+    type: 'bees',
+  }
+}
 
 interface GameBoardProps {
   opponentData: UserData | null;
@@ -20,15 +29,17 @@ interface GameBoardProps {
 function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   const { user, changePhase } = useUser();
   const options = user?.preferences;
-  let { currentMatch, setPlayerTouchedCells, setPlayerReady, submitWord } = useFirebase();
+  let { currentMatch, setPlayerTouchedCells, addAvailablePower, setPlayerReady, submitWord } = useFirebase();
   if (fillerData) {
     currentMatch = fillerData;
   }
+  const [activeCurses, setActiveCurses] = useState<PowerupData[]>([]);
   const [dragging, setDragging] = useState<boolean>(false);
   const [currentWord, setCurrentWord] = useState<string>('');
   const [touchedCells, setTouchedCells] = useState<CellObj[]>([]);
   const [wordValid, setWordValid] = useState<boolean>(false);
   const [wordStatus, setWordStatus] = useState<string>('invalid');
+
   const gameBoardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,10 +55,11 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   useEffect(() => {
     if (user && user.uid && gameBoardRef.current && currentMatch) {
       if (currentMatch.id) {
-        // set ready if not
+        // set ready if not ready
         if (!currentMatch.playerProgress[user.uid].ready) {
           setPlayerReady(user.uid);
         }
+        // show board if both players ready and board not showing
         const opponentProgress = currentMatch.playerProgress[opponentData?.uid || user.uid];
         if (opponentProgress.ready && !gameBoardRef.current.classList.contains(styles.showing)) {
           requestAnimationFrame(() => {
@@ -55,16 +67,39 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
               gameBoardRef.current.classList.add(styles.showing);
             }
           });
-        } else {
-          console.warn('opponent not ready yet!')
+        }
+        // check if attackPoints are enough to activate any powers
+        for (const power in powers) {
+          const playerProgress = currentMatch.playerProgress[user.uid];
+          if (power) {
+            if (playerProgress.attackPoints >= powers[power].cost) {
+              if (!playerProgress.availablePowers || !Object.values(playerProgress.availablePowers).find(p => p.type === power)) {
+                const newPower = {...powers[power]};
+                console.log('adding', newPower, 'to', playerProgress.availablePowers)
+                addAvailablePower(user.uid, newPower);
+              }
+            }          
+          }
         }
       }
+      
+      // check for gameOVer
       if (currentMatch.gameOver) {
         triggerShowMessage(`Game over!`);
-        gameBoardRef.current.classList.remove(styles.showing)
+        gameBoardRef.current && gameBoardRef.current.classList.remove(styles.showing)
       }
     }
   }, [currentMatch]);
+
+  useEffect(() => {
+    if (user && currentMatch) {
+      if (currentMatch.activePowerups) {
+        setActiveCurses(Object.values(currentMatch.activePowerups).filter(c => c.target === user.uid));
+      } else {
+        setActiveCurses([]);
+      }
+    }
+  }, [currentMatch?.activePowerups]);
 
   useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
@@ -123,12 +158,6 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
     };
   }, [dragging, touchedCells, handleWordSubmit]);
 
-  // useEffect(() => {
-  //   if (currentWord && currentMatch && user) {
-  //     setWordValidity(currentWord);
-  //   }
-  // }, [currentMatch, wordStatus, dragging, currentWord]);
-
   useEffect(() => {
     if (currentWord && currentMatch && user) {
       setWordValidity(currentWord);
@@ -164,7 +193,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
       }
 
       setWordStatus(newStatus);
-      setWordValid(!alreadyFound && !opponentAlreadyFound && wordExistsInPuzzle);
+      setWordValid(newStatus === 'valid' || newStatus === 'redeemable');
     }
   }
 
@@ -224,7 +253,7 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
   };
 
   async function handleWordSubmit() {
-    if (user) {
+    if (user && wordValid) {
       submitWord(user.uid, currentWord.toLowerCase(), wordStatus);
     }
     setCurrentWord('');
@@ -306,15 +335,15 @@ function GameBoard({ opponentData, fillerData, noAnimation }: GameBoardProps) {
           wordStatus={wordStatus}
         />
       </div>
-      {/* {gameBoardRef.current &&
+      {gameBoardRef.current && activeCurses.some(c => c.type === 'bees') &&
         <BeeSwarm
           gameBoardElement={gameBoardRef.current}
           gameWidth={currentMatch?.dimensions.width || 5}
           width={window.innerWidth}
           height={window.innerHeight}
-          swarmSize={24}
+          swarmSize={48}
         />
-      } */}
+      }
     </div>
   )
 }
