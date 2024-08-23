@@ -27,12 +27,15 @@ const ChallengeListItem = ({ challenge, opponentData, handleDeclineChallenge, ha
         <span>{`${challenge.timeLimit} seconds`}</span>
         <span>{challenge.difficulty}</span>
       </div>
-      <span><PuzzleIcon puzzleDimensions={challenge?.dimensions} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
-      {handleDeclineChallenge && handleAcceptChallenge && 
-      <div className={`button-group row ${styles.challengeButtons}`}>
-        <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigatorUid)}>Decline</button>
-        <button className={`start ${styles.acceptButton}`} onClick={() => handleAcceptChallenge(challenge)}>Accept</button>
-      </div>}
+      <span><PuzzleIcon puzzleDimensions={{
+        width: challenge.puzzleId ? Number(challenge.puzzleId[0]) : 5,
+        height: challenge.puzzleId ? Number(challenge.puzzleId[1]) : 5
+      }} contents={[]} iconSize={{ width: '4rem', height: '4rem' }} /></span>
+      {handleDeclineChallenge && handleAcceptChallenge &&
+        <div className={`button-group row ${styles.challengeButtons}`}>
+          <button className={`cancel ${styles.declineButton}`} onClick={() => handleDeclineChallenge(challenge.instigatorUid)}>Decline</button>
+          <button className={`start ${styles.acceptButton}`} onClick={() => handleAcceptChallenge(challenge)}>Accept</button>
+        </div>}
     </div>
   );
 }

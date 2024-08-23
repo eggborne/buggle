@@ -93,16 +93,16 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     }
   }, [dimensions, optionsEnabled]);
 
-  const testSize = 5;
-
-  const customOptions = false;
-  // const customOptions: BoardRequestData = {
+  let customOptions: BoardRequestData | false = false;
+  
+  // const testSize = 5;
+  // customOptions = {
   //   dimensions: {
   //     width: testSize,
   //     height: testSize
   //   },
   //   letterDistribution: 'modernEnglish',
-  //   maxAttempts: 5000000,
+  //   maxAttempts: 20000000,
   //   returnBest: true,
   //   customizations: {
   //     // customLetters: {
@@ -111,17 +111,14 @@ function CreateScreen({ hidden }: CreateScreenProps) {
   //     // },
   //     requiredWords: {
   //       wordList: [
-  //         "Piano",
-  //         "Guitar",
-  //         "Violin",
-  //         "Trumpet",
-  //         "Keyboard",
-  //         "Clarinet"
+  //         "sketch", "paint", "sculpt", "collage", "etch",
+  //         "print", "carve", "mold", "weave", "mosaic",
+  //         "stipple",
   //       ],
   //       convertQ: false,
   //     }
   //   },
-  //   theme: '🎵 Music and Instruments 🎸'
+  //   theme: '🖌️ Art Techniques 🖌️'
   // }
 
   const handleStartCreatedPuzzle = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -205,6 +202,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         },
       },
       timeLimit: 180,
+      wordBonus: 5,
     };
     if (options.customizations) {
       if (options.customizations.requiredWords) {
@@ -496,7 +494,8 @@ function CreateScreen({ hidden }: CreateScreenProps) {
             <span>Return best</span>
             <input id={'returnBest'} name={'returnBest'} ref={returnBestInputRef} type='checkbox' />
           </label>
-          <button disabled={generating} type='submit' className={styles.start}>{generating ? `Generating...` : `Generate puzzle`}</button>
+          {/* <button disabled={generating} type='submit' className={styles.start}>{generating ? `Generating...` : `Generate puzzle`}</button> */}
+          <button disabled={false} type='submit' className={styles.start}>{generating ? `Generating...` : `Generate puzzle`}</button>
         </div>
 
       </form>

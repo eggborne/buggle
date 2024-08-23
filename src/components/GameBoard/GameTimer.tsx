@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useFirebase } from '../../context/FirebaseContext';
 import NumeralDisplay from '../NumeralDisplay';
 
@@ -14,15 +14,17 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
   const prevFoundWordsCountRef = useRef<number>(0);
 
   const handleFoundWordsChange = (foundWordsRecord: Record<string, false | string>) => {
-    if (!foundWordsRecord) return;
-    console.log('handleFoundWordsChange');
+    if (!foundWordsRecord || !currentMatch) return;
     const currentFoundWordsCount = Object.values(foundWordsRecord).filter(value => value !== false).length;
     if (currentFoundWordsCount > prevFoundWordsCountRef.current) {
-      const newWordsFound = currentFoundWordsCount - prevFoundWordsCountRef.current;
-      // const addedTime = timeLimit - timeLeft;
-      const addedTime = timeLimit;
-      console.warn(`When timeLeft ${timeLeft} and timeLimit ${timeLimit}, adding ${addedTime} for ${newWordsFound} new words!`);
-      setTimeLeft(prevTimeLeft => prevTimeLeft + addedTime);
+      const addedTime = (typeof currentMatch.wordBonus === 'number') ? currentMatch.wordBonus : 10 || 0;
+      setTimeLeft(prevTimeLeft => {
+        let newTimeLeft = prevTimeLeft + addedTime;
+        if (newTimeLeft > currentMatch.timeLimit) {
+          newTimeLeft = currentMatch.timeLimit;
+        }
+        return newTimeLeft;
+      });
       prevFoundWordsCountRef.current = currentFoundWordsCount;
     }
   };
@@ -47,6 +49,7 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
     // start timer if game started
     let timer: NodeJS.Timeout | null = null;
     if (started && timeLeft > 0) {
+      console.log('-> Starting game timer interval.');
       timer = setInterval(() => {
         setTimeLeft((prevTime) => {
           if (prevTime <= 1) {
@@ -64,7 +67,7 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
     // clear timer
     return () => {
       if (timer) {
-        console.log('Clearing timer interval.');
+        console.log('<- Clearing game timer interval.');
         clearInterval(timer);
       }
     };
@@ -72,7 +75,6 @@ const GameTimer = ({ gameId, started, timeLimit }: GameTimerProps) => {
 
   useEffect(() => {
     if (!gameId && currentMatch) {
-      console.warn('word record changed in singleplayer!');
       handleFoundWordsChange(currentMatch.foundWordsRecord || {})
     }
   }, [currentMatch]);

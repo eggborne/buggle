@@ -24,7 +24,7 @@ function Footer({ optionsShowing, sideMenuShowing, showConfirmModal, toggleOptio
 
   useEffect(() => {
     setChallengeCount(() =>
-      challenges ? Object.values(challenges).filter(challenge => challenge.respondent === user?.uid).length : 0
+      challenges ? Object.values(challenges).filter(challenge => challenge.respondentUid === user?.uid).length : 0
     );
   }, [challenges, user])
 

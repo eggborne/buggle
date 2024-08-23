@@ -1,55 +1,45 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import styles from './SelectScreen.module.css'
-import { ref, child, get } from "firebase/database";
-import { database, fetchRandomPuzzle, firestore } from '../../scripts/firebase';
-import { CurrentGameData, GameOptions, StoredPuzzleData } from '../../types/types';
+import { fetchRandomPuzzle } from '../../scripts/firebase';
+import { CurrentGameData, GameOptions, StoredPuzzleData, UserData } from '../../types/types';
 import PuzzleIcon from '../PuzzleIcon'
 import Modal from '../Modal';
 import StoredPuzzleList from '../StoredPuzzleList';
 import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
 import { stringTo2DArray, decodeMatrix } from '../../scripts/util';
-import { collection, getDocs } from 'firebase/firestore';
 
 interface SelectScreenProps {
   hidden: boolean;
 }
 
 function SelectScreen({ hidden }: SelectScreenProps) {
-  const { user, changePhase } = useUser();
+  const { user, changePhase, setUser } = useUser();
   const { startNewGame } = useFirebase();
-  const [sizeSelected, setSizeSelected] = useState<number>(5);
-  const [puzzleList, setPuzzleList] = useState<StoredPuzzleData[]>([]);
+  const [sizeSelected, setSizeSelected] = useState<number>(4);
   const [listShowing, setListShowing] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
 
-  useEffect(() => {
-    const fetchPuzzles = async () => {
-      try {
-        const puzzlesCollection = collection(firestore, 'puzzles');
-        const puzzlesSnapshot = await getDocs(puzzlesCollection);
-        const puzzleList: StoredPuzzleData[] = [];
-        puzzlesSnapshot.forEach((doc) => {
-          const puzzleData = doc.data() as StoredPuzzleData;
-          puzzleList.push(puzzleData);
-        });
-        setPuzzleList(puzzleList);
-      } catch (error) {
-        console.error("Error fetching puzzles: ", error);
+  const getRandomPuzzleWithOptions = async (newGameOptions: GameOptions): Promise<CurrentGameData | null> => {
+    console.log('user is', user)
+    const seenPuzzles = user?.seenPuzzles || [];
+    const fetchedPuzzle = await fetchRandomPuzzle(newGameOptions, seenPuzzles);
+    if (user) {
+      const newUser: UserData = {
+        ...user,
+        seenPuzzles: [
+          ...(user.seenPuzzles ?? []),
+          ...(fetchedPuzzle ? [fetchedPuzzle.letterMatrix.flat().join('')] : [])
+        ]
       }
-    };
-
-    fetchPuzzles();
-  }, []);
-
-  const getRandomPuzzleWithOptions = async (newGameOptions: GameOptions): Promise<CurrentGameData> => {
-    const fetchedPuzzle = await fetchRandomPuzzle(newGameOptions);
+      setUser(newUser);
+    }
+    if (!fetchedPuzzle) return null;
     const newGameData: CurrentGameData = {
-      // ...newGameOptions,
       ...fetchedPuzzle,
       allWords: Array.from(fetchedPuzzle.allWords),
       startTime: Date.now(),
-      endTime: Date.now() + newGameOptions.timeLimit * 1000,
+      endTime: Date.now() + (newGameOptions.timeLimit * 1000),
       timeLimit: newGameOptions.timeLimit,
     }
     return newGameData;
@@ -66,8 +56,10 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         height: sizeSelected
       },
       timeLimit: Number((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
+      wordBonus: Number((target.elements.namedItem('wordBonus') as HTMLSelectElement).value),
     };
     const newGameData = await getRandomPuzzleWithOptions(newGameOptions);
+    if (!newGameData) return;
     newGameData.playerProgress = {
       [user.uid]: {
         attackPoints: 0,
@@ -77,6 +69,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         touchedCells: [],
       },
     };
+    newGameData.wordBonus = 5;
     await startNewGame(newGameData);
     changePhase('game');
   }
@@ -100,8 +93,9 @@ function SelectScreen({ hidden }: SelectScreenProps) {
       gameOver: false,
       startTime: Date.now(),
       endTime: Date.now() + (600 * 1000),
+      timeLimit: 600,
+      wordBonus: 5,
     }
-    console.log('starting stored with', newGameData)
     await startNewGame(newGameData);
     changePhase('game');
   }
@@ -122,7 +116,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         <form ref={formRef} onSubmit={handleClickStartRandomGame}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
-            <div className={styles.sizeSelect}>
+            {/* <div className={styles.sizeSelect}>
               <div className={styles.sizeSelections}>
                 <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={{
                   width: `4.5rem`,
@@ -137,28 +131,41 @@ function SelectScreen({ hidden }: SelectScreenProps) {
                   height: `4.5rem`
                 }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
               </div>
-            </div>
-            <div className='button-group row'>
+            </div> */}
+            <div className={`button-group row ${styles.timeSelectRow}`}>
+              <span>Difficulty</span>
               <select name='difficulty'>
                 <option value='easy'>Easy</option>
                 <option value='medium'>Medium</option>
                 <option value='hard'>Hard</option>
               </select>
-              <select name='timeLimit'>
+            </div>
+            <div className={`button-group row ${styles.timeSelectRow}`}>
+              <span>Max time</span>
+              <select name='timeLimit' defaultValue='30'>
                 <option value='5'>5 seconds</option>
                 <option value='10'>10 seconds</option>
                 <option value='30'>30 seconds</option>
+                <option value='120'>2 minutes</option>
+              </select>
+            </div>
+            <div className={`button-group row ${styles.timeSelectRow}`}>
+              <span>Word bonus</span>
+              <select name='wordBonus' defaultValue='5'>
+                <option value='5'>5 seconds</option>
+                {/* <option value='pointValue'>Boggle® value</option> */}
+                {/* <option value='pointValue'>Scrabble® value</option> */}
               </select>
             </div>
           </div>
         </form>
         <button onClick={handleSubmitPuzzleOptions} className={styles.start}>Start!</button>
       </div>
-      <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>
+      {process.env.NODE_ENV === 'development' && <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>}
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <>
           <h2>Saved puzzles</h2>
-          <StoredPuzzleList list={puzzleList} onClickStoredPuzzle={async (e) => {
+          <StoredPuzzleList showing={listShowing} onClickStoredPuzzle={async (e) => {
             handleClickStoredPuzzle(e);
             if (listShowing) {
               setListShowing(false);

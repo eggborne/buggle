@@ -1,15 +1,16 @@
 import styles from './LobbyScreen.module.css'
 import { useUser } from '../../context/UserContext'
-import { useState, useRef, useEffect } from 'react';
-import { database, fetchRandomPuzzle } from '../../scripts/firebase';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { database, fetchPuzzleById } from '../../scripts/firebase';
 import { ref, push, update, DataSnapshot, off, onValue } from "firebase/database";
 import Modal from '../../components/Modal';
-import PuzzleIcon from '../../components/PuzzleIcon';
-import { ChallengeData, CurrentGameData, UserData } from '../../types/types';
+import { ChallengeData, CurrentGameData, PendingOutgoingChallengeData, UserData } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';
 import ChallengeListItem from '../ChallengeListItem';
 import ChatWindow from '../ChatWindow';
+import { stringTo2DArray } from '../../scripts/util';
+import StoredPuzzleList from '../StoredPuzzleList';
 
 interface LobbyScreenProps {
   hidden: boolean;
@@ -19,13 +20,20 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const { user, sentChallenges, changePhase, setSentChallenges } = useUser();
   const { challenges, markChallengeAccepted, revokeOutgoingChallenge, startNewGame } = useFirebase();
   const [currentPlayerList, setCurrentPlayerList] = useState<UserData[]>([]);
-  const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<UserData | null>(null);
+  const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<PendingOutgoingChallengeData | null>(null);
   const [challengeList, setChallengeList] = useState<ChallengeData[]>([]);
-
-  const [sizeSelected, setSizeSelected] = useState<number>(5);
-  const difficultyInputRef = useRef<HTMLSelectElement>(null);
-  const timeLimitInputRef = useRef<HTMLSelectElement>(null);
+  const [puzzleListShowing, setPuzzleListShowing] = useState<boolean>(false);
+  const [puzzleSelected, setPuzzleSelected] = useState<string | null>(null);
+  // const [sizeSelected, setSizeSelected] = useState<number>(5);
   const lobbyScreenRef = useRef<HTMLSelectElement>(null);
+  const previousPlayerListRef = useRef<UserData[]>([]);
+  const timeLimitInputRef = useRef<HTMLSelectElement>(null);
+  const wordBonusInputRef = useRef<HTMLSelectElement>(null);
+
+  const hasRelevantChanges = useCallback((prevList: UserData[], newList: UserData[]) => {
+    if (prevList.length !== newList.length) return true;
+    return false;
+  }, []);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -34,17 +42,21 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       }
     });
 
-    console.log(`challenges ----------> Context STARTED listener`);
-    
     const playerListRef = ref(database, '/players');
     const handlePlayerList = (snapshot: DataSnapshot) => {
       const data: { [key: string]: UserData } = snapshot.val();
-      setCurrentPlayerList(Object.values(data || {}));
+      const newPlayerList = Object.values(data || {});
+
+      if (hasRelevantChanges(previousPlayerListRef.current, newPlayerList)) {
+        console.warn('--- SETTING currentPlayerList', newPlayerList);
+        setCurrentPlayerList(newPlayerList);
+        previousPlayerListRef.current = newPlayerList;
+      }
     };
 
     onValue(playerListRef, handlePlayerList);
     console.log(`players ----------> Context STARTED listener`);
-    
+
     return () => {
       off(playerListRef, 'value', handlePlayerList);
       console.log('players <---------- Context STOPPED listener');
@@ -55,62 +67,68 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   useEffect(() => {
     let newSentChallenges = [...sentChallenges];
     if (challenges) {
+      // remove sentChallenges whiich are not in /challenges
       if (sentChallenges.length > 0) {
         newSentChallenges = newSentChallenges.filter((challenge: ChallengeData) => challenge.id ? challenges[challenge.id] : null);
       }
-      const nextChallengeList = Object.values(challenges).filter(challenge => {
+      // find challenges where respondent is user and player is in playerList
+      const nextChallengeList = [];
+      for (const challengeId in challenges) {
+        const challenge = challenges[challengeId];
         const respondentIsUser = challenge.respondentUid === user?.uid;
         const instigatorExistsInPlayerList = currentPlayerList?.some(player => player.uid === challenge.instigatorUid);
-        return respondentIsUser && instigatorExistsInPlayerList;
-      });
+        respondentIsUser && instigatorExistsInPlayerList && nextChallengeList.push(challenge);
+      }
       setChallengeList(nextChallengeList)
     } else {
+      // remove any sentChallenges (since none are actually existent in the DB)
       if (sentChallenges.length > 0) {
         newSentChallenges = [];
       }
-      console.warn('no challenges at LobbyScreen')
     }
     setSentChallenges(newSentChallenges);
 
-  }, [challenges]);
+  }, [challenges, currentPlayerList.length]);
 
   const sendChallenge = async () => {
-    if (user && pendingOutgoingChallenge && difficultyInputRef.current && timeLimitInputRef.current) {
-      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondentUid === pendingOutgoingChallenge.uid)) {
-        // should never be able to occur as there is no button
+    if (user && pendingOutgoingChallenge && timeLimitInputRef.current && wordBonusInputRef.current) {
+      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondentUid === pendingOutgoingChallenge.respondent.uid)) {
+        // should never be able to occur as there would be no button
         console.warn('already challenging');
-        triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.displayName}!`);
+        triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.respondent.displayName}!`);
         return;
       }
       const challengesRef = ref(database, 'challenges/');
       const newChallenge: ChallengeData = {
         accepted: false,
-        difficulty: difficultyInputRef.current.value,
+        difficulty: 'easy',
         instigatorUid: user.uid,
-        respondentUid: pendingOutgoingChallenge.uid,
+        respondentUid: pendingOutgoingChallenge.respondent.uid,
         timeLimit: Number(timeLimitInputRef.current.value),
-        dimensions: {
-          width: sizeSelected,
-          height: sizeSelected
-        },
+        wordBonus: Number(wordBonusInputRef.current.value)
       }
-      const newChallengeUid = await push(challengesRef, newChallenge).key;
-      if (newChallengeUid) {
-        triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.displayName}!`);
+      if (puzzleSelected) {
+        newChallenge.puzzleId = puzzleSelected;
+      }
+      const newChallengeId = await push(challengesRef, newChallenge).key;
+      if (newChallengeId) {
+        triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.respondent.displayName}!`);
         setSentChallenges(prevSentChallenges => {
           const nextSentChallenges = [...prevSentChallenges];
-          const newChallengeData = { ...newChallenge, id: newChallengeUid };
+          const newChallengeData = { ...newChallenge, id: newChallengeId };
           nextSentChallenges.push(newChallengeData);
           return nextSentChallenges;
         });
-        await update(ref(database, `challenges/${newChallengeUid}`), { id: newChallengeUid });
+        await update(ref(database, `challenges/${newChallengeId}`), { id: newChallengeId });
         setPendingOutgoingChallenge(null);
       }
     }
   };
 
   const handleClickChallengePlayer = (opponentData: UserData) => {
-    setPendingOutgoingChallenge(opponentData);
+    setPendingOutgoingChallenge({
+      respondent: opponentData,
+    });
   }
 
   const handleCancelChallengingPlayer = async (opponentUid: string) => {
@@ -139,17 +157,20 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   const handleAcceptChallenge = async (challenge: ChallengeData) => {
     if (!challenges || !currentPlayerList || !user) return;
-    const { dimensions, difficulty, id: challengeId, instigatorUid, respondentUid, timeLimit } = challenge;
+    const { puzzleId, id: challengeId, instigatorUid, respondentUid, timeLimit, wordBonus } = challenge;
     const opponentName = currentPlayerList.filter(p => p.uid === instigatorUid)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
-    const randomPuzzle = await fetchRandomPuzzle({dimensions, difficulty, timeLimit});
-    if (challengeId) {
+    // const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
+    const retrievedPuzzle = await fetchPuzzleById(puzzleId || '');
+    if (challengeId && retrievedPuzzle) {
+      const letterMatrix = stringTo2DArray(retrievedPuzzle.letterString, retrievedPuzzle.dimensions.width, retrievedPuzzle.dimensions.height);
       const newGameData: CurrentGameData = {
-        ...randomPuzzle,
-        allWords: Array.from(randomPuzzle.allWords),
+        ...retrievedPuzzle,
+        allWords: Array.from(retrievedPuzzle.allWords),
         endTime: 0,
         gameOver: false,
         id: challengeId,
+        letterMatrix,
         playerProgress: {
           [instigatorUid]: {
             attackPoints: 0,
@@ -167,10 +188,11 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           },
         },
         startTime: 0,
-        timeLimit: challenge.timeLimit
+        timeLimit: timeLimit,
+        wordBonus: wordBonus
       };
       await markChallengeAccepted(challengeId)
-      console.group('---- starting game', challengeId)
+      console.log('---- accepted and creating/starting game', challengeId)
       await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
       changePhase('game');
     }
@@ -181,31 +203,25 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     return isOpponent;
   });
 
-  // const challengeList = challenges ? Object.values(challenges).filter(challenge => {
-  //   const respondentIsUser = challenge.respondentUid === user?.uid;
-  //   const instigatorExistsInPlayerList = currentPlayerList?.some(player => player.uid === challenge.instigatorUid);
-  //   return respondentIsUser && instigatorExistsInPlayerList;
-  // }) : null;
-
   const lobbyScreenClass = `${styles.LobbyScreen}${hidden ? ' hidden' : ''}`;
   return (
     <main ref={lobbyScreenRef} className={lobbyScreenClass}>
       <ChatWindow hidden={hidden} />
       <div className={styles.playerListArea}>
         <h2>Challenges</h2>
-        <div className={styles.challengeList}>
-          {challengeList && challengeList.length > 0 ?
-            challengeList?.map(challenge => {
-              const opponentData = currentPlayerList?.find(player => player.uid === challenge.instigatorUid);
-              return (
-                <ChallengeListItem
-                  challenge={challenge}
-                  opponentData={opponentData || null}
-                  handleDeclineChallenge={handleDeclineChallenge}
-                  handleAcceptChallenge={handleAcceptChallenge}
-                />
-              );
-            }) : <div style={{ textAlign: 'center' }}>{`No challenges :(`}</div>}
+        <div className={`${styles.challengeList} ${challengeList && (challengeList.length > 0) ? styles.showing : styles.hidden }`}>
+          {challengeList?.map(challenge => {
+            // find the instigator in /players
+            const opponentData = currentPlayerList?.find(player => player.uid === challenge.instigatorUid);
+            return (
+              <ChallengeListItem
+                challenge={challenge}
+                opponentData={opponentData || null}
+                handleDeclineChallenge={handleDeclineChallenge}
+                handleAcceptChallenge={handleAcceptChallenge}
+              />
+            );
+          })}
         </div>
       </div>
       <div className={styles.playerListArea}>
@@ -262,9 +278,9 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
           padding: '2.5rem',
         }}
       >
-        <h3>Challenging {pendingOutgoingChallenge?.displayName}</h3>
+        <h3>Challenging {pendingOutgoingChallenge?.respondent.displayName}</h3>
         <div className={styles.puzzleOptions}>
-          <div className={styles.sizeSelections}>
+          {/* <div className={styles.sizeSelections}>
             <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={{
               width: `4.5rem`,
               height: `4.5rem`
@@ -277,13 +293,17 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
               width: `4.5rem`,
               height: `4.5rem`
             }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
+          </div> */}
+          <div className={`button-group row ${styles.timeSelectRow}`}>
+            <span>Puzzle</span>
+            {puzzleSelected ?
+              <button style={{ fontSize: '0.75rem' }} onClick={() => setPuzzleListShowing(true)}>{puzzleSelected}</button>
+              :
+              <button onClick={() => setPuzzleListShowing(true)}>Select puzzle...</button>
+            }
           </div>
-          <div className='button-group row'>
-            <select defaultValue='easy' ref={difficultyInputRef}>
-              <option value='easy'>Easy</option>
-              <option value='medium'>Medium</option>
-              <option value='hard'>Hard</option>
-            </select>
+          <div className={`button-group row ${styles.timeSelectRow}`}>
+            <span>Max time</span>
             <select defaultValue='30' ref={timeLimitInputRef}>
               <option value='5'>5 seconds</option>
               <option value='10'>10 seconds</option>
@@ -291,11 +311,25 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
               <option value='120'>2 minutes</option>
             </select>
           </div>
+          <div className={`button-group row ${styles.timeSelectRow}`}>
+            <span>Word bonus</span>
+            <select defaultValue='30' ref={wordBonusInputRef}>
+              <option value='5'>5 seconds</option>
+              <option value='pointValue'>Boggle® value</option>
+              {/* <option value='pointValue'>Scrabble® value</option> */}
+            </select>
+          </div>
         </div>
-        <div className='button-group'>
-          <button onClick={sendChallenge} className={'start'}>Send Challenge</button>
+        <div className={`button-group ${styles.lowerButtons}`}>
+          <button disabled={!puzzleSelected} onClick={sendChallenge} className={'start'}>Send Challenge</button>
           <button onClick={() => setPendingOutgoingChallenge(null)} className={'cancel'}>Cancel</button>
         </div>
+      </Modal>
+      <Modal isOpen={puzzleListShowing}>
+        <StoredPuzzleList showing={puzzleListShowing} onClickStoredPuzzle={(puzzle) => {
+          setPuzzleSelected(`${puzzle.dimensions.width}${puzzle.dimensions.height}${puzzle.letterString}`);
+          setPuzzleListShowing(false);
+        }} />
       </Modal>
     </main>
   )

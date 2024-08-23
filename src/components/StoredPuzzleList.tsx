@@ -2,17 +2,58 @@ import styles from './StoredPuzzleList.module.css'
 import { StoredPuzzleData } from '../types/types';
 import { formatDateAndTime } from '../scripts/util'
 import PuzzleIcon from './PuzzleIcon';
+import { useEffect, useState } from 'react';
+import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { firestore } from '../scripts/firebase';
+import LoadingDisplay from './LoadingDisplay';
 
 interface StoredPuzzleListProps {
-  list: StoredPuzzleData[];
+  showing: boolean;
   onClickStoredPuzzle: (puzzle: StoredPuzzleData) => void;
 }
 
-function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) {
-  function organizedPuzzles(puzzleList: StoredPuzzleData[]): {
+const StoredPuzzleList = ({ showing, onClickStoredPuzzle }: StoredPuzzleListProps) => {
+  const [puzzlesLoaded, setPuzzlesLoaded] = useState<boolean>(false);
+  const [list, setList] = useState<StoredPuzzleData[]>([]);
+
+  const deletePuzzle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    const puzzleId = e.currentTarget.dataset.puzzleId;
+    if (puzzleId) {
+      const puzzleRef = doc(firestore, 'puzzles', puzzleId);
+      await deleteDoc(puzzleRef);
+      console.warn('deleted puzzle', puzzleId);
+      setList(prevList => prevList.filter(p => p.letterString !== puzzleId));
+    }
+  };
+
+
+  useEffect(() => {
+    if (showing) {
+      const fetchPuzzles = async () => {
+        try {
+          const puzzlesCollection = collection(firestore, 'puzzles');
+          const puzzlesSnapshot = await getDocs(puzzlesCollection);
+          const puzzleList: StoredPuzzleData[] = [];
+          puzzlesSnapshot.forEach((doc) => {
+            const puzzleData = doc.data() as StoredPuzzleData;
+            puzzleList.push(puzzleData);
+          });
+          console.log('puzzleList', puzzleList)
+          setList(puzzleList);
+          setPuzzlesLoaded(true);
+        } catch (error) {
+          console.error("Error fetching puzzles: ", error);
+        }
+      };
+      fetchPuzzles();
+    }
+  }, [showing]);
+
+  const organizedPuzzles = (puzzleList: StoredPuzzleData[]): {
     label: string;
     list: StoredPuzzleData[];
-  }[] {
+  }[] => {
     const puzzleDictionary: Record<string, StoredPuzzleData[]> = {};
     puzzleList.forEach(puzzle => {
       const dimensionsKey = `${puzzle.dimensions.width} x ${puzzle.dimensions.height}`;
@@ -33,7 +74,7 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
 
   return (
     <div className={styles.puzzleList}>
-      {organizedPuzzles(list).map((listObj) =>
+      {puzzlesLoaded ? organizedPuzzles(list).map((listObj) =>
         <div key={listObj.label} className={styles.sizeGroup}>
           <label>{listObj.label}</label>
           <div className={styles.sizeList}>{
@@ -46,10 +87,11 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
                 } onClick={() => onClickStoredPuzzle(puzzle)} className={styles.puzzleListing}>
                   <div style={{ fontWeight: 'bold' }}>{puzzle.theme}</div>
                   {puzzle.theme && <p>{puzzle.specialWords?.length} special words</p>}
+                  {/* <button onClick={(e) => deletePuzzle(e)} data-puzzle-id={`${puzzle.dimensions.width}${puzzle.dimensions.height}${puzzle.letterString}`} className={'x-close'}>X</button> */}
                   <PuzzleIcon
                     iconSize={{ width: '100%' }}
                     puzzleDimensions={{ ...dimensions }}
-                    contents={puzzle.letterString.split('').map(l => '?')}
+                    contents={puzzle.letterString.split('').map(() => '?')}
                   />
                   <div className={styles.puzzleInfo}>
 
@@ -63,9 +105,9 @@ function StoredPuzzleList({ list, onClickStoredPuzzle }: StoredPuzzleListProps) 
             })
           }</div>
         </div>
-      )}
+      ) : <LoadingDisplay />}
     </div>
   )
-}
+};
 
 export default StoredPuzzleList;

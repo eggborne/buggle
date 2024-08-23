@@ -72,6 +72,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
 
       <div className={styles.puzzlePreview}>
         {!hidden && <GameBoard
+          currentEffects={null}
           noAnimation={true}
           fillerData={{
             allWords: new Set(),

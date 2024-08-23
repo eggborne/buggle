@@ -68,7 +68,7 @@
   user-select: none;
   filter: drop-shadow(0 0 1px black);
   /* filter: url(#lineShadow); */
-  /* transition: opacity 60ms ease; */
+  transition: opacity 60ms ease;
 }
 
 .pathOverlay.visible {
@@ -80,11 +80,11 @@
   /* transition: stroke 60ms ease; */
 }
 
-.animatedSegment {
+/* .animatedSegment {
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
   animation: drawLine 200ms ease-in-out forwards;
-}
+} */
 
 .pathSegment.outerLine {
   stroke: #ffaaaa;
@@ -184,4 +184,36 @@
   height: var(--game-board-size);
   z-index: 100;
   pointer-events: none;
+  border: 4px solid red;
+}
+
+.EffectTimer {
+  position: absolute;
+  translate: -50% -50%;
+  left: 50%;
+  top: 40%;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 50% 50% 50%;
+  background: #ff000066;
+  font-weight: bold;
+  z-index: 0;
+}
+
+.EffectTimer.opponent {
+  border-radius: 50% 0 50% 50%;
+}
+
+.ScoreFlair {
+  position: absolute;
+  translate: -50% 0;
+  left: calc(var(--header-height) / 2);
+  top: 0;
+  font-size: 2rem;
+  color: green;
+  text-shadow: var(--text-stroke);
 }

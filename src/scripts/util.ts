@@ -99,3 +99,19 @@ export const formatDateAndTime = (dateCreated: number) => {
   const formattedTime = `${hours}:${minutes.toString().padStart(2, '0')}${amPm}`;
   return { date: formattedDate, time: formattedTime };
 };
+
+export const getRandomPuzzleWithinRange = ( puzzles: { [key: string]: number }, min: number, max: number ): [string, number] | null => {
+  // Filter the entries that are within the range
+  const validEntries = Object.entries(puzzles).filter(
+    ([, value]) => value >= min && value <= max
+  );
+
+  // If there are no valid entries, return null
+  if (validEntries.length === 0) {
+    return null;
+  }
+
+  // Select a random entry from the valid entries
+  const randomIndex = Math.floor(Math.random() * validEntries.length);
+  return validEntries[randomIndex];
+}

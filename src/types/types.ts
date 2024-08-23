@@ -45,11 +45,17 @@ export interface UserData {
   photoURL: string | null,
   phase: string | null;
   uid: string,
+  seenPuzzles?: string[];
   preferences?: OptionsData | null;
   heartbeat?: number;
 }
 
 // puzzle
+
+export interface PuzzleDimensions {
+  height: number;
+  width: number;
+}
 
 export interface BoardCustomizations {
   requiredWords?: {
@@ -63,14 +69,19 @@ export interface BoardCustomizations {
   };
 }
 
+export interface BoardRequestData {
+  dimensions: PuzzleDimensions;
+  letterDistribution?: string;
+  maxAttempts: number;
+  returnBest: boolean;
+  customizations?: BoardCustomizations;
+  filters?: BoardFilters;
+  theme?: string;
+}
+
 export interface ComparisonFilterData {
   comparison: string,
   value: number,
-}
-
-export interface PuzzleDimensions {
-  height: number;
-  width: number;
 }
 
 export interface PuzzleMetadata {
@@ -135,7 +146,7 @@ export interface GeneratedBoardData {
 
 export interface PlayerMatchData {
   attackPoints: number;
-  availablePowers?: PowerupData[];
+  availablePowers?: DefaultPowerupData[];
   foundOpponentWords: Record<string, false>;
   ready?: boolean;
   score: number;
@@ -143,44 +154,56 @@ export interface PlayerMatchData {
   uid: string;
 }
 
-export interface PowerupData {
+export interface DefaultPowerupData {
   activatedBy?: string;
+  category: 'curses' | 'buffs';
+  cost: number;
+  duration: number;
+  timeLeft?: number;
+  type: string;
+}
+
+export interface DeployedPowerupData {
+  activatedBy: string;
   activatedAt?: number;
   category: 'curses' | 'buffs';
   cost: number;
   duration: number;
-  id?: number;
-  target?: string;
+  id?: string;
+  target: string;
+  timeLeft?: number;
   type: string;
 }
 
 export interface CurrentGameData {
+  activePowerups?: DeployedPowerupData[];
   allWords: Set<string> | string[];
-  specialWords?: string[];
+  // customizations?: BoardCustomizations;
   dimensions: PuzzleDimensions;
+  endTime?: number;
+  // filters?: BoardFilters;
+  foundWordsRecord?: Record<string, string | false>
   gameOver: boolean;
+  id?: string;
   letterMatrix: string[][];
+  instigatorUid?: string;
   metadata: PuzzleMetadata;
   playerProgress: Record<string, PlayerMatchData>;
-  
-  activePowerups?: PowerupData[];
-  customizations?: BoardCustomizations;
-  filters?: BoardFilters;
 
-  id?: string;
-  instigatorUid?: string;
-  endTime?: number;
+
   respondentUid?: string;
-  foundWordsRecord?: Record<string, string | false>
+  specialWords?: string[];
   startTime?: number;
   theme?: string;
-  timeLimit?: number;
+  timeLimit: number;
+  wordBonus: number | string;
 }
 
 export interface GameOptions {
   difficulty: string;
   dimensions: PuzzleDimensions;
   timeLimit: number;
+  wordBonus: number | string;
 }
 
 export interface PointValues {
@@ -199,17 +222,20 @@ export interface LobbyData {
   messages: ChatMessageData[];
 }
 
+export interface PendingOutgoingChallengeData {
+  respondent: UserData;
+  puzzleId?: string
+}
+
 export interface ChallengeData {
   accepted: boolean;
   difficulty: string;
-  instigatorUid: string;
-  respondentUid: string;
-  dimensions: {
-    width: number;
-    height: number;
-  };
-  timeLimit: number;
   id?: string;
+  instigatorUid: string;
+  puzzleId?: string;
+  respondentUid: string;
+  timeLimit: number;
+  wordBonus: number | string;
 }
 
 
@@ -251,4 +277,6 @@ export interface OptionTypeData {
   label: string;
   inputDataList: OptionInputData[];
 }
+
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 

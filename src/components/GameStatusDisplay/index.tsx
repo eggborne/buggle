@@ -1,19 +1,24 @@
-import { ConfirmData, UserData } from '../../types/types';
+import { ConfirmData, DeployedPowerupData, UserData } from '../../types/types';
 import styles from './GameStatusDisplay.module.css';
 import NumeralDisplay from '../NumeralDisplay';
 import { useUser } from '../../context/UserContext';
 import { useFirebase } from '../../context/FirebaseContext';
 import GameTimer from '../GameBoard/GameTimer';
+import EffectTimer from '../GameBoard/EffectTimer';
 
 
 interface GameStatusDisplayProps {
+  currentEffects: {
+    user: DeployedPowerupData[] | [],
+    opponent?: DeployedPowerupData[] | [],
+  } | null;
   gameStarted: boolean;
   isMultiplayer: boolean;
   opponentData: UserData | null;
   showConfirmModal: (confirmData: ConfirmData) => void;
 }
 
-function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfirmModal }: GameStatusDisplayProps) {
+function GameStatusDisplay({ currentEffects, gameStarted, isMultiplayer, opponentData, showConfirmModal }: GameStatusDisplayProps) {
   const { user, isLoggedIn } = useUser();
   const { currentMatch } = useFirebase();
   if (!currentMatch || !user) return;
@@ -30,6 +35,11 @@ function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfi
       <div className={styles.playerArea}>
         <img className={'profile-pic'} src={user.photoURL || ''} />
         <div className={styles.userLabel} style={{ fontSize: `${1.5 - ((user.displayName?.length || 0) / 15)}rem` }}>{user.displayName || 'Guest'}</div>
+        {currentEffects && currentEffects.user.length > 0 &&
+          currentEffects.user.map(powerup => (
+            <EffectTimer powerup={powerup} started={true} />
+          ))
+        }
       </div>
 
       <div className={styles.scoreArea}>
@@ -46,7 +56,7 @@ function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfi
       <div className={styles.scoreArea}>
         <div className={styles.labeledCounter} style={{ visibility: isMultiplayer ? 'visible' : 'hidden' }} >
           <div>Score</div>
-          <NumeralDisplay digits={opponentData ? playerProgress[opponentData.uid].score : 0 } height={'calc(var(--header-button-size) / 3.2)'} length={3} />
+          <NumeralDisplay digits={opponentData ? playerProgress[opponentData.uid].score : 0} height={'calc(var(--header-button-size) / 3.2)'} length={3} />
         </div>
       </div>
 
@@ -60,6 +70,10 @@ function GameStatusDisplay({ gameStarted, isMultiplayer, opponentData, showConfi
             <>
               <img className={'profile-pic'} src={opponentData?.photoURL || ''} />
               <div className={styles.userLabel} style={{ fontSize: `${1.5 - ((opponentData?.displayName?.length || 0) / 15)}rem` }}>{opponentData?.displayName}</div>
+              {/* <EffectTimer opponent={true} powerup={{
+                ...powers.bees,
+
+              }} started={true} timeLimit={30} /> */}
             </>
           :
           <button onClick={confirmToLobby}>Log in to challenge others</button>

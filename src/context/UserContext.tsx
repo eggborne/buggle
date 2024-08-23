@@ -52,6 +52,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       if (firebaseUser) {
         console.warn('-- found Firebase user!')
         userData = await getUserData(firebaseUser);
+        console.log('got userData', userData)
         addUserToPlayerList({
           ...userData,
           heartbeat: Date.now()
@@ -67,7 +68,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             const now = Date.now();
             const sinceLast = now - lastHeartbeatRef.current;
             if (lastHeartbeatRef.current && (sinceLast < (HEARTBEAT_INTERVAL / 2))) {
-              console.warn('sinceLast is', sinceLast, '; skipping this heartbeat');
+              console.warn('because sinceLast is <', (HEARTBEAT_INTERVAL / 2), ': ', sinceLast, '; skipping this heartbeat');
               return;
             }
             // await sendHeartbeat();
@@ -113,6 +114,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         uid: firebaseUser.uid,
         phase: 'title',
         preferences: defaultUser.preferences,
+        seenPuzzles: [],
       };
       await createUserInDatabase(newUserData);
       return newUserData;

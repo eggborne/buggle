@@ -2,12 +2,12 @@ import styles from './GameBoard.module.css';
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { randomInt } from '../../scripts/util';
+import { DeployedPowerupData } from '../../types/types';
 
 interface BeeSwarmProps {
   gameBoardElement: HTMLDivElement;
   gameWidth: number;
-  width: number;
-  height: number;
+  powerupObj: DeployedPowerupData
   swarmSize: number;
 }
 
@@ -25,15 +25,49 @@ interface BeeObject {
   range: Coords;
   rightWing: THREE.Object3D;
   speed: Coords;
+  startPoint: Coords;
+  flyOutDuration: number;
+  flyOutStartTime: number
 }
 
-const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width, height, swarmSize }) => {
-  const mountRef = useRef<HTMLDivElement>(null);
+const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, powerupObj, swarmSize }) => {
   const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
   const [camera, setCamera] = useState<THREE.OrthographicCamera | null>(null);
 
-  if (false) console.log(renderer, scene, camera); // for linter
+  const mountRef = useRef<HTMLDivElement>(null);
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const { timeLeft } = powerupObj;
+
+  false && console.log(renderer, scene, camera); // for linter
+
+  // useEffect(() => {
+  //   // start timer
+  //   let timer: NodeJS.Timeout | null = null;
+  //   if (mountRef.current && timeLeft > 0) {
+  //     console.log('-> Starting effect timer interval.');
+  //     timer = setInterval(() => {
+  //       setTimeLeft((prevTime) => {
+  //         if (prevTime <= 1) {
+  //           if (timer) clearInterval(timer);
+  //           return 0;
+  //         }
+  //         return prevTime - 1;
+  //       });
+  //     }, 1000);
+  //   }
+
+  //   // clear timer
+  //   return () => {
+  //     if (timer) {
+  //       console.log('<- Clearing effect timer interval.');
+  //       clearInterval(timer);
+  //     }
+  //   };
+  // }, []);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -48,18 +82,14 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
     newCamera.position.set(0, 0, 100); // Position above the scene
     newCamera.lookAt(new THREE.Vector3(0, 0, 100)); // Look towards the origin
 
-
-
     const newRenderer = new THREE.WebGLRenderer({
       alpha: true,
       // antialias: true,
       // preserveDrawingBuffer: true,
-      powerPreference: 'high-performance',
+      // powerPreference: 'high-performance',
 
     });
     newRenderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-    console.log(newRenderer.info)
-
 
     newRenderer.setSize(width, height);
     mountRef.current.appendChild(newRenderer.domElement);
@@ -87,7 +117,7 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
     });
 
     const gameBoardSize = gameBoardElement.clientWidth;
-    const beeSize = (gameBoardSize / gameWidth);
+    const beeSize = (gameBoardSize / (gameWidth * 0.8));
 
     // Create bee geometries
     const bodyGeometry = new THREE.PlaneGeometry(beeSize, beeSize);
@@ -95,19 +125,25 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
 
     // Create bees
 
-
     // Calculate the boundaries of the GameBoard in the scene's 3D space
     const boardLeft = (-width / 2) + (width - gameBoardSize) / 2;
     const boardRight = boardLeft + gameBoardElement.clientWidth;
     const boardTop = gameBoardElement.getBoundingClientRect().top;
-    const boardBottom = boardTop + gameBoardSize;
-    console.log('gameBoardLeft', boardLeft, 'gameBoardRight', boardRight, 'gameBoardBottom', boardBottom, 'gameBoardTop', boardTop)
 
     const center = {
       x: (boardLeft + boardRight) / 2,
       y: (height / 2) - (boardTop + (gameBoardSize / 2)),
       z: 50
     }
+
+    const startPoint = { // upper right (opponent's avatar)
+      x: width / 2,
+      y: height / 2,
+      z: 50
+    };
+
+    const TIME_BETWEEN_BEES = 50;
+
     const bees: BeeObject[] = [];
     for (let i = 0; i < swarmSize; i++) {
 
@@ -116,35 +152,34 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
         y: center.y + randomInt(gameBoardSize / -2, gameBoardSize / 2),
         z: center.z
       }
-      // const homePoint = center;
 
       const randomSpeed = {
-        x: randomInt(4, 12),
-        y: randomInt(4, 15),
+        x: randomInt(4, 14),
+        y: randomInt(4, 12),
       };
 
-      // randomSpeed.y += randomSpeed.y % 2;
-
-
       const beeObj: BeeObject = {
+        animationStartTime: randomInt(0, 5000),
+        flyOutStartTime: Date.now() + i * TIME_BETWEEN_BEES,
         group: new THREE.Group(),
         homePoint: new THREE.Vector3(
           homePoint.x,
           homePoint.y,
           homePoint.z
         ),
+        leftWing: new THREE.Object3D(),
         range: {
           x: beeSize / (randomInt(35, 60) / 10),
           y: beeSize / (randomInt(35, 65) / 10),
-          z: randomInt(5, 20)
+          z: randomInt(3, 20)
         },
         speed: {
           ...randomSpeed,
-          z: ((randomSpeed.x + randomSpeed.y) / 2)
+          z: ((randomSpeed.x + randomSpeed.y) / 2) // higher range with faster movement
         },
-        animationStartTime: randomInt(0, 5000),
-        leftWing: new THREE.Object3D(),
-        rightWing: new THREE.Object3D()
+        rightWing: new THREE.Object3D(),
+        startPoint: new THREE.Vector3(startPoint.x, startPoint.y, startPoint.z),
+        flyOutDuration: randomInt(200, 800),
       };
       const { group, leftWing, rightWing } = beeObj;
       const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -160,17 +195,9 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
       rightWingMesh.position.set(beeSize * (0.75 / 2), 0, 0);
       rightWingMesh.scale.x = -1; // Flip the right wing
 
-      group.add(
-        body,
-        leftWing,
-        rightWing
-      );
+      group.add(body, leftWing, rightWing);
 
-      group.position.set(
-        homePoint.x,
-        homePoint.y,
-        homePoint.z
-      )
+      group.position.set(startPoint.x, startPoint.y, startPoint.z);
 
       newScene.add(beeObj.group);
       bees.push(beeObj);
@@ -179,27 +206,43 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, width,
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      if (!newScene || !newCamera || !newRenderer) return;
+      if (!newScene || !newCamera || !newRenderer || !timeLeft) return;
+      
+      // console.log('powerupObj', powerupObj)
+      // console.log('timeLeft', timeLeft)
+
+      const currentTime = Date.now();
 
       // Update bee positions and wing rotations
       bees.forEach((beeObj) => {
-        const { animationStartTime, leftWing, rightWing, homePoint, group, speed, range } = beeObj;
+        const { animationStartTime, leftWing, rightWing, homePoint, group, speed, range, startPoint, flyOutDuration, flyOutStartTime } = beeObj;
         const time = (Date.now() + animationStartTime) * 0.001;
 
-        group.position.x = homePoint.x + (Math.sin(time * speed.x) * range.x);
-        group.position.y = homePoint.y + (Math.cos(time * speed.y) * range.y);
-        group.position.z = homePoint.z + (Math.sin(time * speed.y) * range.z);
-        const newScale = 1 + ((Math.sin(time * speed.z) * (range.z / 10)) / 10);
-        group.scale.set(newScale, newScale, newScale);
+        // Fly out animation
+        if (currentTime < flyOutStartTime + flyOutDuration) {
+          const progress = Math.min((currentTime - flyOutStartTime) / flyOutDuration, 1);
+          group.position.x = startPoint.x + (homePoint.x - startPoint.x) * progress;
+          group.position.y = startPoint.y + (homePoint.y - startPoint.y) * progress;
+          group.position.z = startPoint.z + (homePoint.z - startPoint.z) * progress;
+
+          const scaleProgress = Math.sin(progress * Math.PI / 2);
+          const currentScale = scaleProgress;
+          group.scale.set(currentScale, currentScale, currentScale);
+        } else {
+          // Normal animation after reaching home point
+          group.position.x = homePoint.x + (Math.sin(time * speed.x) * range.x);
+          group.position.y = homePoint.y + (Math.cos(time * speed.y) * range.y);
+          group.position.z = homePoint.z + (Math.sin(time * speed.y) * range.z);
+
+          const newScale = 1 + ((Math.sin(time * speed.z) * (range.z / 10)) / 10);
+          group.scale.set(newScale, newScale, newScale);
+        }
 
         // Wing flapping
         const wingSpeed = 20;
         const wingAmplitude = 1.25;
         leftWing.rotation.y = Math.sin(time * wingSpeed) * wingAmplitude;
         rightWing.rotation.y = -Math.sin(time * wingSpeed) * wingAmplitude;
-
-        // leftWing.rotation.z = Math.sin(time * wingSpeed * 4) * wingAmplitude * 0.25;
-        // rightWing.rotation.z = -Math.sin(time * wingSpeed * 4) * wingAmplitude * 0.25;
 
       });
 

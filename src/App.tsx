@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { triggerShowMessage } from './hooks/useMessageBanner';
 import { useUser } from './context/UserContext';
 import './App.css'
-import { ConfirmData, PointValues, StoredPuzzleData, UserData, } from './types/types';
+import { ConfirmData, PointValues, UserData, } from './types/types';
 import LoadingDisplay from './components/LoadingDisplay';
 import Footer from './components/Footer';
 import TitleScreen from './components/TitleScreen';
@@ -69,7 +69,6 @@ function App() {
 
   useEffect(() => {
     if (!isLoading && !userReady) {
-      console.log('setting userReady');
       isLoggedIn && revokeAllOutgoingChallenges(user?.uid || '');
       requestAnimationFrame(() => {
         setUserReady(true);

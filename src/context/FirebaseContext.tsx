@@ -1,35 +1,38 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction, useCallback } from 'react';
-import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot, push } from 'firebase/database';
-import { CellObj, ChallengeData, CurrentGameData, PowerupData, StoredPuzzleData, UserData } from '../types/types';
+import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot, push, child } from 'firebase/database';
+import { CellObj, ChallengeData, CurrentGameData, DefaultPowerupData, DeployedPowerupData, StoredPuzzleData, UserData } from '../types/types';
 import { database, firestore } from '../scripts/firebase';
 import { useUser } from './UserContext';
 import { pointValues } from '../App';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
-import { doc, setDoc } from 'firebase/firestore';
+import { arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
 
 interface FirebaseContextProps {
   playerList: UserData[] | null;
   challenges: Record<string, ChallengeData> | null;
   currentMatch: CurrentGameData | null;
   totalPlayers: number;
-  activatePowerup: (playerUid: string, targetUid: string, powerup: PowerupData) => void;
-  addAvailablePower: (playerId: string, powerup: PowerupData) => void;
+  activatePowerup: (powerup: DeployedPowerupData) => void;
+  addAvailablePower: (playerId: string, powerup: DefaultPowerupData) => void;
+  deactivatePowerup: (powerupId: string) => void;
   destroyGame: (gameId: string) => void;
   endGame: (gameId: string) => void;
   joinNewGame: (newGameId: string | null) => void;
   markChallengeAccepted: (challegeId: string) => void;
-  setCurrentMatch: Dispatch<SetStateAction<CurrentGameData | null>>;
-  startNewGame: (newGameData: CurrentGameData, newGameId?: string) => void;
+  pruneEndedGames: () => void;
   revokeAllOutgoingChallenges: (uid: string) => void;
   revokeOutgoingChallenge: (challengeId: string) => void;
+  setCurrentMatch: Dispatch<SetStateAction<CurrentGameData | null>>;
   setGameId: (id: string | null) => void;
   setPlayerList: Dispatch<SetStateAction<UserData[] | null>>;
   setPlayerReady: (playerUid: string) => void;
   setPlayerTouchedCells: (playerUid: string, newValue: CellObj[]) => void;
+  startNewGame: (newGameData: CurrentGameData, newGameId?: string) => void;
   submitWord: (playerUid: string, word: string, wordStatus?: string) => void;
   subscribeToFoundWords: (callback: (foundWordsRecord: Record<string, false | string>) => void) => (() => void);
-  uploadPuzzle: (puzzleData: StoredPuzzleData) => void;
   updatePlayerAttackPoints: (playerUid: string, newValue: number, word?: string) => void;
+  updatePowerupTimeLeft: (powerupId: string, newValue: number) => void;
+  uploadPuzzle: (puzzleData: StoredPuzzleData) => void;
 }
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
@@ -40,7 +43,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [totalPlayers, setTotalPlayers] = useState<number>(0);
   const [playerList, setPlayerList] = useState<UserData[] | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
-  const { isLoggedIn } = useUser();
+  const { isLoggedIn, user } = useUser();
 
   useEffect(() => {
     const playersRef = ref(database, 'players');
@@ -63,7 +66,9 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
         setChallenges(data || {});
       };
       onValue(challengesRef, handleChallenges);
-      
+
+      pruneEndedGames();
+
       return () => {
         off(challengesRef, 'value', handleChallenges);
         console.log('challenges <---------- Context STOPPED listener');
@@ -131,18 +136,36 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const setPuzzleSeen = async ({ letterMatrix, dimensions }: CurrentGameData, userUid: string) => {
+    const letterString = letterMatrix.flat().join('');
+    console.log('setting seen:', userUid, letterString);
+    const newPuzzleId = `${dimensions.width}${dimensions.height}${letterString}`;
+    const seenPuzzleRef = doc(firestore, 'users', userUid);
+
+    try {
+      await updateDoc(seenPuzzleRef, {
+        seenPuzzles: arrayUnion(newPuzzleId)
+      });
+      console.warn('Puzzle updated!');
+    } catch (error) {
+      console.warn('Error updating puzzle:', error);
+    }
+  }
+
   const startNewGame = async (newGameData: CurrentGameData, newGameId: string | null = null) => {
     newGameData.startTime = Date.now();
     newGameData.endTime = Date.now() + ((newGameData.timeLimit || 10) * 1000);
-    let foundWordsRecord: Record<string, string | false> = {};
+    const foundWordsRecord: Record<string, string | false> = {};
     Array.from(newGameData.allWords).forEach(word => {
       foundWordsRecord[word] = false;
     })
     newGameData.foundWordsRecord = foundWordsRecord;
     if (newGameId) {
-      console.log('attempting to send game to DB', newGameData)
       await set(ref(database, `games/${newGameId}`), newGameData);
       setGameId(newGameId); // subscribes to listener
+    }
+    if (isLoggedIn && user && user.uid) {
+      setPuzzleSeen(newGameData, user.uid)
     }
     setCurrentMatch(newGameData);
   };
@@ -179,10 +202,9 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const submitWord = async (playerId: string, word: string, wordStatus = 'valid') => {
     console.log(`submitting ${wordStatus} word ${word}`)
     if (!currentMatch) return;
-    if (!gameId) {
+    if (!currentMatch.id) {
       const nextCurrentMatch = { ...currentMatch };
       if (nextCurrentMatch.foundWordsRecord) {
-        console.log('single player submitting', wordStatus, word)
         nextCurrentMatch.foundWordsRecord[word] = playerId;
         setCurrentMatch(nextCurrentMatch);
         submitWordForPoints(playerId, word, wordStatus);
@@ -252,7 +274,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       const updates: Record<string, string | number> = {};
       const updatePath = `games/${currentMatch.id}/playerProgress/${playerUid}/attackPoints`;
       updates[updatePath] = newValue;
-      if (word) { 
+      if (word) {
         const foundWordPath = `games/${currentMatch.id}/playerProgress/${playerUid}/foundOpponentWords/${word}`;
         updates[foundWordPath] = 'true';
       }
@@ -271,36 +293,44 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addAvailablePower = async (playerId: string, powerup: PowerupData) => {
+  const addAvailablePower = async (playerId: string, powerup: DefaultPowerupData) => {
     if (!currentMatch) return;
     if (currentMatch.id) {
       const path = `games/${currentMatch.id}/playerProgress/${playerId}/availablePowers`;
       const availablePowersRef = ref(database, path);
       const newPowerId = await push(availablePowersRef, powerup).key;
-      await update(ref(database, `${path}/${newPowerId}`), { id: newPowerId });
+      update(ref(database, `${path}/${newPowerId}`), { id: newPowerId });
     }
   };
-  
-  const activatePowerup = async (playerUid: string, targetUid: string, powerup: PowerupData) => {
+
+  const activatePowerup = async (powerup: DeployedPowerupData) => {
     if (!currentMatch) return;
     if (currentMatch.id) {
-      const newPowerup = {
-        ...powerup,
-        activatedBy: playerUid,
-        target: targetUid,
-      }      
-      triggerShowMessage(`Sending ${powerup.type}!`);
-
+      triggerShowMessage(`Sending ${powerup.type.toUpperCase()}!`);
       const path = `games/${currentMatch.id}/activePowerups`;
-      const activePowerupsRef = ref(database, path);
-      const newPowerupId = await push(activePowerupsRef, newPowerup).key;
-      await update(ref(database, `${path}/${newPowerupId}`), { id: newPowerupId });
-      
-      const availablePowerPath = `games/${currentMatch.id}/playerProgress/${playerUid}/availablePowers`;
-      await remove(ref(database, `${availablePowerPath}/${powerup.id}`));
+      set(ref(database, `${path}/${powerup.id}`), powerup);
 
+      const availablePowerPath = `games/${currentMatch.id}/playerProgress/${powerup.activatedBy}/availablePowers`;
+      remove(ref(database, `${availablePowerPath}/${powerup.id}`));
     }
   };
+
+  const updatePowerupTimeLeft = async (powerupId: string, newValue: number) => {
+    if (!currentMatch) return;
+    if (currentMatch.id) {
+      const path = `games/${currentMatch.id}/activePowerups/${powerupId}`;
+      update(ref(database, path), { timeLeft: newValue });
+    }
+  };
+
+  const deactivatePowerup = useCallback(async (powerupId: string) => {
+    if (!currentMatch) return;
+    if (currentMatch.id) {
+      const path = `games/${currentMatch.id}/activePowerups`;
+      remove(ref(database, `${path}/${powerupId}`));
+    }
+  }, [currentMatch]);
+
 
   const markChallengeAccepted = async (challegeId: string) => {
     if (challenges) {
@@ -314,7 +344,7 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const endGame = async (gameId: string) => {
     if (currentMatch) {
       if (gameId) {
-        const updates: Record<string, any> = {};
+        const updates: Record<string, boolean> = {};
         updates[`games/${gameId}/gameOver`] = true;
         await update(ref(database), updates);
       } else {
@@ -338,6 +368,22 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     console.warn('Puzzle uploaded!');
   };
 
+  const pruneEndedGames = async () => {
+    const snapshot = await get(child(ref(database), 'games'));
+    const games = snapshot.val();
+
+    if (games) {
+      Object.keys(games).forEach(async (gId) => {
+        const game = games[gId];
+        const ageLimit = Date.now() - 86400000;
+        if (game.gameOver === true || (game.startTime < ageLimit)) {
+          remove(ref(database, `games/${gId}`));
+          console.log(`Removed ended/expired game: ${gId}`);
+        }
+      });
+    }
+  };
+
   return (
     <FirebaseContext.Provider value={{
       challenges,
@@ -346,21 +392,24 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       totalPlayers,
       activatePowerup,
       addAvailablePower,
+      deactivatePowerup,
       destroyGame,
       endGame,
       joinNewGame,
       markChallengeAccepted,
-      setCurrentMatch,
-      startNewGame,
+      pruneEndedGames,
       revokeAllOutgoingChallenges,
       revokeOutgoingChallenge,
+      setCurrentMatch,
       setPlayerList,
       setPlayerReady,
       setPlayerTouchedCells,
       setGameId,
+      startNewGame,
       submitWord,
       subscribeToFoundWords,
       updatePlayerAttackPoints,
+      updatePowerupTimeLeft,
       uploadPuzzle,
     }}>
       {children}

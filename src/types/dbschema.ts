@@ -1,9 +1,9 @@
 export interface FirestoreSchema {
   users: {
     [uid: string]: { // UserData
-      displayName: string,
+      displayName: string;
       phase: string;
-      photoURL: string,
+      photoURL: string;
       preferences?: {
         style: {
           cubeColor: string;
@@ -19,7 +19,7 @@ export interface FirestoreSchema {
           swipeBuffer: number;
         };
       };
-      uid: string,
+      uid: string;
     };
   };
   puzzles: {
@@ -40,5 +40,5 @@ export interface FirestoreSchema {
       theme?: string;
       wordCount: number;
     }
-  }
-};
+  };
+}

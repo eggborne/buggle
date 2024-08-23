@@ -7,6 +7,8 @@
 }
 
 .AttackButtons > button {
+  width: calc(var(--footer-height) * 0.75);
+  height: calc(var(--footer-height) * 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,7 +20,7 @@
 }
 
 .AttackButtons > button.available {
-  outline: 0.5rem solid green;
+  outline: 0.25rem solid green;
   color: rgb(124, 208, 124);
   font-size: 2rem;
   background-color: rgb(198, 138, 18);
@@ -30,7 +32,7 @@
   animation: throb 500ms ease-in-out alternate infinite;
 }
 
-.AttackButtons > .centerButton {
+.AttackButtons > button.centerButton {
   width: calc(var(--footer-height) * 1.2);
   height: calc(var(--footer-height) * 1.2);
   background-color: rgb(60, 60, 31);

@@ -22,12 +22,13 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  /* align-items: center; */
   padding: 0.25rem 0.5rem;
   gap: 0.5rem;
 }
 
-.playerList, .challengeList {
+.playerList,
+.challengeList {
   width: var(--main-width);
   border-radius: 0.25rem;
   display: flex;
@@ -35,6 +36,23 @@
   align-items: stretch;
   gap: 0.5rem;
 }
+
+.challengeList {
+  opacity: 0;
+  transition: all 500ms ease;
+}
+
+.challengeList.showing {
+  opacity: 1;
+  height: 100%;
+}
+
+.challengeList.hidden {
+  opacity: 0.5;
+  height: 0%;
+}
+
+
 
 .playerListArea:nth-of-type(2) {
   border: 2px solid #00000033;
@@ -85,6 +103,17 @@
   padding: 0.25rem;
   border: 0.5rem solid transparent;
   border-radius: 0.25rem;
+}
+
+.puzzleOptions > .timeSelectRow {
+  align-items: center;
+  justify-content: space-between;
+  min-width: 100%;
+}
+
+.lowerButtons button:disabled {
+  opacity: 0.5;
+  background-color: gray;
 }
 
 @keyframes birth-from-left {

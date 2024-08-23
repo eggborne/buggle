@@ -8,6 +8,7 @@
   grid-template-rows: 1fr 1fr;
   gap: 0.5rem 0;
   place-items: center;
+  z-index: 101;
 }
 
 .findMatchButton {
@@ -40,6 +41,10 @@
 
 .gameStatsArea .labeledCounter {
   font-size: 1rem;
+}
+
+.playerArea, .opponentArea {
+  position: relative;
 }
 
 .playerArea {
@@ -79,6 +84,7 @@
   align-items: center;
   justify-content: center;
   text-shadow: var(--text-stroke);
+  z-index: 1;
   /* display: none; */
 }
 
