@@ -3,7 +3,7 @@ import { StoredPuzzleData } from '../types/types';
 import { formatDateAndTime } from '../scripts/util'
 import PuzzleIcon from './PuzzleIcon';
 import { useEffect, useState } from 'react';
-import { collection, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { firestore } from '../scripts/firebase';
 import LoadingDisplay from './LoadingDisplay';
 
@@ -16,16 +16,16 @@ const StoredPuzzleList = ({ showing, onClickStoredPuzzle }: StoredPuzzleListProp
   const [puzzlesLoaded, setPuzzlesLoaded] = useState<boolean>(false);
   const [list, setList] = useState<StoredPuzzleData[]>([]);
 
-  const deletePuzzle = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    const puzzleId = e.currentTarget.dataset.puzzleId;
-    if (puzzleId) {
-      const puzzleRef = doc(firestore, 'puzzles', puzzleId);
-      await deleteDoc(puzzleRef);
-      console.warn('deleted puzzle', puzzleId);
-      setList(prevList => prevList.filter(p => p.letterString !== puzzleId));
-    }
-  };
+  // const deletePuzzle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.stopPropagation();
+  //   const puzzleId = e.currentTarget.dataset.puzzleId;
+  //   if (puzzleId) {
+  //     const puzzleRef = doc(firestore, 'puzzles', puzzleId);
+  //     await deleteDoc(puzzleRef);
+  //     console.warn('deleted puzzle', puzzleId);
+  //     setList(prevList => prevList.filter(p => p.letterString !== puzzleId));
+  //   }
+  // };
 
 
   useEffect(() => {

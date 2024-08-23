@@ -1,7 +1,8 @@
 import styles from './AttackButtons.module.css';
 import { DefaultPowerupData, PlayerMatchData, UserData } from '../../types/types';
-import { powers } from '../GameBoard';
+import { powers } from '../../config.json'
 import { useFirebase } from '../../context/FirebaseContext';
+const gamePowers = powers as Record<string, DefaultPowerupData>;
 
 interface AttackButtonsProps {
   availablePowers?: DefaultPowerupData[];
@@ -16,7 +17,7 @@ const AttackButtons = ({ availablePowers, opponentData, behind, userProgress }: 
   const handleClickUsePowerup = async (powerup: DefaultPowerupData | null) => {
     if (powerup == null) return;
     const { type } = powerup;
-    updatePlayerAttackPoints(userProgress.uid, (userProgress.attackPoints - powers[type].cost));
+    updatePlayerAttackPoints(userProgress.uid, (userProgress.attackPoints - gamePowers[type].cost));
     if (opponentData) {
       const newPowerup = {
         ...powerup,
@@ -33,7 +34,7 @@ const AttackButtons = ({ availablePowers, opponentData, behind, userProgress }: 
         onClick={() => handleClickUsePowerup(Object.values(availablePowers || {}).find(p => p.type === 'bees') || null)}
         className={`knob ${styles.centerButton} ${Object.values(availablePowers || {}).find(p => p.type === 'bees') ? styles.available : ''} ${!behind ? styles.disabled : ''}`} >
         <div className={styles.pointSupply} style={{
-          transform: `scaleY(min(${userProgress.attackPoints / powers['bees'].cost}, 1))`
+          transform: `scaleY(min(${userProgress.attackPoints / gamePowers['bees'].cost}, 1))`
         }} ></div>
       </button>
       <button className={`knob ${styles.rightButton}`}></button>

@@ -1,9 +1,9 @@
 import { createContext, useEffect, useState, ReactNode, useContext, Dispatch, SetStateAction, useCallback } from 'react';
 import { ref, onValue, remove, off, get, runTransaction, set, update, DataSnapshot, push, child } from 'firebase/database';
-import { CellObj, ChallengeData, CurrentGameData, DefaultPowerupData, DeployedPowerupData, StoredPuzzleData, UserData } from '../types/types';
+import { CellObj, ChallengeData, CurrentGameData, DefaultPowerupData, DeployedPowerupData, PointValues, StoredPuzzleData, UserData } from '../types/types';
 import { database, firestore } from '../scripts/firebase';
 import { useUser } from './UserContext';
-import { pointValues } from '../App';
+import { pointValues } from '../config.json';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 import { arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
 
@@ -37,7 +37,7 @@ interface FirebaseContextProps {
 
 const FirebaseContext = createContext<FirebaseContextProps | undefined>(undefined);
 
-export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
+const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [challenges, setChallenges] = useState<Record<string, ChallengeData> | null>(null);
   const [currentMatch, setCurrentMatch] = useState<CurrentGameData | null>(null);
   const [totalPlayers, setTotalPlayers] = useState<number>(0);
@@ -231,10 +231,11 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
 
   const submitWordForPoints = async (playerId: string, word: string, wordStatus = 'valid') => {
     let wordValue;
+    const values = pointValues as PointValues;
     if (word.length >= 8) {
-      wordValue = pointValues[8];
+      wordValue = values[8];
     } else {
-      wordValue = pointValues[word.length];
+      wordValue = values[word.length];
     }
     if (wordStatus === 'special') {
       wordValue *= 2;
@@ -417,10 +418,12 @@ export const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useFirebase = () => {
+const useFirebase = (): FirebaseContextProps => {
   const context = useContext(FirebaseContext);
   if (!context) {
     throw new Error('useFirebase must be used within a FirebaseProvider');
   }
   return context;
 };
+
+export { FirebaseProvider, useFirebase }

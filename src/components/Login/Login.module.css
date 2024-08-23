@@ -1,0 +1,39 @@
+.loginButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  gap: 1rem;
+  width: 100% !important;
+  height: 3rem;
+  margin: 0.75rem 0;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loginButton > img {
+  height: 80%;
+}
+
+.googleButton {
+  background-color: #ffffff;
+  color: #757575;
+  border: 1px solid #dddddd;
+}
+
+.googleButton:hover {
+  background-color: #f1f1f1;
+}
+
+.githubButton {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+.githubButton:hover {
+  background-color: #444444;
+}

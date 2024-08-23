@@ -1,6 +1,6 @@
 import styles from './GameBoard.module.css'
 import { CellObj, CurrentGameData, DefaultPowerupData, DeployedPowerupData, UserData } from '../../types/types';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
@@ -9,17 +9,11 @@ import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';
 import LoadingDisplay from '../LoadingDisplay';
 import Modal from '../Modal';
-import BeeSwarm from './BeeSwarm';
+import { powers } from '../../config.json';
 
-export const powers: Record<string, DefaultPowerupData> = {
-  'bees': {
-    category: 'curses',
-    cost: 3,
-    duration: 20,
-    timeLeft: 20,
-    type: 'bees',
-  }
-}
+// import BeeSwarm from './BeeSwarm';
+const BeeSwarm = lazy(() => import('./BeeSwarm'));
+
 
 interface GameBoardProps {
   currentEffects: {
@@ -74,12 +68,13 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
           });
         }
         // check if attackPoints are enough to activate any powers
-        for (const power in powers) {
+        const gamePowers = powers as Record<string, DefaultPowerupData>;
+        for (const power in gamePowers) {
           const playerProgress = currentMatch.playerProgress[user.uid];
           if (power) {
-            if (playerProgress.attackPoints >= powers[power].cost) {
+            if (playerProgress.attackPoints >= gamePowers[power].cost) {
               if (!playerProgress.availablePowers || !Object.values(playerProgress.availablePowers).find(p => p.type === power)) {
-                const newPower = { ...powers[power], activatedBy: user.uid };
+                const newPower = { ...gamePowers[power], activatedBy: user.uid };
                 addAvailablePower(user.uid, newPower);
               }
             }
@@ -275,8 +270,8 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
             :
             currentMatch && user && user.uid && <>
               <div>{Object.entries(currentMatch?.foundWordsRecord || {})
-                .filter(([_, value]) => value === user.uid)
-                .map(([key, _]) => key).length} words found</div>
+                .filter(([_key, value]) => value === user.uid)
+                .map(([key, _value]) => key).length} words found</div>
               <div>Score: {currentMatch?.playerProgress[user?.uid || '']?.score || 0}</div>
             </>
           }
@@ -334,12 +329,14 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
       {gameBoardRef.current &&
         !!(currentEffects && currentEffects.user.length) &&
         activeBees &&
-        <BeeSwarm
-          gameBoardElement={gameBoardRef.current}
-          gameWidth={currentMatch?.dimensions.width || 5}
-          powerupObj={activeBees}
-          swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+            `<BeeSwarm
+              gameBoardElement={gameBoardRef.current}
+              gameWidth={currentMatch?.dimensions.width || 5}
+              powerupObj={activeBees}
+              swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
+            />`
+        </Suspense>
       }
     </div>
   )

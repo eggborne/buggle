@@ -2,12 +2,13 @@ import { useState, useRef } from 'react'
 import styles from './SelectScreen.module.css'
 import { fetchRandomPuzzle } from '../../scripts/firebase';
 import { CurrentGameData, GameOptions, StoredPuzzleData, UserData } from '../../types/types';
-import PuzzleIcon from '../PuzzleIcon'
+// import PuzzleIcon from '../PuzzleIcon'
 import Modal from '../Modal';
 import StoredPuzzleList from '../StoredPuzzleList';
 import { useFirebase } from '../../context/FirebaseContext';
 import { useUser } from '../../context/UserContext';
-import { stringTo2DArray, decodeMatrix } from '../../scripts/util';
+import { stringTo2DArray, decodeMatrix, updateLetterLists } from '../../scripts/util';
+import { difficulties } from '../../config.json';
 
 interface SelectScreenProps {
   hidden: boolean;
@@ -16,7 +17,7 @@ interface SelectScreenProps {
 function SelectScreen({ hidden }: SelectScreenProps) {
   const { user, changePhase, setUser } = useUser();
   const { startNewGame } = useFirebase();
-  const [sizeSelected, setSizeSelected] = useState<number>(4);
+  // const [sizeSelected, setSizeSelected] = useState<number>(4);
   const [listShowing, setListShowing] = useState<boolean>(false);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -49,11 +50,16 @@ function SelectScreen({ hidden }: SelectScreenProps) {
     e.preventDefault();
     if (!user) return;
     const target = e.currentTarget as HTMLFormElement;
+    const difficultyIndex = Number((target.elements.namedItem('difficulty') as HTMLSelectElement).value);
+    const difficulty = Object.keys(difficulties)[4 - difficultyIndex];
+    console.log('difficulty', difficulty)
     const newGameOptions: GameOptions = {
-      difficulty: (target.elements.namedItem('difficulty') as HTMLSelectElement).value,
+      difficulty,
       dimensions: {
-        width: sizeSelected,
-        height: sizeSelected
+        // width: sizeSelected,
+        // height: sizeSelected
+        width: 4,
+        height: 4
       },
       timeLimit: Number((target.elements.namedItem('timeLimit') as HTMLSelectElement).value),
       wordBonus: Number((target.elements.namedItem('wordBonus') as HTMLSelectElement).value),
@@ -113,6 +119,7 @@ function SelectScreen({ hidden }: SelectScreenProps) {
   return (
     <main className={selectScreenClass}>
       <div className='button-group'>
+        {/* <form ref={formRef} onSubmit={handleClickStartRandomGame}> */}
         <form ref={formRef} onSubmit={handleClickStartRandomGame}>
           <button type='submit' style={{ position: 'absolute', display: 'none' }}>submit</button>
           <div className={styles.puzzleOptions}>
@@ -132,13 +139,14 @@ function SelectScreen({ hidden }: SelectScreenProps) {
                 }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
               </div>
             </div> */}
-            <div className={`button-group row ${styles.timeSelectRow}`}>
-              <span>Difficulty</span>
-              <select name='difficulty'>
+            <div className={`button-group ${styles.timeSelectRow}`}>
+              <span>Word amount</span>
+              {/* <select name='difficulty'>
                 <option value='easy'>Easy</option>
                 <option value='medium'>Medium</option>
                 <option value='hard'>Hard</option>
-              </select>
+              </select> */}
+              <input type='range' name='difficulty' max='4' defaultValue='4'></input>
             </div>
             <div className={`button-group row ${styles.timeSelectRow}`}>
               <span>Max time</span>
@@ -162,6 +170,10 @@ function SelectScreen({ hidden }: SelectScreenProps) {
         <button onClick={handleSubmitPuzzleOptions} className={styles.start}>Start!</button>
       </div>
       {process.env.NODE_ENV === 'development' && <button onClick={() => setListShowing(true)}>{'Show saved puzzles'}</button>}
+      {process.env.NODE_ENV === 'development' && <button onClick={async () => {
+        console.warn('clicked update puzzles')
+        updateLetterLists();
+      }}>{'Update puzzles'}</button>}
       <Modal isOpen={listShowing} onClose={() => setListShowing(false)}>
         <>
           <h2>Saved puzzles</h2>

@@ -8,17 +8,27 @@ module.exports = {
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh'],
+  plugins: [
+    'react-refresh',
+    'unused-imports'
+  ],
   rules: {
     'react-refresh/only-export-components': [
-      'warn',
+      'off',
       { allowConstantExport: true },
     ],
-    '@typescript-eslint/no-unused-vars': [
-      'off'
+    '@typescript-eslint/no-unused-vars': ['off'],
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        args: 'after-used',
+        argsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+        vars: 'all',
+        varsIgnorePattern: '^_'
+      }
     ],
-    'react-hooks/exhaustive-deps': [
-      'off'
-    ]
+    'react-hooks/exhaustive-deps': ['off'],
   },
 }

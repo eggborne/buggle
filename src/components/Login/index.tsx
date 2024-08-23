@@ -1,30 +1,46 @@
-import { useEffect } from 'react';
-import { GithubAuthProvider, GoogleAuthProvider } from 'firebase/auth';
+import styles from './Login.module.css';
+import googleIcon from '/assets/google-icon.svg';
+import githubIcon from '/assets/github-icon.svg';
+import { signInWithPopup, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import { auth } from '../../scripts/firebase';
-import * as firebaseui from 'firebaseui';
-import 'firebaseui/dist/firebaseui.css';
 
 const Login = () => {
-  useEffect(() => {
-    const uiConfig = {
-      signInOptions: [
-        GoogleAuthProvider.PROVIDER_ID,
-        GithubAuthProvider.PROVIDER_ID,
-      ],
-      signInFlow: 'popup',
-      callbacks: {
-        signInSuccessWithAuthResult: () => false,
-      },
-    };
+  const handleGoogleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        // Handle successful login
+        console.log('Google login success:', result);
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        console.error('Google login error:', error);
+      });
+  };
 
-    const ui = new firebaseui.auth.AuthUI(auth);
-    ui.start('#firebaseui-auth-container', uiConfig);
-    return () => {
-      ui.delete();
-    };
-  }, []);
+  const handleGithubLogin = () => {
+    const provider = new GithubAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        // Handle successful login
+        console.log('GitHub login success:', result);
+      })
+      .catch((error) => {
+        // Handle Errors here.
+        console.error('GitHub login error:', error);
+      });
+  };
 
-  return <div id="firebaseui-auth-container"></div>;
+  return (
+    <div>
+      <button className={`${styles.loginButton} ${styles.googleButton}`} onClick={handleGoogleLogin}>
+        <img src={googleIcon} alt="Google Icon" /> Login with Google
+      </button>
+      <button className={`${styles.loginButton} ${styles.githubButton}`} onClick={handleGithubLogin}>
+        <img src={githubIcon} alt="GitHub Icon" /> Login with GitHub
+      </button>
+    </div>
+  );
 };
 
 export default Login;

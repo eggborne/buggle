@@ -1,6 +1,19 @@
 import styles from './GameBoard.module.css';
 import React, { useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
+import {
+  Group,
+  Object3D,
+  WebGLRenderer,
+  Scene,
+  OrthographicCamera,
+  Vector3,
+  PlaneGeometry,
+  LinearSRGBColorSpace,
+  MeshBasicMaterial,
+  Mesh,
+  NormalBlending,
+  TextureLoader,
+} from 'three';
 import { randomInt } from '../../scripts/util';
 import { DeployedPowerupData } from '../../types/types';
 
@@ -19,11 +32,11 @@ interface Coords {
 
 interface BeeObject {
   animationStartTime: number;
-  group: THREE.Group;
-  leftWing: THREE.Object3D;
+  group: Group;
+  leftWing: Object3D;
   homePoint: Coords
   range: Coords;
-  rightWing: THREE.Object3D;
+  rightWing: Object3D;
   speed: Coords;
   startPoint: Coords;
   flyOutDuration: number;
@@ -31,9 +44,9 @@ interface BeeObject {
 }
 
 const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, powerupObj, swarmSize }) => {
-  const [renderer, setRenderer] = useState<THREE.WebGLRenderer | null>(null);
-  const [scene, setScene] = useState<THREE.Scene | null>(null);
-  const [camera, setCamera] = useState<THREE.OrthographicCamera | null>(null);
+  const [renderer, setRenderer] = useState<WebGLRenderer | null>(null);
+  const [scene, setScene] = useState<Scene | null>(null);
+  const [camera, setCamera] = useState<OrthographicCamera | null>(null);
 
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -73,23 +86,23 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
     if (!mountRef.current) return;
 
     // Scene setup
-    const newScene = new THREE.Scene();
+    const newScene = new Scene();
 
     // Orthographic camera setup
-    const newCamera = new THREE.OrthographicCamera(
+    const newCamera = new OrthographicCamera(
       -width / 2, width / 2, height / 2, -height / 2, 0.1, 1000
     );
     newCamera.position.set(0, 0, 100); // Position above the scene
-    newCamera.lookAt(new THREE.Vector3(0, 0, 100)); // Look towards the origin
+    newCamera.lookAt(new Vector3(0, 0, 100)); // Look towards the origin
 
-    const newRenderer = new THREE.WebGLRenderer({
+    const newRenderer = new WebGLRenderer({
       alpha: true,
       // antialias: true,
       // preserveDrawingBuffer: true,
       // powerPreference: 'high-performance',
 
     });
-    newRenderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+    newRenderer.outputColorSpace = LinearSRGBColorSpace;
 
     newRenderer.setSize(width, height);
     mountRef.current.appendChild(newRenderer.domElement);
@@ -99,18 +112,18 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
     setCamera(newCamera);
 
     // Load textures
-    const textureLoader = new THREE.TextureLoader();
+    const textureLoader = new TextureLoader();
     const bodyTexture = textureLoader.load('/assets/beebody.webp');
     const wingTexture = textureLoader.load('/assets/beewing.webp');
 
     // Create bee materials
-    const bodyMaterial = new THREE.MeshBasicMaterial({
+    const bodyMaterial = new MeshBasicMaterial({
       map: bodyTexture,
-      blending: THREE.NormalBlending,
+      blending: NormalBlending,
 
       transparent: true,
     });
-    const wingMaterial = new THREE.MeshBasicMaterial({
+    const wingMaterial = new MeshBasicMaterial({
       map: wingTexture,
       transparent: true,
       opacity: 0.75
@@ -120,8 +133,8 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
     const beeSize = (gameBoardSize / (gameWidth * 0.8));
 
     // Create bee geometries
-    const bodyGeometry = new THREE.PlaneGeometry(beeSize, beeSize);
-    const wingGeometry = new THREE.PlaneGeometry(beeSize / 1.5, beeSize / 2);
+    const bodyGeometry = new PlaneGeometry(beeSize, beeSize);
+    const wingGeometry = new PlaneGeometry(beeSize / 1.5, beeSize / 2);
 
     // Create bees
 
@@ -161,13 +174,13 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
       const beeObj: BeeObject = {
         animationStartTime: randomInt(0, 5000),
         flyOutStartTime: Date.now() + i * TIME_BETWEEN_BEES,
-        group: new THREE.Group(),
-        homePoint: new THREE.Vector3(
+        group: new Group(),
+        homePoint: new Vector3(
           homePoint.x,
           homePoint.y,
           homePoint.z
         ),
-        leftWing: new THREE.Object3D(),
+        leftWing: new Object3D(),
         range: {
           x: beeSize / (randomInt(35, 60) / 10),
           y: beeSize / (randomInt(35, 65) / 10),
@@ -177,19 +190,19 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
           ...randomSpeed,
           z: ((randomSpeed.x + randomSpeed.y) / 2) // higher range with faster movement
         },
-        rightWing: new THREE.Object3D(),
-        startPoint: new THREE.Vector3(startPoint.x, startPoint.y, startPoint.z),
+        rightWing: new Object3D(),
+        startPoint: new Vector3(startPoint.x, startPoint.y, startPoint.z),
         flyOutDuration: randomInt(200, 800),
       };
       const { group, leftWing, rightWing } = beeObj;
-      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      const body = new Mesh(bodyGeometry, bodyMaterial);
 
-      const leftWingMesh = new THREE.Mesh(wingGeometry, wingMaterial);
+      const leftWingMesh = new Mesh(wingGeometry, wingMaterial);
       leftWing.add(leftWingMesh);
       leftWing.position.set(beeSize * -0.175, beeSize * 0.1, 0);
       leftWingMesh.position.set(-beeSize * (0.75 / 2), 0, 0);
 
-      const rightWingMesh = new THREE.Mesh(wingGeometry, wingMaterial);
+      const rightWingMesh = new Mesh(wingGeometry, wingMaterial);
       rightWing.add(rightWingMesh);
       rightWing.position.set(beeSize * 0.1, beeSize * 0.1, 0);
       rightWingMesh.position.set(beeSize * (0.75 / 2), 0, 0);

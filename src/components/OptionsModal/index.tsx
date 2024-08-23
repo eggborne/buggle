@@ -93,6 +93,8 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
               }
             },
             gameOver: false,
+            timeLimit: 300,
+            wordBonus: 5
           }}
           opponentData={null}
         />}

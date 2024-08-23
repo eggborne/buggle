@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { triggerShowMessage } from './hooks/useMessageBanner';
 import { useUser } from './context/UserContext';
 import './App.css'
-import { ConfirmData, PointValues, UserData, } from './types/types';
+import { ConfirmData } from './types/types';
 import LoadingDisplay from './components/LoadingDisplay';
 import Footer from './components/Footer';
 import TitleScreen from './components/TitleScreen';
@@ -17,39 +17,6 @@ import { useFirebase } from './context/FirebaseContext';
 import ConfirmModal from './components/ConfirmModal';
 import PlayerAnnouncementEffect from './effects/PlayerAnnouncementEffect';
 import StartMatchModal from './components/StartMatchModal';
-
-
-const defaultUserPreferences = {
-  style: {
-    cubeColor: "#ddddca",
-    cubeRoundness: 27,
-    cubeScale: 83,
-    cubeTextColor: "#2b2b2b",
-    footerHeight: 3,
-    gameBackgroundColor: "#523e6a",
-    gameBoardBackgroundColor: "#a19191",
-    gameBoardSize: 17,
-  },
-  gameplay: {
-    swipeBuffer: 70,
-  }
-};
-
-export const defaultUser: UserData = {
-  displayName: 'Guest',
-  photoURL: '/assets/generic-user-icon.jpg',
-  phase: 'title',
-  preferences: defaultUserPreferences,
-  uid: 'GuestId'
-};
-
-
-export const difficultyWordAmounts: Record<string, { min: number, max: number }> = {
-  easy: { min: 200, max: 10000 },
-  medium: { min: 150, max: 250 },
-  hard: { min: 1, max: 150 }
-};
-export const pointValues: PointValues = { 3: 1, 4: 1, 5: 2, 6: 3, 7: 5, 8: 11 };
 
 function App() {
   const {

@@ -93,10 +93,10 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     }
   }, [dimensions, optionsEnabled]);
 
-  let customOptions: BoardRequestData | false = false;
+  const customOptions: BoardRequestData | false = false;
   
   // const testSize = 5;
-  // customOptions = {
+  // const customOptions = {
   //   dimensions: {
   //     width: testSize,
   //     height: testSize

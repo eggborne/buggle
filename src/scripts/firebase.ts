@@ -1,13 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
-import { BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
-// import { difficultyWordAmounts } from "../App";
+import { BestLists, BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
 import { difficulties } from '../config.json';
-import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange } from "./util";
-import { bestLists } from '../config.json'
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, where, query } from "firebase/firestore";
-// import { getAnalytics } from "firebase/analytics";
+import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange, loadBestLists } from "./util";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -23,18 +20,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
-// const analytics = getAnalytics(app);
 
 console.warn('Firebase initialized.');
 
 const fetchRandomPuzzle = async ({ difficulty, dimensions, timeLimit, wordBonus }: GameOptions, seenPuzzles: string[]): Promise<CurrentGameData | null> => {
   try {
+    const bestLists = await loadBestLists() as BestLists;
     const diff = difficulty as DifficultyLevel;
     const difficultyAmounts = difficulties[diff].totalWords;
     const availablePuzzles: { [key: string]: number } = {};
     for (const puzzleId in bestLists) {
       if (!seenPuzzles?.includes(puzzleId)) {
-        availablePuzzles[puzzleId] = (bestLists as Record<string, number>)[puzzleId];
+        availablePuzzles[puzzleId] = bestLists[puzzleId];
       }
     }
     console.log('--- User has seen', seenPuzzles.length);
@@ -91,7 +88,7 @@ const fetchPuzzleById = async (puzzleId: string): Promise<StoredPuzzleData | nul
 }
 
 const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
-const generateUrl2 = 'https://b0752b64-de87-447f-86b5-c952417dcf8d-00-ktb8mxecuua3.riker.replit.dev/language-api/generateBoggle/';
+// const generateUrl2 = 'https://b0752b64-de87-447f-86b5-c952417dcf8d-00-ktb8mxecuua3.riker.replit.dev/language-api/generateBoggle/';
 
 
 const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {

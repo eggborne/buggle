@@ -55,6 +55,9 @@
   width: 8rem;
   align-self: center;
 }
+.puzzleOptions input[type="range"] {
+  width: 100%;
+}
 
 .puzzleOptions label {
   display: flex;

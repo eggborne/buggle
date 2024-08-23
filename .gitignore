@@ -25,3 +25,4 @@ dist-ssr
 *.sw?
 .htaccess
 db.json
+stats.html

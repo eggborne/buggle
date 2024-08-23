@@ -3,7 +3,7 @@ import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData, ChallengeData } from '../types/types';
 import { ref, remove, set, update, get, child } from 'firebase/database';
 import { database, firestore, getUserFromDatabase } from '../scripts/firebase';
-import { defaultUser } from '../App';
+import { defaultUser } from '../config.json';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 import { createUserInDatabase } from '../scripts/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -28,7 +28,7 @@ interface UserContextProps {
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
-export const useUser = () => {
+const useUser = () => {
   const context = useContext(UserContext);
   if (!context) {
     throw new Error('useUser must be used within a UserProvider');
@@ -36,7 +36,7 @@ export const useUser = () => {
   return context;
 };
 
-export const UserProvider = ({ children }: { children: ReactNode }) => {
+const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -48,7 +48,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setIsLoading(true);
-      let userData = defaultUser;
+      let userData = defaultUser as UserData;
       if (firebaseUser) {
         console.warn('-- found Firebase user!')
         userData = await getUserData(firebaseUser);
@@ -241,3 +241,5 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     </UserContext.Provider>
   );
 };
+
+export { UserProvider, useUser }

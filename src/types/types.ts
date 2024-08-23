@@ -273,9 +273,19 @@ export interface OptionInputData {
   onPointerUp?: (e: React.PointerEvent<HTMLInputElement>) => void;
 }
 
+
 export interface OptionTypeData {
   label: string;
   inputDataList: OptionInputData[];
+}
+
+type PuzzleId = string;
+type ListScore = number;
+export type BestLists = Record<PuzzleId, ListScore>;
+
+export interface LetterListItem {
+  letterList: PuzzleId;
+  totalWords: ListScore;
 }
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';

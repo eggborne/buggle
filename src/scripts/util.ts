@@ -1,3 +1,23 @@
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { difficulties } from '../config.json'
+import { firestore } from './firebase';
+import { BestLists } from '../types/types';
+
+export const loadBestLists = async (): Promise<BestLists | undefined> => {
+  try {
+    const response = await fetch('https://mikedonovan.dev/buggle-training-data/research/best_lists.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const bestLists = await response.json();
+    return bestLists;
+  } catch (error) {
+    console.error('Error loading best lists:', error);
+  }
+};
+
+const bestLists = await loadBestLists() as BestLists;
+
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
 export const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 export const stringTo2DArray = (input: string, width: number, height: number): string[][] => {
@@ -100,7 +120,7 @@ export const formatDateAndTime = (dateCreated: number) => {
   return { date: formattedDate, time: formattedTime };
 };
 
-export const getRandomPuzzleWithinRange = ( puzzles: { [key: string]: number }, min: number, max: number ): [string, number] | null => {
+export const getRandomPuzzleWithinRange = (puzzles: { [key: string]: number }, min: number, max: number): [string, number] | null => {
   // Filter the entries that are within the range
   const validEntries = Object.entries(puzzles).filter(
     ([, value]) => value >= min && value <= max
@@ -115,3 +135,43 @@ export const getRandomPuzzleWithinRange = ( puzzles: { [key: string]: number }, 
   const randomIndex = Math.floor(Math.random() * validEntries.length);
   return validEntries[randomIndex];
 }
+
+const findBucket = (listScore: number) => {
+  for (const [difficulty, { totalWords }] of Object.entries(difficulties)) {
+    if (listScore >= totalWords.min && listScore <= totalWords.max) {
+      return difficulty;
+    }
+  }
+  return 'easy';
+}
+
+export const updateLetterLists = async (): Promise<void> => {
+  try {
+    for (const puzzleId in bestLists) {
+      const listScore = bestLists[puzzleId];
+      const targetBucket = findBucket(listScore);
+      const currentItem = { letterList: puzzleId, totalWords: listScore };
+      const bucketArray = bestLists?.[targetBucket] || [];
+      console.log('got bucketArray', targetBucket, bucketArray, Object.keys(bucketArray).length)
+      console.log('currentItem', currentItem)
+      const itemExists = Object.keys(bucketArray).some(
+        (existingLetterList: string) => {
+          existingLetterList === currentItem.letterList
+        }
+      );
+
+      if (!itemExists) {
+        const docRef = doc(firestore, `letterLists`, '4');
+        await updateDoc(docRef, {
+          [targetBucket]: arrayUnion(currentItem),
+        });
+        console.log('Added', currentItem, 'to', targetBucket);
+      } else {
+        console.log('Item already exists:', currentItem);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating bestLists:", error);
+    throw error; // Re-throw the error for higher-level handling
+  }
+};
