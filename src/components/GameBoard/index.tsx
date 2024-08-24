@@ -1,6 +1,6 @@
 import styles from './GameBoard.module.css'
 import { CellObj, CurrentGameData, DefaultPowerupData, DeployedPowerupData, UserData } from '../../types/types';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
@@ -329,14 +329,12 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
       {gameBoardRef.current &&
         !!(currentEffects && currentEffects.user.length) &&
         activeBees &&
-        <Suspense fallback={<div>Loading...</div>}>
-            `<BeeSwarm
-              gameBoardElement={gameBoardRef.current}
-              gameWidth={currentMatch?.dimensions.width || 5}
-              powerupObj={activeBees}
-              swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
-            />`
-        </Suspense>
+        <BeeSwarm
+          gameBoardElement={gameBoardRef.current}
+          gameWidth={currentMatch?.dimensions.width || 5}
+          powerupObj={activeBees}
+          swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
+        />
       }
     </div>
   )

@@ -87,9 +87,7 @@ const fetchPuzzleById = async (puzzleId: string): Promise<StoredPuzzleData | nul
   }
 }
 
-const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/'
-// const generateUrl2 = 'https://b0752b64-de87-447f-86b5-c952417dcf8d-00-ktb8mxecuua3.riker.replit.dev/language-api/generateBoggle/';
-
+const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/';
 
 const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
   console.log('>>>>>>>>>>>>  Using API to create puzzle with options', options);
