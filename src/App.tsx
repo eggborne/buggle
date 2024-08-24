@@ -25,7 +25,6 @@ function App() {
     isLoggedIn,
     changePhase,
     handleSignOut,
-
   } = useUser();
   const phase = user?.phase;
   const { currentMatch, destroyGame, revokeAllOutgoingChallenges } = useFirebase();
@@ -33,6 +32,15 @@ function App() {
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
   const [confirmShowing, setConfirmShowing] = useState<ConfirmData | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!loaded) {
+      requestAnimationFrame(() => {
+        setLoaded(true);
+      })
+    }
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !userReady) {
@@ -73,7 +81,7 @@ function App() {
   }
 
   return (
-    isLoading ? <LoadingDisplay /> :
+    (!loaded || isLoading) ? <LoadingDisplay /> :
       <>
         {isLoggedIn && <PlayerAnnouncementEffect />}
         <div

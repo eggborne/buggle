@@ -3,7 +3,7 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
 import { BestLists, BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
 import { difficulties } from '../config.json';
-import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange, loadBestLists } from "./util";
+import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange } from "./util";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -18,10 +18,27 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+
 const auth = getAuth(app);
+const database = getDatabase(app);
+const firestore = getFirestore(app);
+
 
 console.warn('Firebase initialized.');
+
+const loadBestLists = async (): Promise<BestLists | undefined> => {
+  try {
+    const response = await fetch('https://mikedonovan.dev/buggle-training-data/research/best_lists.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const bestLists = await response.json();
+    console.log('got bestLists', bestLists)
+    return bestLists;
+  } catch (error) {
+    console.error('Error loading best lists:', error);
+  }
+};
 
 const fetchRandomPuzzle = async ({ difficulty, dimensions, timeLimit, wordBonus }: GameOptions, seenPuzzles: string[]): Promise<CurrentGameData | null> => {
   try {
@@ -114,8 +131,6 @@ const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedB
   }
 };
 
-const firestore = getFirestore();
-
 const createUserInDatabase = async (userData: UserData) => {
   const userRef = doc(firestore, 'users', userData.uid);
   await setDoc(userRef, userData);
@@ -135,5 +150,6 @@ export {
   fetchPuzzleById,
   fetchRandomPuzzle,
   getUserFromDatabase,
+  loadBestLists,
 }
 

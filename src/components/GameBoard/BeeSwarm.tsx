@@ -1,5 +1,5 @@
-import styles from './GameBoard.module.css';
-import React, { useRef, useEffect, useState } from 'react';
+import beeSwarm from './GameBoard.module.css';
+import { FC, useRef, useEffect, useState } from 'react';
 import {
   Group,
   Object3D,
@@ -43,7 +43,7 @@ interface BeeObject {
   flyOutStartTime: number
 }
 
-const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, powerupObj, swarmSize }) => {
+const BeeSwarm: FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, powerupObj, swarmSize }) => {
   const [renderer, setRenderer] = useState<WebGLRenderer | null>(null);
   const [scene, setScene] = useState<Scene | null>(null);
   const [camera, setCamera] = useState<OrthographicCamera | null>(null);
@@ -280,7 +280,7 @@ const BeeSwarm: React.FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, poweru
     };
   }, [width, height, gameBoardElement.clientWidth, swarmSize]);
 
-  return <div className={styles.BeeSwarm} ref={mountRef} style={{ width: `${width}px`, height: `${height}px` }} />;
+  return <div className={beeSwarm.toString()} ref={mountRef} style={{ width: `${width}px`, height: `${height}px` }} />;
 };
 
 export default BeeSwarm;

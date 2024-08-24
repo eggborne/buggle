@@ -1,22 +1,7 @@
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { difficulties } from '../config.json'
-import { firestore } from './firebase';
+import { firestore, loadBestLists } from './firebase';
 import { BestLists } from '../types/types';
-
-export const loadBestLists = async (): Promise<BestLists | undefined> => {
-  try {
-    const response = await fetch('https://mikedonovan.dev/buggle-training-data/research/best_lists.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const bestLists = await response.json();
-    return bestLists;
-  } catch (error) {
-    console.error('Error loading best lists:', error);
-  }
-};
-
-const bestLists = await loadBestLists() as BestLists;
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
 export const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -147,6 +132,7 @@ const findBucket = (listScore: number) => {
 
 export const updateLetterLists = async (): Promise<void> => {
   try {
+    const bestLists = await loadBestLists() as BestLists;
     for (const puzzleId in bestLists) {
       const listScore = bestLists[puzzleId];
       const targetBucket = findBucket(listScore);
