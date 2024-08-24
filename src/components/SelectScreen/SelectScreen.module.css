@@ -78,10 +78,15 @@
   text-align: center;
 }
 
+.puzzleOptions > .puzzleSelectRow,
 .puzzleOptions > .timeSelectRow {
   align-items: center;
   justify-content: space-between;
   min-width: 100%;
+}
+
+.puzzleOptions > .puzzleSelectRow {
+  display: grid;
 }
 
 .SelectScreen button:not(.start) {

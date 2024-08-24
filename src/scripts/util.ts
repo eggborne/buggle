@@ -1,7 +1,7 @@
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { difficulties } from '../config.json'
-import { firestore, loadBestLists } from './firebase';
-import { BestLists } from '../types/types';
+import { firestore, getPuzzleListFromDatabase, loadBestLists } from './firebase';
+import { BestLists, CurrentGameData, StoredPuzzleData, UserData } from '../types/types';
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
 export const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -132,32 +132,59 @@ const findBucket = (listScore: number) => {
 
 export const updateLetterLists = async (): Promise<void> => {
   try {
+    let newCount = 0;
     const bestLists = await loadBestLists() as BestLists;
+    const existingList = await getPuzzleListFromDatabase() || {};
     for (const puzzleId in bestLists) {
       const listScore = bestLists[puzzleId];
-      const targetBucket = findBucket(listScore);
       const currentItem = { letterList: puzzleId, totalWords: listScore };
-      const bucketArray = bestLists?.[targetBucket] || [];
-      console.log('got bucketArray', targetBucket, bucketArray, Object.keys(bucketArray).length)
-      console.log('currentItem', currentItem)
-      const itemExists = Object.keys(bucketArray).some(
-        (existingLetterList: string) => {
-          existingLetterList === currentItem.letterList
-        }
-      );
-
-      if (!itemExists) {
+      const targetBucketName = findBucket(listScore);
+      const keyList = Object.values(existingList).flat().map(e => e.letterList);
+      if (existingList && !keyList.includes(currentItem.letterList)) {
         const docRef = doc(firestore, `letterLists`, '4');
         await updateDoc(docRef, {
-          [targetBucket]: arrayUnion(currentItem),
+          [targetBucketName]: arrayUnion(currentItem),
         });
-        console.log('Added', currentItem, 'to', targetBucket);
-      } else {
-        console.log('Item already exists:', currentItem);
+        newCount++;
+        console.log('Added', currentItem, 'to', targetBucketName);
       }
     }
+    console.warn('LIST UPDATED! NEW:', newCount);
   } catch (error) {
     console.error("Error updating bestLists:", error);
     throw error; // Re-throw the error for higher-level handling
   }
 };
+
+export const gameDataFromStoredPuzzle = (puzzle: StoredPuzzleData, userUid: string, opponentUid?: string): CurrentGameData => {
+  const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
+  const newGameData = {
+    ...puzzle,
+    allWords: new Set(puzzle.allWords),
+    letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
+    playerProgress: {
+      [userUid]: {
+        attackPoints: 0,
+        foundOpponentWords: {},
+        uid: userUid,
+        score: 0,
+        touchedCells: [],
+      },
+    },
+    gameOver: false,
+    startTime: Date.now(),
+    endTime: Date.now() + (600 * 1000),
+    timeLimit: 600,
+    wordBonus: 5,
+  }
+  if (opponentUid) {
+    newGameData.playerProgress[opponentUid] = {
+      attackPoints: 0,
+      foundOpponentWords: {},
+      uid: opponentUid,
+      score: 0,
+      touchedCells: [],
+    }
+  }
+  return newGameData;
+}

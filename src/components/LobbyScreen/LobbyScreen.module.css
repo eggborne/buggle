@@ -84,38 +84,6 @@
   height: auto;
 }
 
-.puzzleOptions {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-  transform-origin: top;
-  scale: 1 1;
-  transition: all 100ms ease;
-  gap: 1rem;
-}
-
-.sizeSelections {
-  display: flex;
-  align-items: center;
-}
-
-.sizeSelections>span {
-  padding: 0.25rem;
-  border: 0.5rem solid transparent;
-  border-radius: 0.25rem;
-}
-
-.puzzleOptions > .timeSelectRow {
-  align-items: center;
-  justify-content: space-between;
-  min-width: 100%;
-}
-
-.lowerButtons button:disabled {
-  opacity: 0.5;
-  background-color: gray;
-}
-
 @keyframes birth-from-left {
   0% {
     opacity: 0;

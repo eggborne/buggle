@@ -1,4 +1,4 @@
-import beeSwarm from './GameBoard.module.css';
+import styles from './GameBoard.module.css';
 import { FC, useRef, useEffect, useState } from 'react';
 import {
   Group,
@@ -280,7 +280,7 @@ const BeeSwarm: FC<BeeSwarmProps> = ({ gameBoardElement, gameWidth, powerupObj, 
     };
   }, [width, height, gameBoardElement.clientWidth, swarmSize]);
 
-  return <div className={beeSwarm.toString()} ref={mountRef} style={{ width: `${width}px`, height: `${height}px` }} />;
+  return <div className={styles.beeSwarm} ref={mountRef} style={{ width: `${width}px`, height: `${height}px` }} />;
 };
 
 export default BeeSwarm;

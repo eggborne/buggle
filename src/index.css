@@ -260,6 +260,7 @@ button.knob > img {
   align-items: center;
   justify-content: center;
   z-index: 1;
+  outline: none !important;
 }
 
 .profile-pic {
@@ -341,6 +342,12 @@ button.knob > img {
     pointer-events: none;
     z-index: 100;
   }
+}
+
+.debug-button {
+  position: fixed;
+  bottom: 1.5rem;
+  background-color: #00000088;
 }
 
 .dev-window {

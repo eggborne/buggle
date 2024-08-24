@@ -11,8 +11,8 @@ import LoadingDisplay from '../LoadingDisplay';
 import Modal from '../Modal';
 import { powers } from '../../config.json';
 
-// import BeeSwarm from './BeeSwarm';
-const BeeSwarm = lazy(() => import('./BeeSwarm'));
+import BeeSwarm from './BeeSwarm';
+// const BeeSwarm = lazy(() => import('./BeeSwarm'));
 
 
 interface GameBoardProps {
@@ -254,6 +254,7 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
   const opponentTouchedCells = opponentData && currentMatch?.playerProgress[opponentData?.uid]?.touchedCells || undefined;
 
   const activeBees = currentEffects?.user.find(e => e.type === 'bees');
+  // const activeBees = powers.bees;
 
   return (
     <div className={styles.gameArea}>
@@ -333,6 +334,13 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
           gameBoardElement={gameBoardRef.current}
           gameWidth={currentMatch?.dimensions.width || 5}
           powerupObj={activeBees}
+          // powerupObj={{
+          //   ...activeBees,
+          //   category: 'curses',
+          //   activatedBy: user?.uid || '',
+          //   activatedAt: Date.now(),
+          //   target: opponentData?.uid || ''
+          // }}
           swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
         />
       }

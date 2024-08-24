@@ -1,0 +1,114 @@
+.puzzleOptions {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+  transform-origin: top;
+  scale: 1 1;
+  transition: all 100ms ease;
+  gap: 1rem;
+  max-width: 100%;
+}
+
+.puzzleOptions.hidden {
+  opacity: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.puzzleOptions>select {
+  width: 8rem;
+  align-self: center;
+}
+
+.puzzleOptions input[type="range"] {
+  width: 100%;
+}
+
+.puzzleOptions label {
+  display: flex;
+  place-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  margin: 0.5rem;
+}
+
+.puzzleOptions label>span {
+  flex-grow: 1;
+}
+
+.puzzleOptions input {
+  font-size: 2rem;
+  padding: 0.5rem;
+  width: 6rem;
+  text-align: center;
+}
+
+.sizeSelections {
+  display: flex;
+  align-items: center;
+}
+
+.sizeSelections>span {
+  padding: 0.25rem;
+  border: 0.5rem solid transparent;
+  border-radius: 0.25rem;
+}
+
+.themeSelectButton {
+  min-height: 3.5rem;
+  background-color: rgba(165, 42, 42, 0.559);
+}
+
+.puzzleOptions>.puzzleSelectToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.toggleButton {
+  background-color: rgba(128, 128, 128, 0.45);
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-shadow: var(--text-stroke);
+  transition: background-color 300ms ease;
+}
+
+.toggleButton.selected {
+  background-color: green;
+}
+
+.toggleButton:last-child {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.toggleButton:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+.puzzleOptions>.puzzleSelectRow,
+.puzzleOptions>.timeSelectRow {
+  align-items: center;
+  justify-content: space-between;
+  min-width: 100%;
+  height: 4rem;
+}
+.puzzleOptions>.puzzleSelectRow button>p {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+}
+.lowerButtons button:disabled {
+  opacity: 0.5;
+  background-color: gray;
+}
+

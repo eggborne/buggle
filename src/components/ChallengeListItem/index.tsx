@@ -11,7 +11,7 @@ interface ChallengeListItemProps {
 }
 
 const ChallengeListItem = ({ challenge, opponentData, handleDeclineChallenge, handleAcceptChallenge }: ChallengeListItemProps) => {
-
+  
   return (
     <div
       key={challenge.id}

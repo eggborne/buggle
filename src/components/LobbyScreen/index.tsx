@@ -10,7 +10,7 @@ import { triggerShowMessage } from '../../hooks/useMessageBanner';
 import ChallengeListItem from '../ChallengeListItem';
 import ChatWindow from '../ChatWindow';
 import { stringTo2DArray } from '../../scripts/util';
-import StoredPuzzleList from '../StoredPuzzleList';
+import ChallengeModal from '../ChallengeModal/ChallengeModal';
 
 interface LobbyScreenProps {
   hidden: boolean;
@@ -22,13 +22,10 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   const [currentPlayerList, setCurrentPlayerList] = useState<UserData[]>([]);
   const [pendingOutgoingChallenge, setPendingOutgoingChallenge] = useState<PendingOutgoingChallengeData | null>(null);
   const [challengeList, setChallengeList] = useState<ChallengeData[]>([]);
-  const [puzzleListShowing, setPuzzleListShowing] = useState<boolean>(false);
-  const [puzzleSelected, setPuzzleSelected] = useState<string | null>(null);
   // const [sizeSelected, setSizeSelected] = useState<number>(5);
   const lobbyScreenRef = useRef<HTMLSelectElement>(null);
   const previousPlayerListRef = useRef<UserData[]>([]);
-  const timeLimitInputRef = useRef<HTMLSelectElement>(null);
-  const wordBonusInputRef = useRef<HTMLSelectElement>(null);
+  
 
   const hasRelevantChanges = useCallback((prevList: UserData[], newList: UserData[]) => {
     if (prevList.length !== newList.length) return true;
@@ -90,40 +87,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   }, [challenges, currentPlayerList.length]);
 
-  const sendChallenge = async () => {
-    if (user && pendingOutgoingChallenge && timeLimitInputRef.current && wordBonusInputRef.current) {
-      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondentUid === pendingOutgoingChallenge.respondent.uid)) {
-        // should never be able to occur as there would be no button
-        console.warn('already challenging');
-        triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.respondent.displayName}!`);
-        return;
-      }
-      const challengesRef = ref(database, 'challenges/');
-      const newChallenge: ChallengeData = {
-        accepted: false,
-        difficulty: 'easy',
-        instigatorUid: user.uid,
-        respondentUid: pendingOutgoingChallenge.respondent.uid,
-        timeLimit: Number(timeLimitInputRef.current.value),
-        wordBonus: Number(wordBonusInputRef.current.value)
-      }
-      if (puzzleSelected) {
-        newChallenge.puzzleId = puzzleSelected;
-      }
-      const newChallengeId = await push(challengesRef, newChallenge).key;
-      if (newChallengeId) {
-        triggerShowMessage(`Challenge sent to ${pendingOutgoingChallenge.respondent.displayName}!`);
-        setSentChallenges(prevSentChallenges => {
-          const nextSentChallenges = [...prevSentChallenges];
-          const newChallengeData = { ...newChallenge, id: newChallengeId };
-          nextSentChallenges.push(newChallengeData);
-          return nextSentChallenges;
-        });
-        await update(ref(database, `challenges/${newChallengeId}`), { id: newChallengeId });
-        setPendingOutgoingChallenge(null);
-      }
-    }
-  };
+  
 
   const handleClickChallengePlayer = (opponentData: UserData) => {
     setPendingOutgoingChallenge({
@@ -266,71 +230,10 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
             })}
         </div>
       </div>
-      <Modal isOpen={pendingOutgoingChallenge !== null} noCloseButton
-        style={{
-          height: 'auto',
-          minHeight: '100vmin',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '2rem',
-          padding: '2.5rem',
-        }}
-      >
-        <h3>Challenging {pendingOutgoingChallenge?.respondent.displayName}</h3>
-        <div className={styles.puzzleOptions}>
-          {/* <div className={styles.sizeSelections}>
-            <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(4)}><PuzzleIcon iconSize={{
-              width: `4.5rem`,
-              height: `4.5rem`
-            }} puzzleDimensions={{ width: 4, height: 4 }} contents={[]} /></span>
-            <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(5)}><PuzzleIcon iconSize={{
-              width: `4.5rem`,
-              height: `4.5rem`
-            }} puzzleDimensions={{ width: 5, height: 5 }} contents={[]} /></span>
-            <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }} onClick={() => setSizeSelected(6)}><PuzzleIcon iconSize={{
-              width: `4.5rem`,
-              height: `4.5rem`
-            }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
-          </div> */}
-          <div className={`button-group row ${styles.timeSelectRow}`}>
-            <span>Puzzle</span>
-            {puzzleSelected ?
-              <button style={{ fontSize: '0.75rem' }} onClick={() => setPuzzleListShowing(true)}>{puzzleSelected}</button>
-              :
-              <button onClick={() => setPuzzleListShowing(true)}>Select puzzle...</button>
-            }
-          </div>
-          <div className={`button-group row ${styles.timeSelectRow}`}>
-            <span>Max time</span>
-            <select defaultValue='30' ref={timeLimitInputRef}>
-              <option value='5'>5 seconds</option>
-              <option value='10'>10 seconds</option>
-              <option value='30'>30 seconds</option>
-              <option value='120'>2 minutes</option>
-            </select>
-          </div>
-          <div className={`button-group row ${styles.timeSelectRow}`}>
-            <span>Word bonus</span>
-            <select defaultValue='30' ref={wordBonusInputRef}>
-              <option value='5'>5 seconds</option>
-              <option value='pointValue'>Boggle® value</option>
-              {/* <option value='pointValue'>Scrabble® value</option> */}
-            </select>
-          </div>
-        </div>
-        <div className={`button-group ${styles.lowerButtons}`}>
-          <button disabled={!puzzleSelected} onClick={sendChallenge} className={'start'}>Send Challenge</button>
-          <button onClick={() => setPendingOutgoingChallenge(null)} className={'cancel'}>Cancel</button>
-        </div>
-      </Modal>
-      <Modal isOpen={puzzleListShowing}>
-        <StoredPuzzleList showing={puzzleListShowing} onClickStoredPuzzle={(puzzle) => {
-          setPuzzleSelected(`${puzzle.dimensions.width}${puzzle.dimensions.height}${puzzle.letterString}`);
-          setPuzzleListShowing(false);
-        }} />
-      </Modal>
+      <ChallengeModal
+        pendingOutgoingChallenge={pendingOutgoingChallenge}
+        setPendingOutgoingChallenge={setPendingOutgoingChallenge}        
+      />      
     </main>
   )
 }

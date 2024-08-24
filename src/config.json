@@ -118,10 +118,11 @@
     "bees": {
       "category": "curses",
       "cost": 3,
-      "duration": 20,
+      "duration": 200,
       "timeLeft": 20,
       "type": "bees"
     }
   },
-  "puzzlesUrl": "./../../../buggle-training-data/research/best_lists.json"
+  "bestListUrl": "https://mikedonovan.dev/buggle-training-data/research/best-lists.json",
+  "puzzlesUrl": "./../../../buggle-training-data/research/best-lists.json"
 }

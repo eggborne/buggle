@@ -62,7 +62,7 @@
   position: fixed;
   top: 2rem;
   right: 2rem;
-  z-index: 4;
+  z-index: 5;
 }
 
 @keyframes zoom {

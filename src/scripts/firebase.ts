@@ -2,9 +2,9 @@ import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
 import { BestLists, BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
-import { difficulties } from '../config.json';
+import { bestListUrl, difficulties } from '../config.json';
 import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange } from "./util";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, DocumentSnapshot, DocumentData } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -28,12 +28,12 @@ console.warn('Firebase initialized.');
 
 const loadBestLists = async (): Promise<BestLists | undefined> => {
   try {
-    const response = await fetch('https://mikedonovan.dev/buggle-training-data/research/best_lists.json');
+    const response = await fetch(bestListUrl);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const bestLists = await response.json();
-    console.log('got bestLists', bestLists)
+    console.log('got bestLists', Object.entries(bestLists).length)
     return bestLists;
   } catch (error) {
     console.error('Error loading best lists:', error);
@@ -141,6 +141,18 @@ const getUserFromDatabase = async (uid: string) => {
   return await getDoc(userRef);
 };
 
+const getPuzzleListFromDatabase = async (): Promise<DocumentData | undefined> => {
+  const docRef = doc(firestore, `letterLists`, '4');
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return data || undefined;
+  } else {
+    console.error('No such list.');
+    return undefined;
+  }
+}
+
 export {
   auth,
   database,
@@ -150,6 +162,7 @@ export {
   fetchPuzzleById,
   fetchRandomPuzzle,
   getUserFromDatabase,
+  getPuzzleListFromDatabase,
   loadBestLists,
 }
 
