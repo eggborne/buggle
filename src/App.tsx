@@ -97,7 +97,7 @@ function App() {
             hidden={phase !== 'select'}
           />
           {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
-          {phase === 'game' && currentMatch &&
+          {phase === 'game' &&
             <GameScreen
               hidden={phase !== 'game'}
               showConfirmModal={showConfirmModal}

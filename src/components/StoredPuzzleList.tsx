@@ -3,8 +3,7 @@ import { StoredPuzzleData } from '../types/types';
 import { formatDateAndTime } from '../scripts/util'
 import PuzzleIcon from './PuzzleIcon';
 import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { firestore } from '../scripts/firebase';
+import { fetchThemedPuzzles } from '../scripts/firebase';
 import LoadingDisplay from './LoadingDisplay';
 
 interface StoredPuzzleListProps {
@@ -16,34 +15,13 @@ const StoredPuzzleList = ({ showing, onClickStoredPuzzle }: StoredPuzzleListProp
   const [puzzlesLoaded, setPuzzlesLoaded] = useState<boolean>(false);
   const [list, setList] = useState<StoredPuzzleData[]>([]);
 
-  // const deletePuzzle = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.stopPropagation();
-  //   const puzzleId = e.currentTarget.dataset.puzzleId;
-  //   if (puzzleId) {
-  //     const puzzleRef = doc(firestore, 'puzzles', puzzleId);
-  //     await deleteDoc(puzzleRef);
-  //     console.warn('deleted puzzle', puzzleId);
-  //     setList(prevList => prevList.filter(p => p.letterString !== puzzleId));
-  //   }
-  // };
-
-
   useEffect(() => {
     if (showing) {
       const fetchPuzzles = async () => {
-        try {
-          const puzzlesCollection = collection(firestore, 'puzzles');
-          const puzzlesSnapshot = await getDocs(puzzlesCollection);
-          const puzzleList: StoredPuzzleData[] = [];
-          puzzlesSnapshot.forEach((doc) => {
-            const puzzleData = doc.data() as StoredPuzzleData;
-            puzzleList.push(puzzleData);
-          });
-          console.log('puzzleList', puzzleList)
+        const puzzleList = await fetchThemedPuzzles();
+        if (puzzleList) {
           setList(puzzleList);
           setPuzzlesLoaded(true);
-        } catch (error) {
-          console.error("Error fetching puzzles: ", error);
         }
       };
       fetchPuzzles();
@@ -79,7 +57,7 @@ const StoredPuzzleList = ({ showing, onClickStoredPuzzle }: StoredPuzzleListProp
           <label>{listObj.label}</label>
           <div className={styles.sizeList}>{
             listObj.list.map((puzzle) => {
-              const { averageWordLength, dateCreated, percentUncommon } = puzzle.metadata;
+              const { averageWordLength, dateCreated, percentCommon } = puzzle;
               const { dimensions } = puzzle;
               const dateTime = formatDateAndTime(dateCreated);
               return (
@@ -95,9 +73,9 @@ const StoredPuzzleList = ({ showing, onClickStoredPuzzle }: StoredPuzzleListProp
                   />
                   <div className={styles.puzzleInfo}>
 
-                    <p>{puzzle.wordCount} total words</p>
+                    <p>{puzzle.allWords?.length} total words</p>
                     <p>Avg. length: {(averageWordLength).toFixed(2)}</p>
-                    <p> {percentUncommon}% uncommon</p>
+                    <p> {percentCommon}% common</p>
                     <small>{dateTime.date} {dateTime.time}</small>
                   </div>
                 </div>

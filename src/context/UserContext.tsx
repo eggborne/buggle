@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useRef } from 'react';
 import { getAuth, onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData, ChallengeData } from '../types/types';
+import { UserData, OptionsData, StylePreferencesData, GameplayPreferencesData, ChallengeData, CurrentGameData } from '../types/types';
 import { ref, remove, set, update, get, child } from 'firebase/database';
 import { database, firestore, getUserFromDatabase } from '../scripts/firebase';
-import { defaultUser } from '../config.json';
+import { defaultUser, letterKeys } from '../config.json';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
 import { createUserInDatabase } from '../scripts/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { encodeMatrix } from '../scripts/util';
 
 const HEARTBEAT_INTERVAL = 5000;
 const PRUNE_INTERVAL = HEARTBEAT_INTERVAL * 2;
@@ -24,6 +25,7 @@ interface UserContextProps {
   setSentChallenges: Dispatch<SetStateAction<ChallengeData[]>>;
   changeOption: (optionKey: keyof OptionsData['style'] | keyof OptionsData['gameplay'], newValue: string | number) => void;
   saveOptions: (newOptions: OptionsData) => void;
+  setPuzzleSeen: (newGameData: CurrentGameData, userUid: string) => void;
 }
 
 const UserContext = createContext<UserContextProps | undefined>(undefined);
@@ -50,7 +52,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       let userData = defaultUser as UserData;
       if (firebaseUser) {
-        console.warn('-- found Firebase user!')
+        console.warn('-- found registered user!')
         userData = await getUserData(firebaseUser);
         console.log('got userData', userData)
         addUserToPlayerList({
@@ -222,6 +224,25 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
     triggerShowMessage('Options saved!');
   };
 
+  const setPuzzleSeen = async ({ letterMatrix, dimensions }: CurrentGameData, userUid: string) => {
+    const letterString = encodeMatrix(letterMatrix, letterKeys[dimensions.width === 4 ? 'boggle' : dimensions.width === 5 ? 'bigBoggle' : dimensions.width === 6 ? 'superBigBoggle' : 'boggle']).flat().join('');
+    const newPuzzleId = `${dimensions.width}${dimensions.height}${letterString}`;
+    const seenPuzzleRef = doc(firestore, 'users', userUid);
+
+    try {
+      if (!user) return;
+      const newUser = { ...user };
+      newUser.seenPuzzles?.push(newPuzzleId);
+      setUser(newUser);
+      await updateDoc(seenPuzzleRef, {
+        seenPuzzles: arrayUnion(newPuzzleId)
+      });
+      console.warn('seenPuzzles updated!');
+    } catch (error) {
+      console.warn('Error updating puzzle:', error);
+    }
+  }
+
   return (
     <UserContext.Provider value={{
       user,
@@ -236,6 +257,7 @@ const UserProvider = ({ children }: { children: ReactNode }) => {
       setSentChallenges,
       changeOption,
       saveOptions,
+      setPuzzleSeen,
     }}>
       {children}
     </UserContext.Provider>

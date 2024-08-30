@@ -21,20 +21,190 @@
     "uid": "GuestId"
   },
   "difficulties": {
-    "veryEasy": { 
-      "totalWords": {"min": 600, "max": 9999}      
+    "veryEasy": {
+      "totalWords": {
+        "min": 600,
+        "max": 9999
+      }
     },
-    "easy": { 
-      "totalWords": {"min": 400, "max": 600}       
+    "easy": {
+      "totalWords": {
+        "min": 400,
+        "max": 600
+      }
     },
-    "medium": { 
-      "totalWords": {"min": 250, "max": 400}       
+    "medium": {
+      "totalWords": {
+        "min": 250,
+        "max": 400
+      }
     },
-    "hard": { 
-      "totalWords": {"min": 100, "max": 250}      
+    "hard": {
+      "totalWords": {
+        "min": 100,
+        "max": 250
+      }
     },
-    "veryHard": { 
-      "totalWords": {"min": 1, "max": 100}
+    "veryHard": {
+      "totalWords": {
+        "min": 1,
+        "max": 100
+      }
+    }
+  },
+  "letterKeys": {
+    "boggle": {
+      "0": "",
+      "1": "in",
+      "2": "th",
+      "3": "er",
+      "4": "he",
+      "5": "an",
+      "q": "qu"
+    },
+    "bigBoggle": {
+      "0": "",
+      "1": "in",
+      "2": "th",
+      "3": "er",
+      "4": "he",
+      "5": "an",
+      "q": "qu"
+    },
+    "default": {
+      "q": "qu"
+    },
+    "superBigBoggle": {
+      "0": "",
+      "1": "in",
+      "2": "th",
+      "3": "er",
+      "4": "he",
+      "5": "an",
+      "q": "qu"
+    },
+    "syllableUnits": {
+      "ů": "bl",
+      "ű": "br",
+      "ų": "ch",
+      "ŵ": "cl",
+      "ŷ": "cr",
+      "ź": "dr",
+      "ż": "dw",
+      "ž": "fl",
+      "ſ": "fr",
+      "ƀ": "gh",
+      "ƃ": "gl",
+      "ƅ": "gn",
+      "ƈ": "gr",
+      "ƌ": "kl",
+      "ƍ": "kn",
+      "ƒ": "kr",
+      "ƕ": "ph",
+      "ƙ": "pl",
+      "ƚ": "pn",
+      "ƛ": "pr",
+      "ƞ": "ps",
+      "ơ": "qu",
+      "ƣ": "sc",
+      "ƥ": "sf",
+      "ƨ": "sh",
+      "ƪ": "sk",
+      "ƭ": "sl",
+      "ƶ": "sm",
+      "ƹ": "sn",
+      "ƺ": "sp",
+      "ƻ": "st",
+      "ƽ": "sv",
+      "ƾ": "sw",
+      "ƿ": "th",
+      "ǀ": "tr",
+      "ǁ": "tw",
+      "ǂ": "wh",
+      "ǃ": "wr",
+      "ǅ": "scl",
+      "ǆ": "scr",
+      "ǈ": "spl",
+      "ǋ": "spr",
+      "ǌ": "str",
+      "ǎ": "thw",
+      "ǐ": "thr",
+      "ǒ": "schw",
+      "č": "aa",
+      "ď": "ae",
+      "đ": "ai",
+      "ē": "ao",
+      "ĕ": "au",
+      "ė": "aw",
+      "ę": "ay",
+      "ě": "ea",
+      "ĝ": "ee",
+      "ğ": "ei",
+      "ġ": "eo",
+      "ģ": "eu",
+      "ĥ": "ew",
+      "ħ": "ey",
+      "ĩ": "ia",
+      "ī": "ie",
+      "ĭ": "io",
+      "į": "iu",
+      "ı": "oa",
+      "ĳ": "oe",
+      "ĵ": "oi",
+      "ķ": "oo",
+      "ĸ": "ou",
+      "ĺ": "ua",
+      "ļ": "ue",
+      "ľ": "ui",
+      "ŀ": "uo",
+      "ł": "igh",
+      "ń": "eigh",
+      "ǔ": "bb",
+      "ǖ": "ck",
+      "ǘ": "ct",
+      "ǚ": "ff",
+      "ǜ": "ft",
+      "ǝ": "gg",
+      "ǟ": "ie",
+      "ǡ": "lk",
+      "ǣ": "ll",
+      "ǥ": "ln",
+      "ǧ": "lt",
+      "ǩ": "lv",
+      "ǫ": "mm",
+      "ǭ": "mp",
+      "ǯ": "nd",
+      "ǰ": "ng",
+      "ǲ": "nk",
+      "ǳ": "nn",
+      "ǵ": "nt",
+      "ǹ": "pp",
+      "ǻ": "rc",
+      "ȁ": "rf",
+      "ȃ": "rg",
+      "ȅ": "rl",
+      "ȇ": "rm",
+      "ȉ": "rn",
+      "ȋ": "rp",
+      "ȍ": "rt",
+      "ȏ": "ss",
+      "ȑ": "tt",
+      "ȓ": "wt",
+      "ȕ": "yt",
+      "ȗ": "zz",
+      "ș": "dge",
+      "ț": "nce",
+      "ȝ": "nct",
+      "ȟ": "nsh",
+      "ȡ": "nst",
+      "ȣ": "nth",
+      "ȥ": "rch",
+      "ȧ": "rld",
+      "ȩ": "sch",
+      "ȫ": "tch",
+      "ȭ": "mpt",
+      "ȯ": "ngth",
+      "ȱ": "xth"
     }
   },
   "userOptions": {
@@ -87,7 +257,7 @@
             "type": "range",
             "min": 0,
             "max": 100
-          }          
+          }
         ]
       }
     },
@@ -117,12 +287,12 @@
   "powers": {
     "bees": {
       "category": "curses",
-      "cost": 3,
+      "cost": 0,
       "duration": 200,
       "timeLeft": 20,
       "type": "bees"
     }
   },
-  "bestListUrl": "https://mikedonovan.dev/buggle-training-data/research/best-lists.json",
+  "bestListPath": "https://mikedonovan.dev/buggle-training-data/research/",
   "puzzlesUrl": "./../../../buggle-training-data/research/best-lists.json"
 }

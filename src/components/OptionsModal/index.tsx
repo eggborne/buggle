@@ -54,7 +54,7 @@ const sizeOptions: OptionTypeData = userOptions.style.sizes;
 const gameplayOptions: OptionTypeData = userOptions.gameplay.touch;
 
 const OptionsModal = ({ hidden }: OptionsModalProps) => {
-  const [sizeSelected, setSizeSelected] = useState<number>(5);
+  const [sizeSelected, setSizeSelected] = useState<number>(4);
   const [editMode, setEditMode] = useState<string>('colors');
   const { user, isLoggedIn, changeOption, saveOptions } = useUser();
   const preferences = user?.preferences as OptionsData;
@@ -79,7 +79,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
             dimensions: boardDimensions,
             letterMatrix: sampleLetterMatrices[sizeSelected - 4],
             metadata: {
-              percentUncommon: 1,
+              percentCommon: 1,
               averageWordLength: 5,
               dateCreated: 0,
             },

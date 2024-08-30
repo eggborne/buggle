@@ -1,6 +1,6 @@
 import styles from './GameBoard.module.css'
 import { CellObj, CurrentGameData, DefaultPowerupData, DeployedPowerupData, UserData } from '../../types/types';
-import { lazy, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BoardCell from '../BoardCell';
 import CurrentWordDisplay from '../CurrentWordDisplay';
 import { useUser } from '../../context/UserContext';
@@ -254,6 +254,7 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
   const opponentTouchedCells = opponentData && currentMatch?.playerProgress[opponentData?.uid]?.touchedCells || undefined;
 
   const activeBees = currentEffects?.user.find(e => e.type === 'bees');
+  
   // const activeBees = powers.bees;
 
   return (
@@ -330,19 +331,15 @@ function GameBoard({ currentEffects, opponentData, fillerData, noAnimation }: Ga
       {gameBoardRef.current &&
         !!(currentEffects && currentEffects.user.length) &&
         activeBees &&
+        <>
+        <div style={{position: 'absolute', bottom: '6rem', fontSize: '3rem', zIndex: 12}}>FUCKING BEES</div>
         <BeeSwarm
+          active={activeBees !== null}
           gameBoardElement={gameBoardRef.current}
-          gameWidth={currentMatch?.dimensions.width || 5}
-          powerupObj={activeBees}
-          // powerupObj={{
-          //   ...activeBees,
-          //   category: 'curses',
-          //   activatedBy: user?.uid || '',
-          //   activatedAt: Date.now(),
-          //   target: opponentData?.uid || ''
-          // }}
+          gameWidth={currentMatch?.dimensions.width || 5}         
           swarmSize={(Math.pow((currentMatch?.dimensions.width || 5), 2)) * 2.5}
         />
+        </>
       }
     </div>
   )

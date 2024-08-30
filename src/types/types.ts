@@ -57,28 +57,6 @@ export interface PuzzleDimensions {
   width: number;
 }
 
-export interface BoardCustomizations {
-  requiredWords?: {
-    wordList: string[],
-    convertQ?: boolean,
-  };
-  customLetters?: {
-    letterList: string[],
-    convertQ?: boolean,
-    shuffle?: boolean;
-  };
-}
-
-export interface BoardRequestData {
-  dimensions: PuzzleDimensions;
-  letterDistribution?: string;
-  maxAttempts: number;
-  returnBest: boolean;
-  customizations?: BoardCustomizations;
-  filters?: BoardFilters;
-  theme?: string;
-}
-
 export interface ComparisonFilterData {
   comparison: string,
   value: number,
@@ -87,7 +65,7 @@ export interface ComparisonFilterData {
 export interface PuzzleMetadata {
   averageWordLength: number;
   dateCreated: number;
-  percentUncommon: number;
+  percentCommon: number;
   key?: Record<string, string>;
 }
 
@@ -111,6 +89,18 @@ export interface BoardFilters {
   wordLengthLimits?: WordLengthPreference[];
 }
 
+export interface BoardCustomizations {
+  requiredWords?: {
+    wordList: string[],
+    convertQ?: boolean,
+  };
+  customLetters?: {
+    letterList: string[],
+    convertQ?: boolean,
+    shuffle?: boolean;
+  };
+}
+
 export interface BoardRequestData {
   dimensions: PuzzleDimensions;
   letterDistribution?: string;
@@ -122,13 +112,17 @@ export interface BoardRequestData {
 }
 
 export interface StoredPuzzleData {
-  allWords: string[];
+  allWords?: string[];
   dimensions: PuzzleDimensions;
   letterString: string;
-  metadata: PuzzleMetadata;
+  id?: string;
+  averageWordLength: number;
+  dateCreated: number;
+  percentCommon: number;
+  key?: Record<string, string>;
+  totalWords: number;
   specialWords?: string[];
   theme?: string;
-  wordCount: number;
 }
 
 export interface GeneratedBoardData {
@@ -178,10 +172,8 @@ export interface DeployedPowerupData {
 export interface CurrentGameData {
   activePowerups?: DeployedPowerupData[];
   allWords: Set<string> | string[];
-  // customizations?: BoardCustomizations;
   dimensions: PuzzleDimensions;
   endTime?: number;
-  // filters?: BoardFilters;
   foundWordsRecord?: Record<string, string | false>
   gameOver: boolean;
   id?: string;
@@ -273,7 +265,6 @@ export interface OptionInputData {
   onPointerUp?: (e: React.PointerEvent<HTMLInputElement>) => void;
 }
 
-
 export interface OptionTypeData {
   label: string;
   inputDataList: OptionInputData[];
@@ -281,7 +272,18 @@ export interface OptionTypeData {
 
 type PuzzleId = string;
 type ListScore = number;
-export type BestLists = Record<PuzzleId, ListScore>;
+
+export type BestLists = Record<PuzzleId, {
+  totalWords: number;
+  averageWordLength: number;
+  percentCommon: number;
+}>;
+
+export interface BestListData {
+  totalWords: number,
+  averageWordLength: number,
+  percentCommon: number,
+}
 
 export interface LetterListItem {
   letterList: PuzzleId;
@@ -289,4 +291,11 @@ export interface LetterListItem {
 }
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+export interface BestPuzzleData {
+  id: string,
+  totalWords: number,
+  averageWordLength: number,
+  percentCommon: number
+}
 

@@ -101,7 +101,7 @@
 }
 
 .toggleButton.selected {
-  background-color: green;
+  background-color: rgb(183, 154, 42);
 }
 
 .toggleButton:last-child {
@@ -124,7 +124,7 @@
 .puzzleOptions>.puzzleSelectRow {
   padding: 1rem 0;
   gap: 0;
-  height: 6rem;
+  height: 5rem;
 }
 
 .puzzleOptions>.timeSelectRow {
@@ -135,8 +135,48 @@
   margin-top: 0.2rem;
   font-size: 0.75rem;
 }
+
+.GameSetupModal .lowerButtons > .startButton {
+  font-size: 1.5rem;
+  padding: 0;
+  height: 4rem;
+}
+
 .lowerButtons button:disabled {
   opacity: 0.5;
   background-color: gray;
+}
+
+.LoadingModal {
+  height: auto !important;
+  background-color: rgb(152, 151, 55);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.LoadingModal>h1 {
+  font-size: 2rem;
+}
+
+.LoadingModal>.resultsBody {
+  font-size: 1.25rem;
+  text-shadow: var(--text-stroke);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.LoadingModal button {
+  font-size: 1.5rem;
+  padding: 1rem;
+  width: 12rem;
 }
 

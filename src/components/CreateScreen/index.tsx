@@ -2,8 +2,8 @@ import styles from './CreateScreen.module.css';
 import { useState, useEffect, useRef } from 'react';
 import { BoardRequestData, WordLengthPreference, PuzzleDimensions } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
-import { createSolvedPuzzle } from '../../scripts/firebase';
 import { useUser } from '../../context/UserContext';
+import { createSolvedPuzzle } from '../../scripts/fetch';
 
 interface CreateScreenProps {
   hidden: boolean;

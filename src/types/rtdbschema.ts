@@ -24,7 +24,7 @@ export interface RTDBSchema {
       metadata: {
         averageWordLength: number;
         dateCreated: number;
-        percentUncommon: number;
+        percentCommon: number;
         key?: Record<string, string>;
       };
       playerProgress: Record<

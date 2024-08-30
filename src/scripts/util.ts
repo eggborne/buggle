@@ -1,7 +1,6 @@
-import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
-import { difficulties } from '../config.json'
-import { firestore, getPuzzleListFromDatabase, loadBestLists } from './firebase';
-import { BestLists, CurrentGameData, StoredPuzzleData, UserData } from '../types/types';
+import { difficulties, letterKeys } from '../config.json'
+import { CurrentGameData, StoredPuzzleData } from '../types/types';
+import { solvePuzzleFromLetterString } from './fetch';
 
 export const randomInt = (min: number, max: number): number => Math.floor(Math.random() * (max - min + 1)) + min;
 export const pause = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
@@ -56,11 +55,8 @@ export const debounce = <Args extends unknown[], R>(func: (...args: Args) => R, 
   };
 };
 
-
 export const decodeMatrix = (matrix: string[][], key: Record<string, string> | undefined): string[][] => {
   if (!key) return matrix;
-  console.log('decoding matrix', matrix)
-  console.log('decoding with', key)
   const convertedMatrix = matrix.map(row =>
     row.map(cell => {
       cell = cell.toLowerCase();
@@ -72,8 +68,6 @@ export const decodeMatrix = (matrix: string[][], key: Record<string, string> | u
 
 export const encodeMatrix = (matrix: string[][], key: Record<string, string> | undefined): string[][] => {
   if (!key) return matrix;
-  console.log('encoding matrix', matrix)
-  console.log('emcoding with', key)
   const reversedKey: Record<string, string> = Object.fromEntries(
     Object.entries(key).map(([k, v]) => [v, k])
   );
@@ -121,7 +115,7 @@ export const getRandomPuzzleWithinRange = (puzzles: { [key: string]: number }, m
   return validEntries[randomIndex];
 }
 
-const findBucket = (listScore: number) => {
+export const findBucket = (listScore: number) => {
   for (const [difficulty, { totalWords }] of Object.entries(difficulties)) {
     if (listScore >= totalWords.min && listScore <= totalWords.max) {
       return difficulty;
@@ -130,38 +124,24 @@ const findBucket = (listScore: number) => {
   return 'easy';
 }
 
-export const updateLetterLists = async (): Promise<void> => {
-  try {
-    let newCount = 0;
-    const bestLists = await loadBestLists() as BestLists;
-    const existingList = await getPuzzleListFromDatabase() || {};
-    for (const puzzleId in bestLists) {
-      const listScore = bestLists[puzzleId];
-      const currentItem = { letterList: puzzleId, totalWords: listScore };
-      const targetBucketName = findBucket(listScore);
-      const keyList = Object.values(existingList).flat().map(e => e.letterList);
-      if (existingList && !keyList.includes(currentItem.letterList)) {
-        const docRef = doc(firestore, `letterLists`, '4');
-        await updateDoc(docRef, {
-          [targetBucketName]: arrayUnion(currentItem),
-        });
-        newCount++;
-        console.log('Added', currentItem, 'to', targetBucketName);
-      }
-    }
-    console.warn('LIST UPDATED! NEW:', newCount);
-  } catch (error) {
-    console.error("Error updating bestLists:", error);
-    throw error; // Re-throw the error for higher-level handling
+export const gameDataFromStoredPuzzle = async (puzzle: StoredPuzzleData, userUid: string, opponentUid?: string): Promise<CurrentGameData | null> => {
+  console.log('gameDataFromStoredPuzzle got puzzle', puzzle)
+  if (!puzzle.allWords) {
+    console.error('no word list!');
+    const puzzleData = await solvePuzzleFromLetterString(puzzle.letterString);
+    console.log('got puzzleData', puzzleData)
+    puzzle.allWords = puzzleData?.wordList || [];
   }
-};
-
-export const gameDataFromStoredPuzzle = (puzzle: StoredPuzzleData, userUid: string, opponentUid?: string): CurrentGameData => {
+  if (puzzle.allWords.length !== puzzle.totalWords) {
+    console.error('***************** Different total words on solving saved puzzle!', puzzle.letterString);
+    return null;
+  }
   const nextMatrix = stringTo2DArray(puzzle.letterString, puzzle.dimensions.width, puzzle.dimensions.height);
+  const key = letterKeys[puzzle.dimensions.width === 4 ? 'boggle' : puzzle.dimensions.width === 5 ? 'bigBoggle' : puzzle.dimensions.width === 6 ? 'superBigBoggle' : 'boggle'];
   const newGameData = {
-    ...puzzle,
+    dimensions: puzzle.dimensions,
     allWords: new Set(puzzle.allWords),
-    letterMatrix: decodeMatrix(nextMatrix, puzzle.metadata.key),
+    letterMatrix: decodeMatrix(nextMatrix, key),
     playerProgress: {
       [userUid]: {
         attackPoints: 0,
@@ -170,6 +150,13 @@ export const gameDataFromStoredPuzzle = (puzzle: StoredPuzzleData, userUid: stri
         score: 0,
         touchedCells: [],
       },
+    },
+    metadata: {
+      totalWords: puzzle.totalWords,
+      averageWordLength: puzzle.averageWordLength,
+      percentCommon: puzzle.percentCommon,
+      dateCreated: puzzle.dateCreated,
+      key: puzzle.key,
     },
     gameOver: false,
     startTime: Date.now(),

@@ -43,7 +43,7 @@ const FirebaseProvider = ({ children }: { children: ReactNode }) => {
   const [totalPlayers, setTotalPlayers] = useState<number>(0);
   const [playerList, setPlayerList] = useState<UserData[] | null>(null);
   const [gameId, setGameId] = useState<string | null>(null);
-  const { isLoggedIn, user } = useUser();
+  const { isLoggedIn, user, setPuzzleSeen } = useUser();
 
   useEffect(() => {
     const playersRef = ref(database, 'players');
@@ -136,23 +136,8 @@ const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const setPuzzleSeen = async ({ letterMatrix, dimensions }: CurrentGameData, userUid: string) => {
-    const letterString = letterMatrix.flat().join('');
-    console.log('setting seen:', userUid, letterString);
-    const newPuzzleId = `${dimensions.width}${dimensions.height}${letterString}`;
-    const seenPuzzleRef = doc(firestore, 'users', userUid);
-
-    try {
-      await updateDoc(seenPuzzleRef, {
-        seenPuzzles: arrayUnion(newPuzzleId)
-      });
-      console.warn('Puzzle updated!');
-    } catch (error) {
-      console.warn('Error updating puzzle:', error);
-    }
-  }
-
   const startNewGame = async (newGameData: CurrentGameData, newGameId: string | null = null) => {
+    console.log('startNewGame got newGameData', newGameData)
     newGameData.startTime = Date.now();
     newGameData.endTime = Date.now() + ((newGameData.timeLimit || 10) * 1000);
     const foundWordsRecord: Record<string, string | false> = {};
@@ -164,10 +149,10 @@ const FirebaseProvider = ({ children }: { children: ReactNode }) => {
       await set(ref(database, `games/${newGameId}`), newGameData);
       setGameId(newGameId); // subscribes to listener
     }
+    setCurrentMatch(newGameData);
     if (isLoggedIn && user && user.uid) {
       setPuzzleSeen(newGameData, user.uid)
     }
-    setCurrentMatch(newGameData);
   };
 
   const joinNewGame = async (newGameId: string | null = null) => {
@@ -364,7 +349,7 @@ const FirebaseProvider = ({ children }: { children: ReactNode }) => {
     if (!nextPuzzleData) return;
     console.log('uploading', nextPuzzleData);
     const newPuzzleId = `${nextPuzzleData.dimensions.width}${nextPuzzleData.dimensions.height}${nextPuzzleData.letterString}`;
-    const puzzleRef = doc(firestore, 'puzzles', newPuzzleId);
+    const puzzleRef = doc(firestore, `puzzles_${nextPuzzleData.dimensions.width}`, newPuzzleId);
     await setDoc(puzzleRef, nextPuzzleData);
     console.warn('Puzzle uploaded!');
   };

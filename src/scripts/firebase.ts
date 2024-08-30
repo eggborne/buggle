@@ -2,9 +2,10 @@ import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
 import { BestLists, BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
-import { bestListUrl, difficulties } from '../config.json';
+import { bestListPath, difficulties } from '../config.json';
 import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange } from "./util";
-import { getFirestore, doc, setDoc, getDoc, DocumentSnapshot, DocumentData } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, writeBatch, orderBy, where, Query, query } from "firebase/firestore";
+import { createSolvedPuzzle } from "./fetch";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,31 +27,34 @@ const firestore = getFirestore(app);
 
 console.warn('Firebase initialized.');
 
-const loadBestLists = async (): Promise<BestLists | undefined> => {
+const loadBestLists = async (fileName: string): Promise<BestLists | undefined> => {
   try {
-    const response = await fetch(bestListUrl);
+    const remotePath = `${bestListPath}${fileName}`;
+    const response = await fetch(remotePath);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const bestLists = await response.json();
-    console.log('got bestLists', Object.entries(bestLists).length)
     return bestLists;
   } catch (error) {
     console.error('Error loading best lists:', error);
   }
 };
 
-const fetchRandomPuzzle = async ({ difficulty, dimensions, timeLimit, wordBonus }: GameOptions, seenPuzzles: string[]): Promise<CurrentGameData | null> => {
+const fetchRandomPuzzle = async (
+  { difficulty, dimensions, timeLimit, wordBonus }: GameOptions,
+  seenPuzzles: string[]
+): Promise<CurrentGameData | null> => {
   try {
-    const bestLists = await loadBestLists() as BestLists;
+    const bestLists = await loadBestLists('best-totalWords.json') as BestLists;
     const diff = difficulty as DifficultyLevel;
     const difficultyAmounts = difficulties[diff].totalWords;
     const availablePuzzles: { [key: string]: number } = {};
-    for (const puzzleId in bestLists) {
-      if (!seenPuzzles?.includes(puzzleId)) {
-        availablePuzzles[puzzleId] = bestLists[puzzleId];
-      }
-    }
+    // for (const puzzleId in bestLists) {
+    //   if (!seenPuzzles?.includes(puzzleId)) {
+    //     availablePuzzles[puzzleId] = bestLists[puzzleId];
+    //   }
+    // }
     console.log('--- User has seen', seenPuzzles.length);
     console.log('selecting among', Object.entries(availablePuzzles).length, 'availablePuzzles')
     const randomLetterList = getRandomPuzzleWithinRange(availablePuzzles, difficultyAmounts.min, difficultyAmounts.max)
@@ -104,33 +108,6 @@ const fetchPuzzleById = async (puzzleId: string): Promise<StoredPuzzleData | nul
   }
 }
 
-const generateUrl = process.env.NODE_ENV === 'development' ? `${location.protocol}//${location.hostname}:3000/language-api/generateBoggle/` : 'https://mikedonovan.dev/language-api/generateBoggle/';
-
-const createSolvedPuzzle = async (options: BoardRequestData): Promise<GeneratedBoardData | undefined> => {
-  console.log('>>>>>>>>>>>>  Using API to create puzzle with options', options);
-  const fetchStart = Date.now();
-  try {
-    const rawResponse = await fetch(generateUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', },
-      body: JSON.stringify(options),
-    });
-    const response = await rawResponse.json();
-    if (response.success) {
-      const data: GeneratedBoardData = response.data
-      console.warn(`${response.message} in ${Date.now() - fetchStart}ms`);
-      console.warn('<<<<<<  returning GeneratedBoardData', response.data);
-      return data;
-    } else {
-      console.error(response.message);
-      return undefined;
-    }
-  } catch (error) {
-    console.error('Error fetching puzzle:', error);
-    return undefined;
-  }
-};
-
 const createUserInDatabase = async (userData: UserData) => {
   const userRef = doc(firestore, 'users', userData.uid);
   await setDoc(userRef, userData);
@@ -141,28 +118,124 @@ const getUserFromDatabase = async (uid: string) => {
   return await getDoc(userRef);
 };
 
-const getPuzzleListFromDatabase = async (): Promise<DocumentData | undefined> => {
-  const docRef = doc(firestore, `letterLists`, '4');
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    return data || undefined;
+const getCollectionFromDatabase = async (collectionId: string): Promise<DocumentData | undefined> => {
+  const collectionRef = collection(firestore, collectionId);
+  const querySnapshot = await getDocs(collectionRef);
+  if (!querySnapshot.empty) {
+    const data: Record<string, any> = {};
+    querySnapshot.forEach(doc => {
+      data[doc.id] = doc.data();
+    });
+    return data;
   } else {
-    console.error('No such list.');
+    console.error('No documents found.');
     return undefined;
   }
+}
+
+export const updateBestPuzzles = async (size: number) => {
+  const localLists = await loadBestLists(`${size}_all_puzzles.json`) as BestLists;
+  const localStart = Date.now();
+  const existingRemoteLists = await getCollectionFromDatabase(`puzzles_${size}`) || {};
+  console.log('Got local list in', Date.now() - localStart, 'ms');  
+  const localArr = Object.entries(localLists);
+  const existingArr = Object.entries(existingRemoteLists);
+  const newEntries = localArr.filter(([id, _]) =>
+    !existingRemoteLists.hasOwnProperty(`${size}${size}${id}`)
+);
+if (newEntries.length) {
+    const batchStart = Date.now();
+    const batch = writeBatch(firestore);
+    const collectionRef = collection(firestore, `puzzles_${size}`);
+    newEntries.forEach(([letterString, data]) => {
+      const size = Math.sqrt(letterString.length);
+      const puzzleId = `${size}${size}${letterString}`;
+      const newDocRef = doc(collectionRef, puzzleId);
+      const puzzleData: StoredPuzzleData = {
+        dimensions: {
+          height: size,
+          width: size,
+        },
+        letterString,
+        ...data,
+        dateCreated: Date.now(),
+        id: puzzleId,
+      }
+      batch.set(newDocRef, puzzleData);
+    });
+    console.log('Created batch in', Date.now() - batchStart, 'ms');
+  
+    const commitStart = Date.now();
+    try {
+      await batch.commit();
+      console.log(newEntries.length, 'size', size, 'puzzles sent successfully. New total:', (existingArr.length + newEntries.length));
+      console.log('Took', Date.now() - commitStart, 'ms to commit.')
+    } catch (error) {
+      console.error('Error updating best puzzles:', error);
+    }
+  } else {
+    console.log('No new puzzles to update. Existing total:', existingArr.length);
+  }
+}
+
+const fetchThemedPuzzles = async (): Promise<StoredPuzzleData[] | null> => {
+  try {
+    const puzzlesCollection = collection(firestore, 'puzzles');
+    const puzzlesQuery = query(puzzlesCollection, where('theme', '!=', null));
+    const puzzlesSnapshot = await getDocs(puzzlesQuery);
+    const puzzleList: StoredPuzzleData[] = [];
+    puzzlesSnapshot.forEach((doc) => {
+      const puzzleData = doc.data() as StoredPuzzleData;
+      puzzleList.push(puzzleData);
+    });
+    return puzzleList;
+  } catch (error) {
+    console.error("Error fetching puzzles: ", error);
+  }
+  return null;
+}
+
+const findBestPuzzle = async (
+  minTotalWords: number = 50,
+  maxTotalWords: number = 9999,
+  seenPuzzleIds: string[],
+  size: number
+): Promise<StoredPuzzleData | null> => {
+  const puzzlesRef = collection(firestore, `puzzles_${size}`);
+
+  let q: Query = query(puzzlesRef,
+    where('totalWords', '>=', minTotalWords),
+    where('totalWords', '<=', maxTotalWords),
+    orderBy('totalWords'),  // Required for the range query
+    orderBy('averageWordLength', 'desc')
+  );
+  
+  const querySnapshot = await getDocs(q);
+
+  let bestPuzzle: StoredPuzzleData | null = null;
+
+  for (const doc of querySnapshot.docs) {
+    const puzzleData = doc.data() as StoredPuzzleData;
+    if (!seenPuzzleIds.includes(doc.id)) {
+      bestPuzzle = puzzleData;
+      return bestPuzzle;
+    }
+  }
+  console.error('NO APPROPRIATE PUZZLE FOUND!')
+  return null;
 }
 
 export {
   auth,
   database,
   firestore,
-  createSolvedPuzzle,
   createUserInDatabase,
   fetchPuzzleById,
   fetchRandomPuzzle,
+  fetchThemedPuzzles,
+  findBestPuzzle,
   getUserFromDatabase,
-  getPuzzleListFromDatabase,
+  getCollectionFromDatabase,
   loadBestLists,
 }
 

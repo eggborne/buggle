@@ -38,7 +38,6 @@ const EffectTimer = ({ opponent, powerup, started }: EffectTimerProps) => {
       deactivatePowerup(id);
     }
   }, [timeLeft, id, deactivatePowerup]);
-  console.log('using bee key', id)
   return (
     <div key={id} className={`${styles.EffectTimer} ${opponent ? styles.opponent : ''}`}>
       <span>{powerup.type.toUpperCase()}!</span>

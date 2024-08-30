@@ -2,8 +2,7 @@ import styles from './LobbyScreen.module.css'
 import { useUser } from '../../context/UserContext'
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { database, fetchPuzzleById } from '../../scripts/firebase';
-import { ref, push, update, DataSnapshot, off, onValue } from "firebase/database";
-import Modal from '../../components/Modal';
+import { ref, DataSnapshot, off, onValue } from "firebase/database";
 import { ChallengeData, CurrentGameData, PendingOutgoingChallengeData, UserData } from '../../types/types';
 import { useFirebase } from '../../context/FirebaseContext';
 import { triggerShowMessage } from '../../hooks/useMessageBanner';

@@ -10,6 +10,7 @@ import { get, child, ref } from 'firebase/database';
 import { database } from '../../scripts/firebase';
 import AttackButtons from '../AttackButtons';
 import DevWindow from '../DevWindow';
+import LoadingDisplay from '../LoadingDisplay';
 
 interface GameScreenProps {
   hidden: boolean;
@@ -80,7 +81,6 @@ function GameScreen({ hidden, showConfirmModal }: GameScreenProps) {
   }, [currentMatch]);
 
   useEffect(() => {
-    console.warn('powerups changed');
     const powerupsTargetingUser = (Object.values(currentMatch?.activePowerups || {})).filter(p => p.target === user?.uid);
     const powerupsTargetingOpponent = (Object.values(currentMatch?.activePowerups || {})).filter(p => p.target === opponentData?.uid);
     setCurrentEffects({
@@ -99,10 +99,10 @@ function GameScreen({ hidden, showConfirmModal }: GameScreenProps) {
       {currentMatch &&
         <GameStatusDisplay currentEffects={currentEffects} gameStarted={opponentData ? playerProgress[opponentData.uid].ready === true : true} isMultiplayer={isMultiplayer} opponentData={opponentData} showConfirmModal={showConfirmModal} />
       }
-      <GameBoard
+      {currentMatch ? <GameBoard
         opponentData={opponentData}
         currentEffects={currentEffects}
-      />
+      /> : <LoadingDisplay />}
       {user && currentMatch &&
         <AttackButtons
           availablePowers={playerProgress[user.uid].availablePowers}
