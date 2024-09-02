@@ -207,6 +207,81 @@
       "ȱ": "xth"
     }
   },
+  "defaultBoardRequestValues": {
+    "dimensions": {
+      "width": 5,
+      "height": 5
+    },
+    "filters": {
+      "commonWordAmount": 3
+    },
+    "maxAttempts": 10,
+    "returnBest": true
+  },
+  "boardRequestOptions": {
+    "filters": {
+      "totalWordLimits": {
+        "min": {
+          "elementName": "minWords",
+          "defaultValue": 1
+        },
+        "max": {
+          "elementName": "maxWords",
+          "defaultValue": 99999
+        }
+      },
+      "averageWordLength": {
+        "comparison": {
+          "elementName": "averageWordLengthComparison"
+        },
+        "value": {
+          "elementName": "averageWordLengthValue"
+        }
+      },
+      "commonWordAmount": {
+        "comparison": {
+          "elementName": "commonWordAmountComparison"
+        },
+        "value": {
+          "elementName": "commonWordAmountValue"
+        }
+      },
+      "wordLengthLimits": {
+        "useExternalValue": true,
+        "externalValueName": "wordLengthPrefs"
+      }
+    },
+    "customizations": {
+      "customLetters": {
+        "letterList": {
+          "useExternalValue": true,
+          "externalValueName": "userLetters"
+        },
+        "convertQ": {
+          "refName": "convertQForLettersRef",
+          "property": "checked"
+        },
+        "shuffle": {
+          "refName": "shuffleCustomLettersRef",
+          "property": "checked"
+        }
+      },
+      "requiredWords": {
+        "wordList": {
+          "useExternalValue": true,
+          "externalValueName": "userWords",
+          "sort": {
+            "key": "length",
+            "order": "descending"
+          }
+        },
+        "convertQ": {
+          "refName": "convertQForWordsRef",
+          "property": "checked"
+        }
+      }
+    }
+  },
   "userOptions": {
     "style": {
       "colors": {

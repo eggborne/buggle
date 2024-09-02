@@ -5,7 +5,7 @@ import { database, firestore } from '../scripts/firebase';
 import { useUser } from './UserContext';
 import { pointValues } from '../config.json';
 import { triggerShowMessage } from '../hooks/useMessageBanner';
-import { arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 
 interface FirebaseContextProps {
   playerList: UserData[] | null;

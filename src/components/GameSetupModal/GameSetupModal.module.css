@@ -16,11 +16,10 @@
 .puzzleOptions {
   display: flex;
   flex-direction: column;
-  /* margin-top: 1rem; */
   transform-origin: top;
   scale: 1 1;
   transition: all 100ms ease;
-  /* gap: 0.5rem; */
+  gap: 1rem;
   max-width: 100%;
 }
 
@@ -56,18 +55,6 @@
   padding: 0.5rem;
   width: 6rem;
   text-align: center;
-}
-
-.sizeSelections {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.sizeSelections>span {
-  padding: 0.25rem;
-  border: 0.5rem solid transparent;
-  border-radius: 0.25rem;
 }
 
 .themeSelectButton {

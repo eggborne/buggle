@@ -3,12 +3,12 @@ import { useEffect } from 'react';
 import { useMessageBanner } from '../../hooks/useMessageBanner';
 
 const MessageBanner = () => {
-  const { message, isVisible, hideMessage } = useMessageBanner();
+  const { duration, message, isVisible, hideMessage } = useMessageBanner();
   useEffect(() => {
     if (isVisible) {
       setTimeout(() => {
         hideMessage();
-      }, 2000);
+      }, duration);
     }
   }, [isVisible]);
 

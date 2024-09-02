@@ -33,7 +33,7 @@ export interface FirestoreSchema {
       metadata: {
         averageWordLength: number;
         dateCreated: number;
-        percentCommon: number;
+        commonWordAmount: number;
         key?: Record<string, string>;
       };
       specialWords?: string[];

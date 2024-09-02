@@ -7,9 +7,9 @@ import StoredPuzzleList from '../StoredPuzzleList';
 import { useFirebase } from '../../context/FirebaseContext';
 import { gameDataFromStoredPuzzle } from '../../scripts/util';
 import { difficulties } from './../../config.json';
-import PuzzleIcon from '../PuzzleIcon';
 import { findBestPuzzle } from '../../scripts/firebase';
 import LoadingDisplay from '../LoadingDisplay';
+import SizeSelection from '../SizeSelection';
 
 const GameSetupModal = () => {
   const { user, changePhase } = useUser();
@@ -26,7 +26,6 @@ const GameSetupModal = () => {
   const handleClickStartGame = async () => {
     if (!user) return;
     setGenerating(true);
-    let newGameData;
     let selected = puzzleSelected;
     if (selected) {
       console.log('clicked while puzzle selected', puzzleSelected);
@@ -42,7 +41,7 @@ const GameSetupModal = () => {
     setGenerating(false);
     const notSolvedInDB = !selected.allWords;
     const dataFromStored = await gameDataFromStoredPuzzle(selected, user.uid);
-    newGameData = {
+    const newGameData = {
       ...dataFromStored,
       timeLimit: Number(timeLimitInputRef.current?.value),
       wordBonus: Number(wordBonusInputRef.current?.value)
@@ -60,26 +59,10 @@ const GameSetupModal = () => {
     <div className={styles.GameSetupModal}>
       <h1>Single Player</h1>
       <div className={styles.puzzleOptions}>
-        <div className={styles.sizeSelections}>
-          <span style={{ borderColor: sizeSelected === 4 ? '#8f8' : 'transparent' }}
-            onClick={() => setSizeSelected(4)}
-          ><PuzzleIcon iconSize={{
-            width: `4rem`,
-            height: `4rem`
-          }} puzzleDimensions={{ width: 4, height: 4 }} contents={[]} /></span>
-          <span style={{ borderColor: sizeSelected === 5 ? '#8f8' : 'transparent' }}
-          onClick={() => setSizeSelected(5)}
-          ><PuzzleIcon iconSize={{
-            width: `4rem`,
-            height: `4rem`
-          }} puzzleDimensions={{ width: 5, height: 5 }} contents={[]} /></span>
-          <span style={{ borderColor: sizeSelected === 6 ? '#8f8' : 'transparent' }}
-          onClick={() => setSizeSelected(6)}
-          ><PuzzleIcon iconSize={{
-            width: `4rem`,
-            height: `4rem`
-          }} puzzleDimensions={{ width: 6, height: 6 }} contents={[]} /></span>
-        </div>
+        <SizeSelection sizeSelected={sizeSelected} handleChangeSize={(newSize: number) => setSizeSelected(newSize)} iconSize={{
+          width: `4.5rem`,
+          height: `4.5rem`
+        }} />      
         <div className={styles.puzzleSelectToggle}>
           <div role='button' className={`${styles.toggleButton} ${selectionType === 'random' ? styles.selected : ''}`} onClick={() => setSelectionType('random')}>Random</div>
           <div role='button' className={`${styles.toggleButton} ${selectionType === 'themed' ? styles.selected : ''}`} onClick={() => setSelectionType('themed')}>Themed</div>
@@ -94,7 +77,7 @@ const GameSetupModal = () => {
             {puzzleSelected ?
               <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>{puzzleSelected.theme}<p>click to change</p></button>
               :
-              <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>Select puzzle...</button>
+              <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>Select theme...</button>
             }
           </div>
         }
@@ -120,7 +103,7 @@ const GameSetupModal = () => {
         <button disabled={false} onClick={handleClickStartGame} className={`start ${styles.startButton}`}>Start Game</button>
       </div>
       <Modal isOpen={puzzleListShowing} onClose={() => setPuzzleListShowing(false)}>
-        <StoredPuzzleList showing={puzzleListShowing} onClickStoredPuzzle={(puzzle) => {
+        <StoredPuzzleList showing={puzzleListShowing} size={sizeSelected} onClickStoredPuzzle={(puzzle) => {
           setPuzzleSelected(puzzle);
           setPuzzleListShowing(false);
         }} />

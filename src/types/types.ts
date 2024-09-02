@@ -1,3 +1,5 @@
+import { RefObject } from "react";
+
 export interface DatabaseStructure {
   challenges: {
     [challengeId: string]: ChallengeData;
@@ -65,7 +67,7 @@ export interface ComparisonFilterData {
 export interface PuzzleMetadata {
   averageWordLength: number;
   dateCreated: number;
-  percentCommon: number;
+  commonWordAmount: number;
   key?: Record<string, string>;
 }
 
@@ -83,9 +85,9 @@ export interface CellObj {
 }
 
 export interface BoardFilters {
-  averageWordLengthFilter?: ComparisonFilterData;
+  averageWordLength?: ComparisonFilterData;
+  commonWordAmount?: number;
   totalWordLimits?: { min?: number, max?: number };
-  uncommonWordLimit?: ComparisonFilterData;
   wordLengthLimits?: WordLengthPreference[];
 }
 
@@ -102,23 +104,24 @@ export interface BoardCustomizations {
 }
 
 export interface BoardRequestData {
+  customizations?: BoardCustomizations;
   dimensions: PuzzleDimensions;
   letterDistribution?: string;
   maxAttempts: number;
   returnBest: boolean;
-  customizations?: BoardCustomizations;
   filters?: BoardFilters;
   theme?: string;
 }
 
 export interface StoredPuzzleData {
   allWords?: string[];
+  creatorUid?: string;
   dimensions: PuzzleDimensions;
   letterString: string;
   id?: string;
   averageWordLength: number;
   dateCreated: number;
-  percentCommon: number;
+  commonWordAmount: number;
   key?: Record<string, string>;
   totalWords: number;
   specialWords?: string[];
@@ -222,12 +225,12 @@ export interface PendingOutgoingChallengeData {
 export interface ChallengeData {
   accepted: boolean;
   difficulty: string;
-  id?: string;
   instigatorUid: string;
-  puzzleId?: string;
   respondentUid: string;
   timeLimit: number;
   wordBonus: number | string;
+  id?: string;
+  puzzleId?: string;
 }
 
 
@@ -270,32 +273,38 @@ export interface OptionTypeData {
   inputDataList: OptionInputData[];
 }
 
-type PuzzleId = string;
-type ListScore = number;
-
-export type BestLists = Record<PuzzleId, {
-  totalWords: number;
-  averageWordLength: number;
-  percentCommon: number;
-}>;
-
-export interface BestListData {
+interface BestListData {
   totalWords: number,
   averageWordLength: number,
-  percentCommon: number,
+  commonWordAmount: number
 }
 
-export interface LetterListItem {
-  letterList: PuzzleId;
-  totalWords: ListScore;
-}
+export type BestLists = Record<string, BestListData>;
 
 export type DifficultyLevel = 'easy' | 'medium' | 'hard';
 
-export interface BestPuzzleData {
-  id: string,
-  totalWords: number,
-  averageWordLength: number,
-  percentCommon: number
-}
 
+export interface InputRefsData {
+  customizations: {
+    customLetters: {
+      letterList: string[];
+      shuffle: RefObject<HTMLInputElement>;
+    };
+    requiredWords: {
+      wordList: string[];
+    };
+  };
+  filters: {
+    averageWordLength: {
+      comparison: React.RefObject<HTMLSelectElement>;
+      value: React.RefObject<HTMLInputElement>;
+    };
+    commonWordAmount: React.RefObject<HTMLInputElement>;
+    totalWordLimits: {
+      min: React.RefObject<HTMLInputElement>;
+      max: React.RefObject<HTMLInputElement>;
+    };
+  };
+  maxAttempts: React.RefObject<HTMLInputElement>;
+  theme: React.RefObject<HTMLInputElement>;
+}

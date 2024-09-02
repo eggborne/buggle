@@ -6,37 +6,41 @@ interface PuzzleIconProps {
     width: number;
     height: number;
   },
-  iconSize: {
+  iconSize?: {
     width: string;
     height?: string;
   },
-  // iconSize: string;
-  contents: string[];
+  contents?: string[];
 }
 
-function PuzzleIcon({ puzzleDimensions, contents, iconSize }: PuzzleIconProps) {
+const PuzzleIcon = ({ puzzleDimensions, contents, iconSize }: PuzzleIconProps) => {
   const { width, height } = puzzleDimensions;
-  const cubeArray = contents;
-  if (contents.length === 0) {
+  let cubeArray = contents;
+  if (!cubeArray) {
+    cubeArray = [];
     for (let i = 0; i < (width * height); i++) {
       cubeArray.push('')
     }
   }
+  const puzzleStyle: Record<string, string | number> = {
+    gridTemplateColumns: `repeat(${width}, 1fr)`,
+    gridTemplateRows: `repeat(${height}, 1fr)`,
+    width: iconSize?.width || '33%',
+    aspectRatio: (width / height),
+  };
+  if (iconSize?.height) {
+    puzzleStyle.height = iconSize.height;
+  }
   return (
     <div
       className={styles.PuzzleIcon}
-      style={{
-        gridTemplateColumns: `repeat(${width}, 1fr)`,
-        gridTemplateRows: `repeat(${height}, 1fr)`,
-        width: iconSize.width,
-        aspectRatio: (width / height),
-      }}
+      style={puzzleStyle}
     >
-      {contents.map((item, i) =>
+      {cubeArray.map((item, i) =>
         <BoardCell key={`${item}${i}`} letter={item} touched={false} wordStatus={''} />
       )}
     </div>
   )
-}
+};
 
 export default PuzzleIcon;

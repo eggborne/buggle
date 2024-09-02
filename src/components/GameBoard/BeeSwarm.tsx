@@ -3,12 +3,8 @@ import { FC, useRef, useEffect } from 'react';
 import {
   Group,
   Object3D,
-  WebGLRenderer,
-  Scene,
-  OrthographicCamera,
   Vector3,
   PlaneGeometry,
-  LinearSRGBColorSpace,
   MeshBasicMaterial,
   Mesh,
   NormalBlending,

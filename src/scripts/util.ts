@@ -154,7 +154,7 @@ export const gameDataFromStoredPuzzle = async (puzzle: StoredPuzzleData, userUid
     metadata: {
       totalWords: puzzle.totalWords,
       averageWordLength: puzzle.averageWordLength,
-      percentCommon: puzzle.percentCommon,
+      commonWordAmount: puzzle.commonWordAmount,
       dateCreated: puzzle.dateCreated,
       key: puzzle.key,
     },

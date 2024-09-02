@@ -1,11 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 import { getAuth } from 'firebase/auth';
-import { BestLists, BoardRequestData, CurrentGameData, DifficultyLevel, GameOptions, GeneratedBoardData, StoredPuzzleData, UserData } from "../types/types";
-import { bestListPath, difficulties } from '../config.json';
-import { stringTo2DArray, decodeMatrix, getRandomPuzzleWithinRange } from "./util";
+import { BestLists, StoredPuzzleData, UserData } from "../types/types";
+import { bestListPath } from '../config.json';
 import { getFirestore, doc, setDoc, getDoc, DocumentData, collection, getDocs, writeBatch, orderBy, where, Query, query } from "firebase/firestore";
-import { createSolvedPuzzle } from "./fetch";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,11 +17,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
 const database = getDatabase(app);
 const firestore = getFirestore(app);
-
 
 console.warn('Firebase initialized.');
 
@@ -41,65 +37,9 @@ const loadBestLists = async (fileName: string): Promise<BestLists | undefined> =
   }
 };
 
-const fetchRandomPuzzle = async (
-  { difficulty, dimensions, timeLimit, wordBonus }: GameOptions,
-  seenPuzzles: string[]
-): Promise<CurrentGameData | null> => {
-  try {
-    const bestLists = await loadBestLists('best-totalWords.json') as BestLists;
-    const diff = difficulty as DifficultyLevel;
-    const difficultyAmounts = difficulties[diff].totalWords;
-    const availablePuzzles: { [key: string]: number } = {};
-    // for (const puzzleId in bestLists) {
-    //   if (!seenPuzzles?.includes(puzzleId)) {
-    //     availablePuzzles[puzzleId] = bestLists[puzzleId];
-    //   }
-    // }
-    console.log('--- User has seen', seenPuzzles.length);
-    console.log('selecting among', Object.entries(availablePuzzles).length, 'availablePuzzles')
-    const randomLetterList = getRandomPuzzleWithinRange(availablePuzzles, difficultyAmounts.min, difficultyAmounts.max)
-    const letters = randomLetterList ? randomLetterList[0] : null;
-
-    const nextMatrix = stringTo2DArray(letters || '', dimensions.width, dimensions.height);
-
-    const randomPuzzleOptions = {
-      dimensions,
-      letterDistribution: 'boggle',
-      maxAttempts: 1,
-      returnBest: true,
-      customizations: {
-        customLetters: {
-          letterList: letters?.split('') || [],
-          convertQ: true,
-          shuffle: false,
-        }
-      }
-    } as BoardRequestData;
-
-    const randomPuzzle = await createSolvedPuzzle(randomPuzzleOptions);
-    if (randomPuzzle) {
-      const nextGameData: CurrentGameData = {
-        ...randomPuzzle,
-        dimensions,
-        allWords: new Set(randomPuzzle.wordList),
-        letterMatrix: decodeMatrix(nextMatrix, randomPuzzle.metadata.key),
-        gameOver: false,
-        playerProgress: {},
-        timeLimit,
-        wordBonus
-      };
-      return nextGameData;
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error("Error fetching random puzzle:", error);
-    throw error; // Re-throw the error for higher-level handling
-  }
-};
-
 const fetchPuzzleById = async (puzzleId: string): Promise<StoredPuzzleData | null> => {
-  const puzzleRef = doc(firestore, 'puzzles', puzzleId);
+  const size = Math.sqrt(puzzleId.length - 2)
+  const puzzleRef = doc(firestore, `puzzles_${size}`, puzzleId);
   const snapshot = await getDoc(puzzleRef);
   if (snapshot.exists()) {
     return snapshot.data() as StoredPuzzleData;
@@ -122,7 +62,7 @@ const getCollectionFromDatabase = async (collectionId: string): Promise<Document
   const collectionRef = collection(firestore, collectionId);
   const querySnapshot = await getDocs(collectionRef);
   if (!querySnapshot.empty) {
-    const data: Record<string, any> = {};
+    const data: Record<string, Record<string, StoredPuzzleData>> = {};
     querySnapshot.forEach(doc => {
       data[doc.id] = doc.data();
     });
@@ -137,13 +77,13 @@ export const updateBestPuzzles = async (size: number) => {
   const localLists = await loadBestLists(`${size}_all_puzzles.json`) as BestLists;
   const localStart = Date.now();
   const existingRemoteLists = await getCollectionFromDatabase(`puzzles_${size}`) || {};
-  console.log('Got local list in', Date.now() - localStart, 'ms');  
+  console.log('Got local list in', Date.now() - localStart, 'ms');
   const localArr = Object.entries(localLists);
   const existingArr = Object.entries(existingRemoteLists);
   const newEntries = localArr.filter(([id, _]) =>
-    !existingRemoteLists.hasOwnProperty(`${size}${size}${id}`)
-);
-if (newEntries.length) {
+    !(`${size}${size}${id}` in existingRemoteLists)
+  );
+  if (newEntries.length) {
     const batchStart = Date.now();
     const batch = writeBatch(firestore);
     const collectionRef = collection(firestore, `puzzles_${size}`);
@@ -164,7 +104,7 @@ if (newEntries.length) {
       batch.set(newDocRef, puzzleData);
     });
     console.log('Created batch in', Date.now() - batchStart, 'ms');
-  
+
     const commitStart = Date.now();
     try {
       await batch.commit();
@@ -178,9 +118,9 @@ if (newEntries.length) {
   }
 }
 
-const fetchThemedPuzzles = async (): Promise<StoredPuzzleData[] | null> => {
+const fetchThemedPuzzles = async (size: number): Promise<StoredPuzzleData[] | null> => {
   try {
-    const puzzlesCollection = collection(firestore, 'puzzles');
+    const puzzlesCollection = collection(firestore, `puzzles_${size}`);
     const puzzlesQuery = query(puzzlesCollection, where('theme', '!=', null));
     const puzzlesSnapshot = await getDocs(puzzlesQuery);
     const puzzleList: StoredPuzzleData[] = [];
@@ -203,13 +143,13 @@ const findBestPuzzle = async (
 ): Promise<StoredPuzzleData | null> => {
   const puzzlesRef = collection(firestore, `puzzles_${size}`);
 
-  let q: Query = query(puzzlesRef,
+  const q: Query = query(puzzlesRef,
     where('totalWords', '>=', minTotalWords),
     where('totalWords', '<=', maxTotalWords),
     orderBy('totalWords'),  // Required for the range query
     orderBy('averageWordLength', 'desc')
   );
-  
+
   const querySnapshot = await getDocs(q);
 
   let bestPuzzle: StoredPuzzleData | null = null;
@@ -231,7 +171,6 @@ export {
   firestore,
   createUserInDatabase,
   fetchPuzzleById,
-  fetchRandomPuzzle,
   fetchThemedPuzzles,
   findBestPuzzle,
   getUserFromDatabase,

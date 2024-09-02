@@ -24,7 +24,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
   // const [sizeSelected, setSizeSelected] = useState<number>(5);
   const lobbyScreenRef = useRef<HTMLSelectElement>(null);
   const previousPlayerListRef = useRef<UserData[]>([]);
-  
+
 
   const hasRelevantChanges = useCallback((prevList: UserData[], newList: UserData[]) => {
     if (prevList.length !== newList.length) return true;
@@ -86,8 +86,6 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
 
   }, [challenges, currentPlayerList.length]);
 
-  
-
   const handleClickChallengePlayer = (opponentData: UserData) => {
     setPendingOutgoingChallenge({
       respondent: opponentData,
@@ -123,41 +121,47 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
     const { puzzleId, id: challengeId, instigatorUid, respondentUid, timeLimit, wordBonus } = challenge;
     const opponentName = currentPlayerList.filter(p => p.uid === instigatorUid)[0].displayName;
     triggerShowMessage(`Challenge from ${opponentName} accepted!`);
-    // const randomPuzzle = await fetchRandomPuzzle({ dimensions, difficulty, timeLimit });
     const retrievedPuzzle = await fetchPuzzleById(puzzleId || '');
     if (challengeId && retrievedPuzzle) {
-      const letterMatrix = stringTo2DArray(retrievedPuzzle.letterString, retrievedPuzzle.dimensions.width, retrievedPuzzle.dimensions.height);
-      const newGameData: CurrentGameData = {
-        ...retrievedPuzzle,
-        allWords: Array.from(retrievedPuzzle.allWords),
-        endTime: 0,
-        gameOver: false,
-        id: challengeId,
-        letterMatrix,
-        playerProgress: {
-          [instigatorUid]: {
-            attackPoints: 0,
-            foundOpponentWords: {},
-            uid: instigatorUid,
-            score: 0,
-            touchedCells: [],
+      if (retrievedPuzzle.allWords) {
+        const letterMatrix = stringTo2DArray(retrievedPuzzle.letterString, retrievedPuzzle.dimensions.width, retrievedPuzzle.dimensions.height);
+        const newGameData: CurrentGameData = {
+          ...retrievedPuzzle,
+          allWords: retrievedPuzzle.allWords,
+          endTime: 0,
+          gameOver: false,
+          id: challengeId,
+          letterMatrix,
+          playerProgress: {
+            [instigatorUid]: {
+              attackPoints: 0,
+              foundOpponentWords: {},
+              uid: instigatorUid,
+              score: 0,
+              touchedCells: [],
+            },
+            [respondentUid]: {
+              attackPoints: 0,
+              foundOpponentWords: {},
+              uid: respondentUid,
+              score: 0,
+              touchedCells: [],
+            },
           },
-          [respondentUid]: {
-            attackPoints: 0,
-            foundOpponentWords: {},
-            uid: respondentUid,
-            score: 0,
-            touchedCells: [],
+          metadata: {
+            averageWordLength: retrievedPuzzle.averageWordLength,
+            dateCreated: retrievedPuzzle.dateCreated,
+            commonWordAmount: retrievedPuzzle.commonWordAmount,
           },
-        },
-        startTime: 0,
-        timeLimit: timeLimit,
-        wordBonus: wordBonus
-      };
-      await markChallengeAccepted(challengeId)
-      console.log('---- accepted and creating/starting game', challengeId)
-      await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
-      changePhase('game');
+          startTime: 0,
+          timeLimit: timeLimit,
+          wordBonus: wordBonus
+        };
+        await markChallengeAccepted(challengeId)
+        console.log('---- accepted and creating/starting game', challengeId)
+        await startNewGame(newGameData, challengeId); // including challengeId creates game in DB/games
+        changePhase('game');
+      }
     }
   };
 
@@ -172,7 +176,7 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
       <ChatWindow hidden={hidden} />
       <div className={styles.playerListArea}>
         <h2>Challenges</h2>
-        <div className={`${styles.challengeList} ${challengeList && (challengeList.length > 0) ? styles.showing : styles.hidden }`}>
+        <div className={`${styles.challengeList} ${challengeList && (challengeList.length > 0) ? styles.showing : styles.hidden}`}>
           {challengeList?.map(challenge => {
             // find the instigator in /players
             const opponentData = currentPlayerList?.find(player => player.uid === challenge.instigatorUid);
@@ -229,10 +233,12 @@ function LobbyScreen({ hidden }: LobbyScreenProps) {
             })}
         </div>
       </div>
-      <ChallengeModal
+      {pendingOutgoingChallenge && <ChallengeModal
+        sentChallenges={sentChallenges}
+        setSentChallenges={setSentChallenges}
         pendingOutgoingChallenge={pendingOutgoingChallenge}
-        setPendingOutgoingChallenge={setPendingOutgoingChallenge}        
-      />      
+        setPendingOutgoingChallenge={setPendingOutgoingChallenge}
+      />}
     </main>
   )
 }

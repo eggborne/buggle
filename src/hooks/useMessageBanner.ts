@@ -2,15 +2,18 @@ import { useState, useCallback, useEffect } from 'react';
 
 interface MessageEvent extends Event {
   detail: {
+    duration: number;
     message: string;
   };
 }
 
 export const useMessageBanner = () => {
+  const [duration, setDuration] = useState(2000);
   const [message, setMessage] = useState('');
   const [isVisible, setIsVisible] = useState(false);
 
   const showMessage = useCallback((msg: string) => {
+    setDuration(duration)
     setMessage(msg);
     setIsVisible(true);
   }, []);
@@ -31,9 +34,9 @@ export const useMessageBanner = () => {
     };
   }, [showMessage]);
 
-  return { message, isVisible, showMessage, hideMessage };
+  return { duration, message, isVisible, showMessage, hideMessage };
 };
 
-export const triggerShowMessage = (message: string) => {
-  window.dispatchEvent(new CustomEvent('showMessage', { detail: { message } }));
+export const triggerShowMessage = (message: string, duration: number = 2000) => {
+  window.dispatchEvent(new CustomEvent('showMessage', { detail: { duration, message } }));
 };

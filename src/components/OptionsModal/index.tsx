@@ -79,7 +79,7 @@ const OptionsModal = ({ hidden }: OptionsModalProps) => {
             dimensions: boardDimensions,
             letterMatrix: sampleLetterMatrices[sizeSelected - 4],
             metadata: {
-              percentCommon: 1,
+              commonWordAmount: 1,
               averageWordLength: 5,
               dateCreated: 0,
             },
