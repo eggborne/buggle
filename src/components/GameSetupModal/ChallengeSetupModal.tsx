@@ -1,4 +1,4 @@
-import styles from './ChallengeModal.module.css';
+import styles from './GameSetupModal.module.css';
 import { StoredPuzzleData, PendingOutgoingChallengeData, ChallengeData } from '../../types/types';
 import Modal from '../Modal';
 import { useUser } from '../../context/UserContext';
@@ -34,13 +34,7 @@ const ChallengeModal = ({
   const difficultyInputRef = useRef<HTMLInputElement>(null);
 
   const sendChallenge = async () => {
-    if (user && pendingOutgoingChallenge && timeLimitInputRef.current && wordBonusInputRef.current) {
-      if (sentChallenges.length > 0 && sentChallenges.some(c => c.respondentUid === pendingOutgoingChallenge.respondent.uid)) {
-        // should never be able to occur as there would be no button
-        console.warn('already challenging');
-        triggerShowMessage(`Already challenging ${pendingOutgoingChallenge.respondent.displayName}!`);
-        return;
-      }
+    if (user && pendingOutgoingChallenge && timeLimitInputRef.current && wordBonusInputRef.current) {      
       const challengesRef = ref(database, 'challenges/');
       const newChallenge: ChallengeData = {
         accepted: false,
@@ -73,18 +67,13 @@ const ChallengeModal = ({
       <Modal
         isOpen={pendingOutgoingChallenge !== null}
         noCloseButton
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '2rem'
-        }}
+        className={styles.GameSetupModal}
       >
-        <div className={styles.challengeHeader}>
-          <h2>Challenging {<br />}{pendingOutgoingChallenge?.respondent.displayName}</h2>
-          <img className={'profile-pic'} style={{ width: '4rem', height: '4rem' }} src={pendingOutgoingChallenge?.respondent.photoURL || undefined} />
-        </div>
+        <h2 className={styles.challengeHeader}>
+          <div>Challenging</div>
+          <div className={styles.opponentName}>{pendingOutgoingChallenge?.respondent.displayName}</div>
+          <img className={'profile-pic'} src={pendingOutgoingChallenge?.respondent.photoURL || undefined} />
+        </h2>
         <div className={styles.puzzleOptions}>
           <SizeSelection sizeSelected={sizeSelected} handleChangeSize={(newSize: number) => setSizeSelected(newSize)} iconSize={{
             width: `4.5rem`,
@@ -117,17 +106,16 @@ const ChallengeModal = ({
               <option value='30'>30 seconds</option>
               <option value='120'>2 minutes</option>
             </select>
-            <select defaultValue='30' ref={wordBonusInputRef}>
+            <select defaultValue='5' ref={wordBonusInputRef}>
+              <option value='5'>2 seconds</option>
               <option value='5'>5 seconds</option>
-              <option value='pointValue'>Boggle® value</option>
-              {/* <option value='pointValue'>Scrabble® value</option> */}
+              <option value='5'>10 seconds</option>
             </select>
           </div>
         </div>
         <div className={`button-group ${styles.lowerButtons}`}>
-          <button onClick={sendChallenge} className={'start'}>Send Challenge</button>
+          <button onClick={sendChallenge} className={`start ${styles.startButton}`}>Send Challenge</button>
           <button onClick={() => setPendingOutgoingChallenge(null)} className={'cancel'}>Cancel</button>
-
         </div>
       </Modal>
       <Modal isOpen={puzzleListShowing} onClose={() => setPuzzleListShowing(false)}>

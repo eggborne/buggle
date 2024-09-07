@@ -7,7 +7,6 @@ import LoadingDisplay from './components/LoadingDisplay';
 import Footer from './components/Footer';
 import TitleScreen from './components/TitleScreen';
 import LobbyScreen from './components/LobbyScreen';
-import SelectScreen from './components/SelectScreen';
 import GameScreen from './components/GameScreen';
 import OptionsModal from './components/OptionsModal';
 import CreateScreen from './components/CreateScreen';
@@ -17,6 +16,8 @@ import { useFirebase } from './context/FirebaseContext';
 import ConfirmModal from './components/ConfirmModal';
 import PlayerAnnouncementEffect from './effects/PlayerAnnouncementEffect';
 import StartMatchModal from './components/StartMatchModal';
+import SinglePlayerSetupModal from './components/GameSetupModal/SinglePlayerSetupModal';
+import { updateBestPuzzles } from './scripts/firebase';
 
 function App() {
   const {
@@ -32,6 +33,7 @@ function App() {
   const [optionsShowing, setOptionsShowing] = useState<boolean>(false);
   const [sideMenuShowing, setSideMenuShowing] = useState<boolean>(false);
   const [confirmShowing, setConfirmShowing] = useState<ConfirmData | null>(null);
+  const [singlePlayerMenuOpen, setSinglePlayerMenuOpen] = useState<boolean>(false);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -91,10 +93,15 @@ function App() {
           }}
         >
           <MessageBanner />
-          <TitleScreen hidden={phase !== 'title' || !userReady} showOptions={() => setOptionsShowing(true)} />
+          <TitleScreen
+            hidden={phase !== 'title' || !userReady}
+            showOptions={() => setOptionsShowing(true)}
+            showSinglePlayerSetupModal={() => setSinglePlayerMenuOpen(true)}
+          />
           <CreateScreen hidden={phase !== 'create'} />
-          <SelectScreen
-            hidden={phase !== 'select'}
+          <SinglePlayerSetupModal
+            isOpen={singlePlayerMenuOpen}
+            onClose={() => setSinglePlayerMenuOpen(false)}
           />
           {phase === 'lobby' && <LobbyScreen hidden={phase !== 'lobby'} />}
           {phase === 'game' &&
@@ -131,6 +138,12 @@ function App() {
         />
         </div>
         {isLoggedIn && <StartMatchModal />}
+        {process.env.NODE_ENV === 'development' &&
+          <button className={'debug-button'} onClick={async () => {
+            console.warn('clicked update puzzles')
+            updateBestPuzzles(4);
+          }}>Update puzzles
+          </button>}
       </>
   )
 }

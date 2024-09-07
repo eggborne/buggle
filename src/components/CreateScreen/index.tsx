@@ -110,12 +110,16 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     if (!user) return;
     const options: BoardRequestData = {
       ...defaultValues,
-      dimensions,
-      letterDistribution: ['boggle', 'bigBoggle', 'superBigBoggle'][dimensions.width - 4],
+      dimensions: {
+        width: sizeSelected,
+        height: sizeSelected,
+      },
+      letterDistribution: ['boggle', 'bigBoggle', 'superBigBoggle'][sizeSelected - 4],
       maxAttempts: Number(inputRefs.maxAttempts.current?.value),
       returnBest: true,
       customizations: customOptions || {
         customLetters: {
+          ...defaultValues.customizations?.customLetters,
           letterList: userLetters,
           shuffle: inputRefs.customizations.customLetters.shuffle.current?.checked,
         },
@@ -123,27 +127,29 @@ function CreateScreen({ hidden }: CreateScreenProps) {
           wordList: userWords,
         }
       },
-      filters: {
+      filters:
+      {
         averageWordLength: {
+          ...defaultValues.filters?.averageWordLength,
           comparison: inputRefs.filters.averageWordLength.comparison.current?.value || '',
           value: Number(inputRefs.filters.averageWordLength.value.current?.value),
         },
         commonWordAmount: Number(inputRefs.filters.commonWordAmount.current?.value),
         totalWordLimits: {
-          min: Number(inputRefs.filters.totalWordLimits.min.current?.value),
-          max: Number(inputRefs.filters.totalWordLimits.max.current?.value)
+          ...defaultValues.filters?.totalWordLimits,
+          min: Number(inputRefs.filters.totalWordLimits.min.current?.value) || 50,
+          max: Number(inputRefs.filters.totalWordLimits.max.current?.value) || 99999
         },
       },
       theme: inputRefs.theme.current?.value,
     };
 
-    for (const cat in optionsEnabled) {
-      const category = optionsEnabled[cat];
-      for (const option in category) {
-        const optionBool = category[option];
-        if (optionBool) continue;
-        delete category[option];
-        console.log('deleted', option)
+    for (const categoryName in optionsEnabled) {
+      const category = optionsEnabled[categoryName];
+      const allFalse = !Object.values(category).some(o => o);
+      if (allFalse) {
+        console.log('deleting', categoryName)
+        delete options[categoryName as keyof BoardRequestData];
       }
     }
 
@@ -152,15 +158,6 @@ function CreateScreen({ hidden }: CreateScreenProps) {
     if (!optionsEnabled.filters.averageWordLength) delete options.filters?.averageWordLength;
     if (!optionsEnabled.filters.commonWordAmount) delete options.filters?.commonWordAmount;
     if (!optionsEnabled.filters.totalWordLimits) delete options.filters?.totalWordLimits;
-    if (!Object.values(optionsEnabled.customizations).some((o => o))) {
-      delete options.customizations;
-    }
-    if (!Object.values(optionsEnabled.filters).some((o => o))) {
-      delete options.filters;
-    }
-
-    // console.log('options', options);
-    // return;
 
     setGenerating(true);
     const generatedBoardData = await createSolvedPuzzle(options);
@@ -303,7 +300,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
         <div className={styles.optionalSettings}>
 
           <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>
-            <h2>Customization</h2>
+            <h2 className={styles.categoryHeader}><span>Customization</span></h2>
           </div>
 
           <div className={styles.optionalRow}>
@@ -350,7 +347,7 @@ function CreateScreen({ hidden }: CreateScreenProps) {
 
         <div className={styles.optionalSettings}>
           <div className={`${styles.buttonHeader} ${filtersShowing ? styles.active : styles.inactive}`} onClick={() => setFiltersShowing(prevState => !prevState)}>
-            <h2>Filters</h2>
+            <h2 className={styles.categoryHeader}>Filters</h2>
           </div>
           <div className={styles.optionalRow}>
             <input checked={optionsEnabled.filters.totalWordLimits} onChange={handleClickCheckbox} type='checkbox' id={'totalWordLimits'} name={'filters-totalWordLimits'} />
@@ -359,11 +356,11 @@ function CreateScreen({ hidden }: CreateScreenProps) {
               <div className={styles.doubleInputRow}>
                 <label>
                   <span>Min</span>
-                  <input ref={inputRefs.filters.totalWordLimits.min} disabled={!optionsEnabled.filters.totalWordLimits} type='number' min='1' max='99999' />
+                  <input ref={inputRefs.filters.totalWordLimits.min} disabled={!optionsEnabled.filters.totalWordLimits} type='number' min='50' max='9999' />
                 </label>
                 <label>
                   <span>Max</span>
-                  <input ref={inputRefs.filters.totalWordLimits.max} disabled={!optionsEnabled.filters.totalWordLimits} type='number' min='2' max='99999' />
+                  <input ref={inputRefs.filters.totalWordLimits.max} disabled={!optionsEnabled.filters.totalWordLimits} type='number' min='51' max='9999' />
                 </label>
               </div>
             </div>
@@ -398,8 +395,9 @@ function CreateScreen({ hidden }: CreateScreenProps) {
 
         <div className={styles.submitArea}>
           <label htmlFor={'attempts'}>
-            <span>Max. attempts</span>
-            <input id={'attempts'} name={'attempts'} ref={inputRefs.maxAttempts} type='number' min={1} max={1000000} defaultValue={10} />
+            <span>Effort (more takes longer)</span>
+            <input ref={inputRefs.maxAttempts} type='range' defaultValue={defaultValues.maxAttempts} min={1} max={50000} step='1' />
+
           </label>
           <button disabled={generating} type='submit' className={styles.start}>{generating ? `Generating...` : `Generate puzzle`}</button>
         </div>

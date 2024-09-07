@@ -32,7 +32,9 @@ export const solvePuzzleFromLetterString = async (letterString: string): Promise
   console.log('>>>>>>>>>>>>  Using API to solve', letterString);
   const fetchStart = Date.now();
   try {
-    const rawResponse = await fetch(`${solveUrl}?${letterString}`);
+    const rawResponse = await fetch(`${solveUrl}${letterString}`, {
+      method: 'POST',
+    });
     const response = await rawResponse.json();
     if (response.success) {
       const data: Record<string, string[]> = response.data

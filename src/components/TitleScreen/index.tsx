@@ -5,10 +5,11 @@ import Login from '../Login';
 
 interface TitleScreenProps {
   hidden: boolean;
+  showSinglePlayerSetupModal: () => void;
   showOptions: () => void;
 }
 
-function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
+function TitleScreen({ hidden, showSinglePlayerSetupModal, showOptions }: TitleScreenProps) {
   const { user, isLoggedIn, changePhase } = useUser();
   const { totalPlayers } = useFirebase();
 
@@ -26,7 +27,7 @@ function TitleScreen({ hidden, showOptions }: TitleScreenProps) {
   return (
     <main className={titleScreenClass}>
       <div className={`${styles.titleButtons}`}>
-        <button className={`${styles.select} ${styles.titleButton} ${styles.small}`} onClick={() => changePhase('select')}>Practice</button>
+        <button className={`${styles.select} ${styles.titleButton} ${styles.small}`} onClick={showSinglePlayerSetupModal}>Practice</button>
         <div role='button' className={`${styles.lobby} ${styles.titleButton}`} onClick={handleClickMultiplayer}> Multiplayer <div style={{ fontSize: '1rem', fontWeight: 'normal', color: '#fff' }}>{playersString}</div> <div className={styles.buttonMenu}> {(isLoggedIn && user) ? <div role='button' className={styles.enterButton}>Enter lobby</div> : <Login /> } </div> </div>
         <div className={'button-group row'}>
           <button className={`${styles.options} ${styles.titleButton} ${styles.small}`} onClick={showOptions}>Options</button>

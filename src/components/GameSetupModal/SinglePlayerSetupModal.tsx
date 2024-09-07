@@ -6,12 +6,17 @@ import { useRef, useState } from 'react';
 import StoredPuzzleList from '../StoredPuzzleList';
 import { useFirebase } from '../../context/FirebaseContext';
 import { gameDataFromStoredPuzzle } from '../../scripts/util';
-import { difficulties } from './../../config.json';
+import { difficulties } from '../../config.json';
 import { findBestPuzzle } from '../../scripts/firebase';
 import LoadingDisplay from '../LoadingDisplay';
 import SizeSelection from '../SizeSelection';
 
-const GameSetupModal = () => {
+interface SinglePlayerSetupModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+const SinglePlayerSetupModal = ({ isOpen, onClose }: SinglePlayerSetupModalProps) => {
   const { user, changePhase } = useUser();
   const { startNewGame, uploadPuzzle } = useFirebase();
   const [puzzleSelected, setPuzzleSelected] = useState<StoredPuzzleData | null>(null);
@@ -47,6 +52,7 @@ const GameSetupModal = () => {
       wordBonus: Number(wordBonusInputRef.current?.value)
     }
     if (newGameData) {
+      onClose();
       startNewGame(newGameData as CurrentGameData);
       changePhase('game');
       if (notSolvedInDB) {
@@ -56,52 +62,57 @@ const GameSetupModal = () => {
   }
 
   return (
-    <div className={styles.GameSetupModal}>
-      <h1>Single Player</h1>
-      <div className={styles.puzzleOptions}>
-        <SizeSelection sizeSelected={sizeSelected} handleChangeSize={(newSize: number) => setSizeSelected(newSize)} iconSize={{
-          width: `4.5rem`,
-          height: `4.5rem`
-        }} />      
-        <div className={styles.puzzleSelectToggle}>
-          <div role='button' className={`${styles.toggleButton} ${selectionType === 'random' ? styles.selected : ''}`} onClick={() => setSelectionType('random')}>Random</div>
-          <div role='button' className={`${styles.toggleButton} ${selectionType === 'themed' ? styles.selected : ''}`} onClick={() => setSelectionType('themed')}>Themed</div>
-        </div>
-        {selectionType === 'random' ?
-          <div className={`button-group ${styles.puzzleSelectRow}`}>
-            <span>Word amount</span>
-            <input ref={difficultyInputRef} type='range' name='difficulty' min='0' max='4' defaultValue={4}></input>
+    <div className={styles.SinglePlayerSetupModal}>
+      <Modal
+        isOpen={isOpen}
+        noCloseButton
+        className={styles.GameSetupModal}
+      >
+        <h1>Practice</h1>
+        <div className={styles.puzzleOptions}>
+          <SizeSelection sizeSelected={sizeSelected} handleChangeSize={(newSize: number) => setSizeSelected(newSize)} iconSize={{
+            width: `4.5rem`,
+            height: `4.5rem`
+          }} />
+          <div className={styles.puzzleSelectToggle}>
+            <div role='button' className={`${styles.toggleButton} ${selectionType === 'random' ? styles.selected : ''}`} onClick={() => setSelectionType('random')}>Random</div>
+            <div role='button' className={`${styles.toggleButton} ${selectionType === 'themed' ? styles.selected : ''}`} onClick={() => setSelectionType('themed')}>Themed</div>
           </div>
-          :
-          <div className={`button-group row ${styles.puzzleSelectRow}`}>
-            {puzzleSelected ?
-              <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>{puzzleSelected.theme}<p>click to change</p></button>
-              :
-              <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>Select theme...</button>
-            }
+          {selectionType === 'random' ?
+            <div className={`button-group ${styles.puzzleSelectRow}`}>
+              <span>Word amount</span>
+              <input ref={difficultyInputRef} type='range' name='difficulty' min='0' max='4' defaultValue={4}></input>
+            </div>
+            :
+            <div className={`button-group row ${styles.puzzleSelectRow}`}>
+              {puzzleSelected ?
+                <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>{puzzleSelected.theme}<p>click to change</p></button>
+                :
+                <button className={styles.themeSelectButton} onClick={() => setPuzzleListShowing(true)}>Select theme...</button>
+              }
+            </div>
+          }
+          <div className={`button-group row ${styles.timeSelectRow}`}>
+            <span>Max time</span>
+            <span>Word bonus</span>
+            <select defaultValue='30' ref={timeLimitInputRef}>
+              <option value='5'>5 seconds</option>
+              <option value='10'>10 seconds</option>
+              <option value='30'>30 seconds</option>
+              <option value='120'>2 minutes</option>
+            </select>
+            <select defaultValue='30' ref={wordBonusInputRef}>
+              <option value='5'>5 seconds</option>
+              <option value='pointValue'>Boggle® value</option>
+              {/* <option value='pointValue'>Scrabble® value</option> */}
+            </select>
           </div>
-        }
-        <div className={`button-group row ${styles.timeSelectRow}`}>
-          <span>Max time</span>
-          <select defaultValue='30' ref={timeLimitInputRef}>
-            <option value='5'>5 seconds</option>
-            <option value='10'>10 seconds</option>
-            <option value='30'>30 seconds</option>
-            <option value='120'>2 minutes</option>
-          </select>
         </div>
-        <div className={`button-group row ${styles.timeSelectRow}`}>
-          <span>Word bonus</span>
-          <select defaultValue='30' ref={wordBonusInputRef}>
-            <option value='5'>5 seconds</option>
-            <option value='pointValue'>Boggle® value</option>
-            {/* <option value='pointValue'>Scrabble® value</option> */}
-          </select>
+        <div className={`button-group ${styles.lowerButtons}`}>
+          <button disabled={false} onClick={handleClickStartGame} className={`start ${styles.startButton}`}>Start Game</button>
+          <button onClick={onClose} className={'cancel'}>Cancel</button>
         </div>
-      </div>
-      <div className={`button-group ${styles.lowerButtons}`}>
-        <button disabled={false} onClick={handleClickStartGame} className={`start ${styles.startButton}`}>Start Game</button>
-      </div>
+      </Modal>
       <Modal isOpen={puzzleListShowing} onClose={() => setPuzzleListShowing(false)}>
         <StoredPuzzleList showing={puzzleListShowing} size={sizeSelected} onClickStoredPuzzle={(puzzle) => {
           setPuzzleSelected(puzzle);
@@ -119,8 +130,8 @@ const GameSetupModal = () => {
           height: '1rem'
         }} />
       </Modal>
-    </div>
+    </div >
   );
 }
 
-export default GameSetupModal;
+export default SinglePlayerSetupModal;

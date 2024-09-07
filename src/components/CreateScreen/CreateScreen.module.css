@@ -283,12 +283,19 @@ h1 {
   justify-self: stretch;
 }
 
-.puzzleOptions h2 {
+.categoryHeader {
   width: 100%;
   text-align: center;
   padding: 0.5rem 0;
   background: #22167f2e;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
 }
+
+/* .categoryHeader {
+  
+} */
 
 .inactive button {
   pointer-events: none;
@@ -314,7 +321,6 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
   /* height: 100%; */
 }
 
@@ -322,13 +328,13 @@ h1 {
   width: max-content;
 }
 
-.submitArea>label>input[type='number'] {
+.submitArea>label>input[type='range'] {
   display: flex;
   flex-direction: column;
   text-align: center;
   font-size: 1.2rem;
-  width: 5rem;
-  height: 100%;
+  width: 90%;
+  height: 3rem;
 }
 
 .checkboxArea {

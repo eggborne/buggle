@@ -9,7 +9,7 @@ import { triggerShowMessage } from '../../hooks/useMessageBanner';
 import ChallengeListItem from '../ChallengeListItem';
 import ChatWindow from '../ChatWindow';
 import { stringTo2DArray } from '../../scripts/util';
-import ChallengeModal from '../ChallengeModal/ChallengeModal';
+import ChallengeModal from '../GameSetupModal/ChallengeSetupModal';
 
 interface LobbyScreenProps {
   hidden: boolean;
